@@ -566,148 +566,116 @@ double CombineHarvester::GetRateInternal(ProcSystMap const& lookup, std::string 
 }
 
 TH1F CombineHarvester::GetShapeInternal(ProcSystMap const& lookup, std::string const& single_sys) {
-  // Initialize an empty histogram to hold the combined shape for all processes.
-  TH1F shape;
+  // Initialize the cumulative histogram for all processes.
+  TH1F cumulative_shape;
+  bool is_shape_initialized = false; // Flag to track initialization.
 
-  // A flag to determine if the `shape` histogram has been initialized.
-  bool shape_init = false;
+  // Lambda to apply systematic uncertainties to a given process shape and rate.
+  auto apply_systematics = [&](double & process_rate, TH1F & process_shape, const std::vector<Systematic const*>& systematics) {
+    for (const auto* systematic : systematics) {
+      if (systematic->type() == "rateParam") continue; // Skip rate parameters.
 
-  // Loop over all processes in the CombineHarvester instance.
-  for (const auto& proc : procs_) {
-    // Determine if this process should be skipped based on the single_sys filter.
-    bool has_pdf = proc->pdf();
-    bool has_matching_sys = ch::any_of(lookup[&proc - &procs_[0]], [&](Systematic const * sys) {
-      return sys->name() == single_sys;
-    });
+      // Retrieve the associated parameter for the systematic.
+      auto param_it = params_.find(systematic->name());
+      if (param_it == params_.end()) {
+        throw std::runtime_error("Parameter " + systematic->name() + " not found in CombineHarvester instance");
+      }
+      double parameter_value = param_it->second->val();
 
-    // Skip processes that do not have PDFs and do not match the single_sys filter.
-    if (!single_sys.empty() && !has_pdf && !has_matching_sys) {
+      if (systematic->asymm()) {
+        // Adjust rate using asymmetric uncertainties (logarithmic kappas).
+        process_rate *= logKappaForX(parameter_value * systematic->scale(), systematic->value_d(), systematic->value_u());
+
+        // Handle shape-related systematics (shape, shapeN2, shapeU).
+        if (systematic->type() == "shape" || systematic->type() == "shapeN2" || systematic->type() == "shapeU") {
+          bool is_linear = (systematic->type() != "shapeN2");
+
+          // Apply upper and lower shape variations if available.
+          if (systematic->shape_u() && systematic->shape_d()) {
+            ShapeDiff(parameter_value * systematic->scale(), &process_shape, &process_shape,
+                      systematic->shape_d(), systematic->shape_u(), is_linear);
+          } else if (systematic->data_u() && systematic->data_d()) {
+            const auto* nominal_data = dynamic_cast<RooDataHist const*>(process_shape.Clone());
+            if (nominal_data) {
+              ShapeDiff(parameter_value * systematic->scale(), &process_shape, nominal_data,
+                        systematic->data_d(), systematic->data_u());
+            }
+          }
+        }
+      } else {
+        // Adjust rate using symmetric uncertainties (exponential scale).
+        process_rate *= std::pow(systematic->value_u(), parameter_value * systematic->scale());
+      }
+    }
+  };
+
+  // Lambda to ensure non-negative bin contents in a histogram.
+  auto ensure_non_negative_bins = [](TH1F & histogram) {
+    for (int bin = 1; bin <= histogram.GetNbinsX(); ++bin) {
+      if (histogram.GetBinContent(bin) < 0.0) {
+        histogram.SetBinContent(bin, 0.0);
+      }
+    }
+  };
+
+  // Iterate over all processes in the CombineHarvester instance.
+  for (const auto& process : procs_) {
+    // Skip processes based on the single_sys filter.
+    if (!single_sys.empty() && !process->pdf() &&
+    !ch::any_of(lookup[&process - &procs_[0]], [&](Systematic const * sys) {
+    return sys->name() == single_sys;
+    })) {
       continue;
     }
 
-    // Get the base rate for the current process.
-    double p_rate = proc->rate();
+    double base_rate = process->rate(); // Base rate for the process.
+    TH1F process_shape; // Histogram representing the process shape.
 
-    // Case 1: Handle processes with shapes or associated data.
-    if (proc->shape() || proc->data()) {
-      // Extract the shape of the process as a histogram.
-      TH1F proc_shape = proc->ShapeAsTH1F();
+    if (process->shape() || process->data()) { // Handle processes with shapes or data.
+      process_shape = process->ShapeAsTH1F();
+      apply_systematics(base_rate, process_shape, lookup[&process - &procs_[0]]);
+      ensure_non_negative_bins(process_shape);
+      process_shape.Scale(base_rate);
 
-      // Apply systematic uncertainties to the process shape.
-      for (const auto* sys_it : lookup[&proc - &procs_[0]]) {
-        if (sys_it->type() == "rateParam") continue; // Skip rate parameters.
-
-        // Retrieve the parameter associated with this systematic.
-        auto param_it = params_.find(sys_it->name());
-        if (param_it == params_.end()) {
-          throw std::runtime_error("Parameter " + sys_it->name() + " not found in CombineHarvester instance");
-        }
-
-        // Get the current value of the parameter.
-        double x = param_it->second->val();
-
-        if (sys_it->asymm()) {
-          // For asymmetric uncertainties, compute the rate adjustment using logarithmic kappas.
-          p_rate *= logKappaForX(x * sys_it->scale(), sys_it->value_d(), sys_it->value_u());
-
-          // Handle shape-related systematics, including shapeN2 and shapeU types.
-          if (sys_it->type() == "shape" || sys_it->type() == "shapeN2" || sys_it->type() == "shapeU") {
-            bool linear = (sys_it->type() != "shapeN2"); // Determine if adjustment is linear.
-
-            // Apply shape differences for the upper and lower systematic variations.
-            if (sys_it->shape_u() && sys_it->shape_d()) {
-              ShapeDiff(x * sys_it->scale(), &proc_shape, proc->shape(),
-                        sys_it->shape_d(), sys_it->shape_u(), linear);
-            } else if (sys_it->data_u() && sys_it->data_d()) {
-              const auto* nom = dynamic_cast<RooDataHist const*>(proc->data());
-              if (nom) {
-                ShapeDiff(x * sys_it->scale(), &proc_shape, nom,
-                          sys_it->data_d(), sys_it->data_u());
-              }
-            }
-          }
-        } else {
-          // For symmetric uncertainties, scale the rate directly using the systematic value.
-          p_rate *= std::pow(sys_it->value_u(), x * sys_it->scale());
-        }
+    } else if (process->pdf()) { // Handle processes with PDFs.
+      if (!process->observable()) {
+        auto* matching_data = FindMatchingData(process.get());
+        std::string variable_name = matching_data ? matching_data->get()->first()->GetName() : "CMS_th1x";
+        process->set_observable(dynamic_cast<RooRealVar*>(process->pdf()->findServer(variable_name.c_str())));
       }
 
-      // Ensure non-negative bin contents by setting negative bins to zero.
-      for (int b = 1; b <= proc_shape.GetNbinsX(); ++b) {
-        if (proc_shape.GetBinContent(b) < 0.0) {
-          proc_shape.SetBinContent(b, 0.0);
-        }
+      TH1::AddDirectory(false); // Prevent ROOT from managing temporary histograms.
+      auto* temporary_histogram = dynamic_cast<TH1F*>(process->observable()->createHistogram(""));
+
+      // Fill the temporary histogram with PDF values weighted by bin widths.
+      for (int bin = 1; bin <= temporary_histogram->GetNbinsX(); ++bin) {
+        process->observable()->setVal(temporary_histogram->GetBinCenter(bin));
+        temporary_histogram->SetBinContent(bin, temporary_histogram->GetBinWidth(bin) * process->pdf()->getVal());
       }
 
-      // Scale the shape by the adjusted process rate.
-      proc_shape.Scale(p_rate);
-
-      // Initialize the cumulative shape if it hasn't been set yet.
-      if (!shape_init) {
-        proc_shape.Copy(shape); // Copy the first shape into `shape`.
-        shape.Reset();          // Reset bin contents to prepare for additions.
-        shape_init = true;      // Mark the shape as initialized.
-      }
-
-      // Add the current process shape to the cumulative shape.
-      shape.Add(&proc_shape);
-
-    } else if (proc->pdf()) { // Case 2: Handle processes with PDFs.
-
-      // Ensure the observable variable is set for the process.
-      if (!proc->observable()) {
-        auto* data_obj = FindMatchingData(proc.get());
-        std::string var_name = data_obj ? data_obj->get()->first()->GetName() : "CMS_th1x";
-        proc->set_observable(dynamic_cast<RooRealVar*>(proc->pdf()->findServer(var_name.c_str())));
-      }
-
-      // Create a temporary histogram for the PDF.
-      TH1::AddDirectory(false); // Prevent ROOT from automatically adding the histogram to memory management.
-      auto* tmp = dynamic_cast<TH1F*>(proc->observable()->createHistogram(""));
-
-      // Fill the temporary histogram with PDF values, weighted by bin widths.
-      for (int b = 1; b <= tmp->GetNbinsX(); ++b) {
-        proc->observable()->setVal(tmp->GetBinCenter(b));
-        tmp->SetBinContent(b, tmp->GetBinWidth(b) * proc->pdf()->getVal());
-      }
-
-      // Copy the temporary histogram into `proc_shape` and delete the temporary histogram.
-      TH1F proc_shape = *tmp;
-      delete tmp;
+      process_shape = *temporary_histogram;
+      delete temporary_histogram;
 
       // Normalize the histogram if the PDF is not self-normalized.
-      const auto* aspdf = dynamic_cast<RooAbsPdf const*>(proc->pdf());
-      if ((!aspdf || !aspdf->selfNormalized()) && proc_shape.Integral() > 0.0) {
-        proc_shape.Scale(1.0 / proc_shape.Integral());
+      const auto* abstract_pdf = dynamic_cast<RooAbsPdf const*>(process->pdf());
+      if ((!abstract_pdf || !abstract_pdf->selfNormalized()) && process_shape.Integral() > 0.0) {
+        process_shape.Scale(1.0 / process_shape.Integral());
       }
 
-      // Apply rate uncertainties to the process rate.
-      for (const auto* sys_it : lookup[&proc - &procs_[0]]) {
-        if (sys_it->type() == "rateParam") continue; // Skip rate parameters.
-        double x = params_[sys_it->name()]->val();
-
-        if (sys_it->asymm()) {
-          p_rate *= logKappaForX(x * sys_it->scale(), sys_it->value_d(), sys_it->value_u());
-        } else {
-          p_rate *= std::pow(sys_it->value_u(), x * sys_it->scale());
-        }
-      }
-
-      // Scale the shape by the adjusted process rate.
-      proc_shape.Scale(p_rate);
-
-      // Initialize or add to the cumulative shape.
-      if (!shape_init) {
-        proc_shape.Copy(shape);
-        shape.Reset();
-        shape_init = true;
-      }
-      shape.Add(&proc_shape);
+      apply_systematics(base_rate, process_shape, lookup[&process - &procs_[0]]);
+      process_shape.Scale(base_rate);
     }
+
+    // Combine individual process shapes into the cumulative shape.
+    if (!is_shape_initialized) {
+      process_shape.Copy(cumulative_shape);
+      cumulative_shape.Reset(); // Reset for additions.
+      is_shape_initialized = true;
+    }
+    cumulative_shape.Add(&process_shape);
   }
 
-  // Return the combined histogram representing the total shape.
-  return shape;
+  return cumulative_shape;
 }
 
 double CombineHarvester::GetObservedRate() {
