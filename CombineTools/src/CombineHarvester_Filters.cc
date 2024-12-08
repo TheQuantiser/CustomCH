@@ -11,7 +11,7 @@
 namespace ch {
 
 CombineHarvester& CombineHarvester::bin(
-    std::vector<std::string> const& vec, bool cond) {
+  std::vector<std::string> const& vec, bool cond) {
   if (GetFlag("filters-use-regex")) {
     FilterContainingRgx(procs_, vec, std::mem_fn(&Process::bin), cond);
     FilterContainingRgx(obs_, vec, std::mem_fn(&Observation::bin), cond);
@@ -19,13 +19,21 @@ CombineHarvester& CombineHarvester::bin(
   } else {
     FilterContaining(procs_, vec, std::mem_fn(&Process::bin), cond);
     FilterContaining(obs_, vec, std::mem_fn(&Observation::bin), cond);
-    FilterContaining(systs_, vec, std::mem_fn(&Systematic::bin), cond);  
+    FilterContaining(systs_, vec, std::mem_fn(&Systematic::bin), cond);
   }
   return *this;
 }
 
+CombineHarvester& CombineHarvester::bin_rgx(std::vector<std::string> const& vec, bool cond) {
+  FilterContainingRgx(procs_, vec, std::mem_fn(&Process::bin), cond);
+  FilterContainingRgx(obs_, vec, std::mem_fn(&Observation::bin), cond);
+  FilterContainingRgx(systs_, vec, std::mem_fn(&Systematic::bin), cond);
+  return *this;
+};
+
+
 CombineHarvester& CombineHarvester::bin_id(
-    std::vector<int> const& vec, bool cond) {
+  std::vector<int> const& vec, bool cond) {
   FilterContaining(procs_, vec, std::mem_fn(&Process::bin_id), cond);
   FilterContaining(obs_, vec, std::mem_fn(&Observation::bin_id), cond);
   FilterContaining(systs_, vec, std::mem_fn(&Systematic::bin_id), cond);
@@ -33,7 +41,7 @@ CombineHarvester& CombineHarvester::bin_id(
 }
 
 CombineHarvester& CombineHarvester::process(
-    std::vector<std::string> const& vec, bool cond) {
+  std::vector<std::string> const& vec, bool cond) {
   if (GetFlag("filters-use-regex")) {
     FilterContainingRgx(procs_, vec, std::mem_fn(&Process::process), cond);
     FilterContainingRgx(systs_, vec, std::mem_fn(&Systematic::process), cond);
@@ -46,14 +54,14 @@ CombineHarvester& CombineHarvester::process(
 }
 
 CombineHarvester& CombineHarvester::process_rgx(
-    std::vector<std::string> const& vec, bool cond) {
+  std::vector<std::string> const& vec, bool cond) {
   FilterContainingRgx(procs_, vec, std::mem_fn(&Process::process), cond);
   FilterContainingRgx(systs_, vec, std::mem_fn(&Systematic::process), cond);
   return *this;
 }
 
 CombineHarvester& CombineHarvester::analysis(
-    std::vector<std::string> const& vec, bool cond) {
+  std::vector<std::string> const& vec, bool cond) {
   if (GetFlag("filters-use-regex")) {
     FilterContainingRgx(procs_, vec, std::mem_fn(&Process::analysis), cond);
     FilterContainingRgx(obs_, vec, std::mem_fn(&Observation::analysis), cond);
@@ -67,7 +75,7 @@ CombineHarvester& CombineHarvester::analysis(
 }
 
 CombineHarvester& CombineHarvester::era(
-    std::vector<std::string> const& vec, bool cond) {
+  std::vector<std::string> const& vec, bool cond) {
   if (GetFlag("filters-use-regex")) {
     FilterContainingRgx(procs_, vec, std::mem_fn(&Process::era), cond);
     FilterContainingRgx(obs_, vec, std::mem_fn(&Observation::era), cond);
@@ -81,7 +89,7 @@ CombineHarvester& CombineHarvester::era(
 }
 
 CombineHarvester& CombineHarvester::channel(
-    std::vector<std::string> const& vec, bool cond) {
+  std::vector<std::string> const& vec, bool cond) {
   if (GetFlag("filters-use-regex")) {
     FilterContainingRgx(procs_, vec, std::mem_fn(&Process::channel), cond);
     FilterContainingRgx(obs_, vec, std::mem_fn(&Observation::channel), cond);
@@ -95,7 +103,7 @@ CombineHarvester& CombineHarvester::channel(
 }
 
 CombineHarvester& CombineHarvester::mass(
-    std::vector<std::string> const& vec, bool cond) {
+  std::vector<std::string> const& vec, bool cond) {
   if (GetFlag("filters-use-regex")) {
     FilterContainingRgx(procs_, vec, std::mem_fn(&Process::mass), cond);
     FilterContainingRgx(obs_, vec, std::mem_fn(&Observation::mass), cond);
@@ -109,7 +117,7 @@ CombineHarvester& CombineHarvester::mass(
 }
 
 CombineHarvester& CombineHarvester::attr(
-    std::vector<std::string> const& vec, std::string attr_label, bool cond) {
+  std::vector<std::string> const& vec, std::string attr_label, bool cond) {
   if (GetFlag("filters-use-regex")) {
     FilterContainingRgx(procs_, vec, std::mem_fn(&Process::attribute), attr_label, cond);
     FilterContainingRgx(obs_, vec, std::mem_fn(&Observation::attribute), attr_label, cond);
@@ -117,14 +125,14 @@ CombineHarvester& CombineHarvester::attr(
   } else {
     FilterContaining(procs_, vec, std::mem_fn(&Process::attribute), attr_label, cond);
     FilterContaining(obs_, vec, std::mem_fn(&Observation::attribute), attr_label, cond);
-    FilterContaining(systs_, vec, std::mem_fn(&Systematic::attribute), attr_label, cond);  
+    FilterContaining(systs_, vec, std::mem_fn(&Systematic::attribute), attr_label, cond);
   }
   return *this;
 }
 
 
 CombineHarvester& CombineHarvester::syst_name(
-    std::vector<std::string> const& vec, bool cond) {
+  std::vector<std::string> const& vec, bool cond) {
   if (GetFlag("filters-use-regex")) {
     FilterContainingRgx(systs_, vec, std::mem_fn(&Systematic::name), cond);
   } else {
@@ -134,7 +142,7 @@ CombineHarvester& CombineHarvester::syst_name(
 }
 
 CombineHarvester& CombineHarvester::syst_type(
-    std::vector<std::string> const& vec, bool cond) {
+  std::vector<std::string> const& vec, bool cond) {
   if (GetFlag("filters-use-regex")) {
     FilterContainingRgx(systs_, vec, std::mem_fn(&Systematic::type), cond);
   } else {
@@ -189,11 +197,11 @@ CombineHarvester & CombineHarvester::data() {
 
 std::set<std::string> CombineHarvester::bin_set() {
   std::set<std::string> result =
-      this->SetFromObs(std::mem_fn(&ch::Observation::bin));
+    this->SetFromObs(std::mem_fn(&ch::Observation::bin));
   std::set<std::string> result2 =
-      this->SetFromProcs(std::mem_fn(&ch::Process::bin));
+    this->SetFromProcs(std::mem_fn(&ch::Process::bin));
   std::set<std::string> result3 =
-      this->SetFromSysts(std::mem_fn(&ch::Systematic::bin));
+    this->SetFromSysts(std::mem_fn(&ch::Systematic::bin));
   result.insert(result2.begin(), result2.end());
   result.insert(result3.begin(), result3.end());
   return result;
@@ -201,11 +209,11 @@ std::set<std::string> CombineHarvester::bin_set() {
 
 std::set<int> CombineHarvester::bin_id_set() {
   std::set<int> result =
-      this->SetFromObs(std::mem_fn(&ch::Observation::bin_id));
+    this->SetFromObs(std::mem_fn(&ch::Observation::bin_id));
   std::set<int> result2 =
-      this->SetFromProcs(std::mem_fn(&ch::Process::bin_id));
+    this->SetFromProcs(std::mem_fn(&ch::Process::bin_id));
   std::set<int> result3 =
-      this->SetFromSysts(std::mem_fn(&ch::Systematic::bin_id));
+    this->SetFromSysts(std::mem_fn(&ch::Systematic::bin_id));
   result.insert(result2.begin(), result2.end());
   result.insert(result3.begin(), result3.end());
   return result;
@@ -213,20 +221,20 @@ std::set<int> CombineHarvester::bin_id_set() {
 
 std::set<std::string> CombineHarvester::process_set() {
   std::set<std::string> result = this->SetFromProcs(
-      std::mem_fn(&ch::Process::process));
+                                   std::mem_fn(&ch::Process::process));
   std::set<std::string> result2 = this->SetFromSysts(
-      std::mem_fn(&ch::Systematic::process));
+                                    std::mem_fn(&ch::Systematic::process));
   result.insert(result2.begin(), result2.end());
   return result;
 }
 
 std::set<std::string> CombineHarvester::analysis_set() {
   std::set<std::string> result = this->SetFromObs(
-      std::mem_fn(&ch::Observation::analysis));
+                                   std::mem_fn(&ch::Observation::analysis));
   std::set<std::string> result2 = this->SetFromProcs(
-      std::mem_fn(&ch::Process::analysis));
+                                    std::mem_fn(&ch::Process::analysis));
   std::set<std::string> result3 = this->SetFromSysts(
-      std::mem_fn(&ch::Systematic::analysis));
+                                    std::mem_fn(&ch::Systematic::analysis));
   result.insert(result2.begin(), result2.end());
   result.insert(result3.begin(), result3.end());
   return result;
@@ -234,11 +242,11 @@ std::set<std::string> CombineHarvester::analysis_set() {
 
 std::set<std::string> CombineHarvester::era_set() {
   std::set<std::string> result =
-      this->SetFromObs(std::mem_fn(&ch::Observation::era));
+    this->SetFromObs(std::mem_fn(&ch::Observation::era));
   std::set<std::string> result2 =
-      this->SetFromProcs(std::mem_fn(&ch::Process::era));
+    this->SetFromProcs(std::mem_fn(&ch::Process::era));
   std::set<std::string> result3 =
-      this->SetFromSysts(std::mem_fn(&ch::Systematic::era));
+    this->SetFromSysts(std::mem_fn(&ch::Systematic::era));
   result.insert(result2.begin(), result2.end());
   result.insert(result3.begin(), result3.end());
   return result;
@@ -246,11 +254,11 @@ std::set<std::string> CombineHarvester::era_set() {
 
 std::set<std::string> CombineHarvester::channel_set() {
   std::set<std::string> result = this->SetFromObs(
-      std::mem_fn(&ch::Observation::channel));
+                                   std::mem_fn(&ch::Observation::channel));
   std::set<std::string> result2 = this->SetFromProcs(
-      std::mem_fn(&ch::Process::channel));
+                                    std::mem_fn(&ch::Process::channel));
   std::set<std::string> result3 = this->SetFromSysts(
-      std::mem_fn(&ch::Systematic::channel));
+                                    std::mem_fn(&ch::Systematic::channel));
   result.insert(result2.begin(), result2.end());
   result.insert(result3.begin(), result3.end());
   return result;
@@ -258,11 +266,11 @@ std::set<std::string> CombineHarvester::channel_set() {
 
 std::set<std::string> CombineHarvester::mass_set() {
   std::set<std::string> result = this->SetFromObs(
-      std::mem_fn(&ch::Observation::mass));
+                                   std::mem_fn(&ch::Observation::mass));
   std::set<std::string> result2 = this->SetFromProcs(
-      std::mem_fn(&ch::Process::mass));
+                                    std::mem_fn(&ch::Process::mass));
   std::set<std::string> result3 = this->SetFromSysts(
-      std::mem_fn(&ch::Systematic::mass));
+                                    std::mem_fn(&ch::Systematic::mass));
   result.insert(result2.begin(), result2.end());
   result.insert(result3.begin(), result3.end());
   return result;
@@ -270,13 +278,13 @@ std::set<std::string> CombineHarvester::mass_set() {
 
 std::set<std::string> CombineHarvester::syst_name_set() {
   std::set<std::string> result = this->SetFromSysts(
-      std::mem_fn(&ch::Systematic::name));
+                                   std::mem_fn(&ch::Systematic::name));
   return result;
 }
 
 std::set<std::string> CombineHarvester::syst_type_set() {
   std::set<std::string> result = this->SetFromSysts(
-      std::mem_fn(&ch::Systematic::type));
+                                   std::mem_fn(&ch::Systematic::type));
   return result;
 }
 }

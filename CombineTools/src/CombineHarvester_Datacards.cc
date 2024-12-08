@@ -34,47 +34,47 @@ namespace ch {
 
 // Bug fix for RooConstVar CompatibilityA
 RooWorkspace* CombineHarvester::fixRooConstVar(RooWorkspace *win, bool useRooRealVar, bool clean)
-{ 
-    if ( !GetFlag("fix-rooconstvar")) return win; 
-    std::cout<<"[INFO]"<< "Running fixRooConstVar on "<<win->GetName()<<std::endl;
-    // to fix RooConstVar we need to create a new workspace, 
-    // import them first and later reimport all the other objects
-    std::string name = win->GetName();
-    RooWorkspace *wout = new RooWorkspace(name.c_str(), (std::string( win->GetTitle() ) + "_RCVfix").c_str() ) ;
-    for (auto cobj : win->components()) {
-        if (cobj->IsA() == RooConstVar::Class() )
-        {
-            RooConstVar* cvar = dynamic_cast<RooConstVar*> (cobj);
-            std::cout<<"[INFO] Found RooConstVar '"<<cvar->GetName()<<"' with value "<< cvar->getVal()<<" in workspace "<<name<<std::endl; 
-            if (useRooRealVar)
-            {
-                RooRealVar rrv = RooRealVar(cvar->GetName(),cvar->GetTitle(),cvar->getVal());
-                rrv . removeRange(); // the line above may already do it
-                rrv . setConstant();
-                wout -> import ( rrv, RooFit::RecycleConflictNodes());
-            }
-            else{
-                RooConstVar rcv  = RooConstVar(cvar->GetName(),cvar->GetTitle(),cvar->getVal()); 
-                wout -> import ( rcv, RooFit::RecycleConflictNodes());
-            }
+{
+  if ( !GetFlag("fix-rooconstvar")) return win;
+  std::cout << "[INFO]" << "Running fixRooConstVar on " << win->GetName() << std::endl;
+  // to fix RooConstVar we need to create a new workspace,
+  // import them first and later reimport all the other objects
+  std::string name = win->GetName();
+  RooWorkspace *wout = new RooWorkspace(name.c_str(), (std::string( win->GetTitle() ) + "_RCVfix").c_str() ) ;
+  for (auto cobj : win->components()) {
+    if (cobj->IsA() == RooConstVar::Class() )
+    {
+      RooConstVar* cvar = dynamic_cast<RooConstVar*> (cobj);
+      std::cout << "[INFO] Found RooConstVar '" << cvar->GetName() << "' with value " << cvar->getVal() << " in workspace " << name << std::endl;
+      if (useRooRealVar)
+      {
+        RooRealVar rrv = RooRealVar(cvar->GetName(), cvar->GetTitle(), cvar->getVal());
+        rrv . removeRange(); // the line above may already do it
+        rrv . setConstant();
+        wout -> import ( rrv, RooFit::RecycleConflictNodes());
+      }
+      else {
+        RooConstVar rcv  = RooConstVar(cvar->GetName(), cvar->GetTitle(), cvar->getVal());
+        wout -> import ( rcv, RooFit::RecycleConflictNodes());
+      }
 
-            std::cout<<" -> imported in workspace"<<std::endl;
-            wout -> obj( cvar->GetName() ) -> Print("T");
-        }
-
+      std::cout << " -> imported in workspace" << std::endl;
+      wout -> obj( cvar->GetName() ) -> Print("T");
     }
 
-    // Import all other stuff
-    wout -> import(win->components(), RooFit::RecycleConflictNodes());
-    for (auto d : win->allData() ) wout -> import(*d);
-    if (clean) delete win; // if chained with clone and other stuff, this is the best option.
-    return wout; 
+  }
+
+  // Import all other stuff
+  wout -> import(win->components(), RooFit::RecycleConflictNodes());
+  for (auto d : win->allData() ) wout -> import(*d);
+  if (clean) delete win; // if chained with clone and other stuff, this is the best option.
+  return wout;
 }
 
 // Extract info from filename using parse rule like:
 // ".*{MASS}/{ANALYSIS}_{CHANNEL}_{BINID}_{ERA}.txt"
 int CombineHarvester::ParseDatacard(std::string const& filename,
-    std::string parse_rules) {
+                                    std::string parse_rules) {
   boost::replace_all(parse_rules, "$ANALYSIS",  "(?<ANALYSIS>[\\w\\.]+)");
   boost::replace_all(parse_rules, "$ERA",       "(?<ERA>[\\w\\.]+)");
   boost::replace_all(parse_rules, "$CHANNEL",   "(?<CHANNEL>[\\w\\.]+)");
@@ -84,21 +84,21 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
   boost::smatch matches;
   boost::regex_search(filename, matches, rgx);
   this->ParseDatacard(filename,
-    matches.str("ANALYSIS"),
-    matches.str("ERA"),
-    matches.str("CHANNEL"),
-    matches.str("BINID").length() ?
-      boost::lexical_cast<int>(matches.str("BINID")) : 0,
-    matches.str("MASS"));
+                      matches.str("ANALYSIS"),
+                      matches.str("ERA"),
+                      matches.str("CHANNEL"),
+                      matches.str("BINID").length() ?
+                      boost::lexical_cast<int>(matches.str("BINID")) : 0,
+                      matches.str("MASS"));
   return 0;
 }
 
 int CombineHarvester::ParseDatacard(std::string const& filename,
-    std::string const& analysis,
-    std::string const& era,
-    std::string const& channel,
-    int bin_id,
-    std::string const& mass) {
+                                    std::string const& analysis,
+                                    std::string const& era,
+                                    std::string const& channel,
+                                    int bin_id,
+                                    std::string const& mass) {
   TH1::AddDirectory(kFALSE);
   // Load the entire datacard into memory as a vector of strings
   std::vector<std::string> lines = ch::ParseFileLines(filename);
@@ -113,7 +113,7 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
     if (lines[i].at(0) == '#' || lines[i].at(0) == '-') continue;
     words.push_back(std::vector<std::string>());
     boost::split(words.back(), lines[i], boost::is_any_of("\t "),
-        boost::token_compress_on);
+                 boost::token_compress_on);
   }
 
   std::vector<HistMapping> hist_mapping;
@@ -163,14 +163,14 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
 
       if (mapping.IsPdf()) {
         std::string store_key =
-            mapping.file->GetName() + mapping.WorkspaceName();
+          mapping.file->GetName() + mapping.WorkspaceName();
         if (!ws_store.count(store_key)) {
           mapping.file->cd();
           std::shared_ptr<RooWorkspace> ptr(
-                      fixRooConstVar(
-                      dynamic_cast<RooWorkspace*>(gDirectory->Get(mapping.WorkspaceName().c_str())) 
-                  )
-               );
+            fixRooConstVar(
+              dynamic_cast<RooWorkspace*>(gDirectory->Get(mapping.WorkspaceName().c_str()))
+            )
+          );
           if (!ptr) {
             throw std::runtime_error(FNERROR("Workspace not found in file"));
           }
@@ -180,14 +180,14 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
       }
       if (mapping.IsPdf() && mapping.syst_pattern != "") {
         std::string store_key =
-            mapping.file->GetName() + mapping.SystWorkspaceName();
+          mapping.file->GetName() + mapping.SystWorkspaceName();
         if (!ws_store.count(store_key)) {
           mapping.file->cd();
           std::shared_ptr<RooWorkspace> ptr(
-                  fixRooConstVar(
-                      dynamic_cast<RooWorkspace*>(gDirectory->Get(mapping.SystWorkspaceName().c_str()))
-                      )
-                  );
+            fixRooConstVar(
+              dynamic_cast<RooWorkspace*>(gDirectory->Get(mapping.SystWorkspaceName().c_str()))
+            )
+          );
           if (!ptr) {
             throw std::runtime_error(FNERROR("Workspace not found in file"));
           }
@@ -230,7 +230,7 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
       }
       if ((!is_wsp_rateparam) && (words[i].size() == 3 || has_range)) {
         ch::Parameter* param = SetupRateParamVar(
-            param_name, boost::lexical_cast<double>(words[i][2]), true);
+                                 param_name, boost::lexical_cast<double>(words[i][2]), true);
         param->set_err_u(0.);
         param->set_err_d(0.);
         if (has_range) {
@@ -243,9 +243,9 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
           }
         }
       } else if (words[i].size() == 3 && is_wsp_rateparam) {
-          if (!SetupRateParamWspObjFromWsStore(param_name, words[i][2], ws_store)) {
-            SetupRateParamWspObj(param_name, words[i][2], true);
-          }
+        if (!SetupRateParamWspObjFromWsStore(param_name, words[i][2], ws_store)) {
+          SetupRateParamWspObj(param_name, words[i][2], true);
+        }
       }
     }
   }
@@ -261,11 +261,11 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
     // can add Observation objects
     if (i >= 1) {
       if (  boost::iequals(words[i][0], "observation") &&
-            boost::iequals(words[i-1][0], "bin") &&
-            words[i].size() == words[i-1].size()) {
+            boost::iequals(words[i - 1][0], "bin") &&
+            words[i].size() == words[i - 1].size()) {
         for (unsigned p = 1; p < words[i].size(); ++p) {
           auto obs = std::make_shared<Observation>();
-          obs->set_bin(words[i-1][p]);
+          obs->set_bin(words[i - 1][p]);
           obs->set_rate(boost::lexical_cast<double>(words[i][p]));
           obs->set_analysis(analysis);
           obs->set_era(era);
@@ -281,7 +281,7 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
     }
 
     if (boost::iequals(words[i][0], "observation") &&
-        !boost::iequals(words[i-1][0], "bin") &&
+        !boost::iequals(words[i - 1][0], "bin") &&
         words[i].size() == 2 &&
         single_obs.get() == nullptr) {
       for (unsigned p = 1; p < words[i].size(); ++p) {
@@ -304,24 +304,24 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
 
     if (i >= 3) {
       if (  boost::iequals(words[i][0], "rate") &&
-            boost::iequals(words[i-1][0], "process") &&
-            boost::iequals(words[i-2][0], "process") &&
-            boost::iequals(words[i-3][0], "bin") &&
-            words[i].size() == words[i-1].size() &&
-            words[i].size() == words[i-2].size() &&
-            words[i].size() == words[i-3].size()) {
+            boost::iequals(words[i - 1][0], "process") &&
+            boost::iequals(words[i - 2][0], "process") &&
+            boost::iequals(words[i - 3][0], "bin") &&
+            words[i].size() == words[i - 1].size() &&
+            words[i].size() == words[i - 2].size() &&
+            words[i].size() == words[i - 3].size()) {
         for (unsigned p = 1; p < words[i].size(); ++p) {
           auto proc = std::make_shared<Process>();
-          proc->set_bin(words[i-3][p]);
-          bin_names.insert(words[i-3][p]);
+          proc->set_bin(words[i - 3][p]);
+          bin_names.insert(words[i - 3][p]);
           try {
-            int process_id = boost::lexical_cast<int>(words[i-2][p]);
+            int process_id = boost::lexical_cast<int>(words[i - 2][p]);
             proc->set_signal(process_id <= 0);
-            proc->set_process(words[i-1][p]);
-          } catch(boost::bad_lexical_cast &) {
-            int process_id = boost::lexical_cast<int>(words[i-1][p]);
+            proc->set_process(words[i - 1][p]);
+          } catch (boost::bad_lexical_cast &) {
+            int process_id = boost::lexical_cast<int>(words[i - 1][p]);
             proc->set_signal(process_id <= 0);
-            proc->set_process(words[i-2][p]);
+            proc->set_process(words[i - 2][p]);
           }
           proc->set_rate(boost::lexical_cast<double>(words[i][p]));
           proc->set_analysis(analysis);
@@ -348,7 +348,7 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
           param->set_err_d(
             boost::lexical_cast<double>(words[i][3].substr(0, slash_pos)));
           param->set_err_u(
-            boost::lexical_cast<double>(words[i][3].substr(slash_pos+1)));
+            boost::lexical_cast<double>(words[i][3].substr(slash_pos + 1)));
         } else {
           param->set_err_u(+1.0 * boost::lexical_cast<double>(words[i][3]));
           param->set_err_d(-1.0 * boost::lexical_cast<double>(words[i][3]));
@@ -371,10 +371,10 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
         sys->set_bin_id(bin_id);
         sys->set_mass(mass);
         // Add string extension for edge case where param and rateParam have the same name
-        std::string syst_str_ext = (boost::format("%g %g") % param->val() % ((param->err_u() - param->err_d()) / 2.0)).str(); 
+        std::string syst_str_ext = (boost::format("%g %g") % param->val() % ((param->err_u() - param->err_d()) / 2.0)).str();
         if (param->range_d() != std::numeric_limits<double>::lowest() &&
             param->range_u() != std::numeric_limits<double>::max()) {
-                syst_str_ext += (boost::format(" [%.4g,%.4g]") % param->range_d() % param->range_u()).str();
+          syst_str_ext += (boost::format(" [%.4g,%.4g]") % param->range_d() % param->range_u()).str();
         }
         sys->set_param_str_ext(syst_str_ext);
         systs_.push_back(sys);
@@ -406,7 +406,7 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
       }
       if ((!is_wsp_rateparam) && (words[i].size() == 5 || has_range)) {
         ch::Parameter* param = SetupRateParamVar(
-            param_name, boost::lexical_cast<double>(words[i][4]));
+                                 param_name, boost::lexical_cast<double>(words[i][4]));
         param->set_err_u(0.);
         param->set_err_d(0.);
         if (has_range) {
@@ -428,14 +428,14 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
         bool matches_proc = false;
         int process_id;
         std::string process;
-        std::string bin = words[r-3][p];
+        std::string bin = words[r - 3][p];
         // Not great that we repeat this below
         try {
-          process_id = boost::lexical_cast<int>(words[r-2][p]);
-          process = words[r-1][p];
-        } catch(boost::bad_lexical_cast &) {
-          process_id = boost::lexical_cast<int>(words[r-1][p]);
-          process = words[r-2][p];
+          process_id = boost::lexical_cast<int>(words[r - 2][p]);
+          process = words[r - 1][p];
+        } catch (boost::bad_lexical_cast &) {
+          process_id = boost::lexical_cast<int>(words[r - 1][p]);
+          process = words[r - 2][p];
         }
         // if (words[i][2] == "*" || words[i][2] == bin) {
         if (words[i][2] == "*" || fnmatch(words[i][2].c_str(), bin.c_str(), 0) == 0) {
@@ -493,26 +493,26 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
       }
     }
 
-    if (start_nuisance_scan && words[i].size()-1 == words[r].size() && !boost::iequals(words[i][1], "autoMCStats")) {
+    if (start_nuisance_scan && words[i].size() - 1 == words[r].size() && !boost::iequals(words[i][1], "autoMCStats")) {
       for (unsigned p = 2; p < words[i].size(); ++p) {
         if (words[i][p] == "-") continue;
         auto sys = std::make_shared<Systematic>();
-        sys->set_bin(words[r-3][p-1]);
+        sys->set_bin(words[r - 3][p - 1]);
         try {
-          int process_id = boost::lexical_cast<int>(words[r-2][p-1]);
+          int process_id = boost::lexical_cast<int>(words[r - 2][p - 1]);
           sys->set_signal(process_id <= 0);
-          sys->set_process(words[r-1][p-1]);
-        } catch(boost::bad_lexical_cast &) {
-          int process_id = boost::lexical_cast<int>(words[r-1][p-1]);
+          sys->set_process(words[r - 1][p - 1]);
+        } catch (boost::bad_lexical_cast &) {
+          int process_id = boost::lexical_cast<int>(words[r - 1][p - 1]);
           sys->set_signal(process_id <= 0);
-          sys->set_process(words[r-2][p-1]);
+          sys->set_process(words[r - 2][p - 1]);
         }
         sys->set_name(words[i][0]);
         std::string type = words[i][1];
-        if (!contains(std::vector<std::string>{"shape", "shape?", "shapeN2", "shapeU", "lnN", "lnU"},
+        if (!contains(std::vector<std::string> {"shape", "shape?", "shapeN2", "shapeU", "lnN", "lnU"},
                       type)) {
           throw std::runtime_error(
-              FNERROR("Systematic type " + type + " not supported"));
+            FNERROR("Systematic type " + type + " not supported"));
         }
         sys->set_type(words[i][1]);
         sys->set_analysis(analysis);
@@ -527,7 +527,7 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
           sys->set_value_d(
             boost::lexical_cast<double>(words[i][p].substr(0, slash_pos)));
           sys->set_value_u(
-            boost::lexical_cast<double>(words[i][p].substr(slash_pos+1)));
+            boost::lexical_cast<double>(words[i][p].substr(slash_pos + 1)));
           sys->set_asymm(true);
         } else {
           sys->set_value_u(boost::lexical_cast<double>(words[i][p]));
@@ -574,8 +574,8 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
       obs_.push_back(single_obs);
     } else {
       throw std::runtime_error(FNERROR(
-          "Input card specifies a single observation entry without a bin, but "
-          "multiple bins defined elsewhere"));
+                                 "Input card specifies a single observation entry without a bin, but "
+                                 "multiple bins defined elsewhere"));
     }
   }
 
@@ -620,7 +620,7 @@ void CombineHarvester::FillHistMappings(std::vector<HistMapping> & mappings) {
     for (RooAbsArg *fv : fvars) {
       RooAbsReal *y = dynamic_cast<RooAbsReal*>(fv);
       if (y) pdf_ws_map[iter.second->function(y->GetName())] = iter.second.get();
-    } 
+    }
   }
 
   // For writing TH1s we will hard code a set of patterns for each bin
@@ -630,23 +630,23 @@ void CombineHarvester::FillHistMappings(std::vector<HistMapping> & mappings) {
   auto bins = this->bin_set();
   for (auto bin : bins) {
     unsigned shape_count = std::count_if(procs_.begin(), procs_.end(),
-        [&](std::shared_ptr<ch::Process> p) {
-          return (p->bin() == bin && p->shape() && (!p->signal()));
-        });
+    [&](std::shared_ptr<ch::Process> p) {
+      return (p->bin() == bin && p->shape() && (!p->signal()));
+    });
     shape_count += std::count_if(obs_.begin(), obs_.end(),
-        [&](std::shared_ptr<ch::Observation> p) {
-          return (p->bin() == bin && p->shape());
-        });
+    [&](std::shared_ptr<ch::Observation> p) {
+      return (p->bin() == bin && p->shape());
+    });
     unsigned counting = std::count_if(
-        procs_.begin(), procs_.end(), [&](std::shared_ptr<ch::Process> p) {
-          return (p->bin() == bin && p->shape() == nullptr &&
-                  p->pdf() == nullptr && p->data() == nullptr);
-        });
+    procs_.begin(), procs_.end(), [&](std::shared_ptr<ch::Process> p) {
+      return (p->bin() == bin && p->shape() == nullptr &&
+              p->pdf() == nullptr && p->data() == nullptr);
+    });
     counting += std::count_if(
-        obs_.begin(), obs_.end(), [&](std::shared_ptr<ch::Observation> p) {
-          return (p->bin() == bin && p->shape() == nullptr &&
-                  p->data() == nullptr);
-        });
+    obs_.begin(), obs_.end(), [&](std::shared_ptr<ch::Observation> p) {
+      return (p->bin() == bin && p->shape() == nullptr &&
+              p->data() == nullptr);
+    });
 
     if (shape_count > 0) {
       mappings.emplace_back("*", bin, bin + "/$PROCESS",
@@ -658,15 +658,15 @@ void CombineHarvester::FillHistMappings(std::vector<HistMapping> & mappings) {
     }
 
     CombineHarvester ch_signals =
-        std::move(this->cp().bin({bin}).signals().histograms());
+      std::move(this->cp().bin({bin}).signals().histograms());
     auto sig_proc_set =
-        ch_signals.SetFromProcs(std::mem_fn(&ch::Process::process));
+      ch_signals.SetFromProcs(std::mem_fn(&ch::Process::process));
     for (auto sig_proc : sig_proc_set) {
       // should only add this mapping if the signal process has a numeric mass
       // value, otherwise we will write it using the background rule above
       auto masses = Set2Vec(ch_signals.cp()
-                                .process({sig_proc})
-                                .SetFromProcs(std::mem_fn(&ch::Process::mass)));
+                            .process({sig_proc})
+                            .SetFromProcs(std::mem_fn(&ch::Process::mass)));
       if (masses.size() != 1) {
         throw std::runtime_error(FNERROR("Process " + sig_proc + " in bin " +
                                          bin +
@@ -777,13 +777,13 @@ void CombineHarvester::WriteDatacard(std::string const& name,
 
   // First figure out if this is a counting-experiment only
   bool is_counting = true;
-  this->ForEachObs([&](ch::Observation *obs) {
+  this->ForEachObs([&](ch::Observation * obs) {
     if (obs->shape() != nullptr || obs->data() != nullptr) {
       is_counting = false;
     }
   });
   if (is_counting) {
-    this->ForEachProc([&](ch::Process *proc) {
+    this->ForEachProc([&](ch::Process * proc) {
       if (proc->shape() != nullptr || proc->data() != nullptr ||
           proc->pdf() != nullptr) {
         is_counting = false;
@@ -794,7 +794,7 @@ void CombineHarvester::WriteDatacard(std::string const& name,
   // Allow a non-open ROOT file if this is purely a counting experiment
   if (!root_file.IsOpen() && !is_counting) {
     throw std::runtime_error(FNERROR(
-        std::string("Output ROOT file is not open: ") + root_file.GetName()));
+                               std::string("Output ROOT file is not open: ") + root_file.GetName()));
   }
 
   std::unique_ptr<std::ostream> txt_file_ptr = nullptr;
@@ -824,17 +824,17 @@ void CombineHarvester::WriteDatacard(std::string const& name,
   std::set<std::string> sys_set;
   std::set<std::string> param_set;
   std::set<std::string> rateparam_set;
-  this->ForEachSyst([&](ch::Systematic const* sys) {
+  this->ForEachSyst([&](ch::Systematic const * sys) {
     if (sys->type() == "rateParam") {
       rateparam_set.insert(sys->name());
     }
-    else if (sys->type() == "param"){
+    else if (sys->type() == "param") {
       param_set.insert(sys->name());
     }
     else sys_set.insert(sys->name());
   });
   txt_file << "imax    " << bin_set.size()
-            << " number of bins\n";
+           << " number of bins\n";
   txt_file << "jmax    " << proc_set.size() - 1
            << " number of processes minus 1\n";
   txt_file << "kmax    " << "*" << " number of nuisance parameters\n";
@@ -886,10 +886,10 @@ void CombineHarvester::WriteDatacard(std::string const& name,
           proc->pdf()->InheritsFrom("RooMultiPdf")) {
         multipdf_cats.insert(par_list_var->GetName());
       }
-    
-}
+
+    }
     if (proc->norm()) {
-      for (RooAbsArg *nm_list_var: norm_par_list) {
+      for (RooAbsArg *nm_list_var : norm_par_list) {
         if (dynamic_cast<RooRealVar*>(nm_list_var)) {
           all_dependents_pars.insert(nm_list_var->GetName());
         }
@@ -903,10 +903,10 @@ void CombineHarvester::WriteDatacard(std::string const& name,
   // NOTE: was using canonical here instead of absolute, but not
   // supported in boost 1.47
   boost::filesystem::path root_file_path =
-      boost::filesystem::absolute(file_name);
+    boost::filesystem::absolute(file_name);
   // Get the full path to the directory containing the txt file
   boost::filesystem::path txt_file_path =
-      boost::filesystem::absolute(name).parent_path();
+    boost::filesystem::absolute(name).parent_path();
   // Compute the relative path from the txt file to the root file
   file_name = make_relative(txt_file_path, root_file_path).string();
 
@@ -917,11 +917,11 @@ void CombineHarvester::WriteDatacard(std::string const& name,
   for (auto const& mapping : mappings) {
     if (!mapping.is_fake) {
       txt_file << format("shapes %s %s %s %s %s\n")
-        % mapping.process
-        % mapping.category
-        % file_name
-        % mapping.pattern
-        % mapping.syst_pattern;
+               % mapping.process
+               % mapping.category
+               % file_name
+               % mapping.pattern
+               % mapping.syst_pattern;
       if (mapping.IsPdf() || mapping.IsData()) {
         used_wsps.insert(mapping.WorkspaceName());
         if (mapping.syst_pattern != "") {
@@ -930,9 +930,9 @@ void CombineHarvester::WriteDatacard(std::string const& name,
       }
     } else {
       txt_file << format("shapes %s %s %s\n")
-        % mapping.process
-        % mapping.category
-        % "FAKE";
+               % mapping.process
+               % mapping.category
+               % "FAKE";
     }
   }
   txt_file << dashes << "\n";
@@ -971,9 +971,9 @@ void CombineHarvester::WriteDatacard(std::string const& name,
     std::string obs_fmt_flt = "%-15.4f ";
     for (auto const& obs : obs_) {
       bool is_float =
-          std::fabs(obs->rate() - std::round(obs->rate())) > 1E-4;
+        std::fabs(obs->rate() - std::round(obs->rate())) > 1E-4;
       txt_file << format(is_float ? obs_fmt_flt : obs_fmt_int)
-          % obs->rate();
+               % obs->rate();
     }
     txt_file << "\n";
     txt_file << dashes << "\n";
@@ -987,16 +987,16 @@ void CombineHarvester::WriteDatacard(std::string const& name,
     if (sys.length() > sys_str_len) sys_str_len = sys.length();
   }
   std::string sys_str_short = boost::lexical_cast<std::string>(sys_str_len);
-  std::string sys_str_long = boost::lexical_cast<std::string>(sys_str_len+9);
+  std::string sys_str_long = boost::lexical_cast<std::string>(sys_str_len + 9);
 
-  auto getProcLen = [](auto const& proc) -> std::string {
+  auto getProcLen = [](auto const & proc) -> std::string {
     std::size_t proc_len = 15;
     proc_len = std::max(proc_len, proc->process().size());
     std::string proc_len_str = boost::lexical_cast<std::string>(proc_len);
     return proc_len_str;
   };
 
-  txt_file << format("%-"+sys_str_long+"s") % "bin";
+  txt_file << format("%-" + sys_str_long + "s") % "bin";
   for (auto const& proc : procs_) {
     if (proc->shape()) {
       bool add_dir = TH1::AddDirectoryStatus();
@@ -1006,18 +1006,18 @@ void CombineHarvester::WriteDatacard(std::string const& name,
                       proc->process(), proc->mass(), "", 0);
       TH1::AddDirectory(add_dir);
     }
-    txt_file << format("%-"+getProcLen(proc)+"s ") % proc->bin();
+    txt_file << format("%-" + getProcLen(proc) + "s ") % proc->bin();
   }
   txt_file << "\n";
 
-  txt_file << format("%-"+sys_str_long+"s") % "process";
+  txt_file << format("%-" + sys_str_long + "s") % "process";
 
   for (auto const& proc : procs_) {
-    txt_file << format("%-"+getProcLen(proc)+"s ") % proc->process();
+    txt_file << format("%-" + getProcLen(proc) + "s ") % proc->process();
   }
   txt_file << "\n";
 
-  txt_file << format("%-"+sys_str_long+"s") % "process";
+  txt_file << format("%-" + sys_str_long + "s") % "process";
 
   // Setup process_ids first
   std::map<std::string, int> p_ids;
@@ -1047,14 +1047,14 @@ void CombineHarvester::WriteDatacard(std::string const& name,
     }
   }
   for (auto const& proc : procs_) {
-    txt_file << format("%-"+getProcLen(proc)+"s ") % p_ids[proc->process()];
+    txt_file << format("%-" + getProcLen(proc) + "s ") % p_ids[proc->process()];
   }
   txt_file << "\n";
 
 
-  txt_file << format("%-"+sys_str_long+"s") % "rate";
+  txt_file << format("%-" + sys_str_long + "s") % "rate";
   for (auto const& proc : procs_) {
-    txt_file << format("%-"+getProcLen(proc)+".6g ") % proc->no_norm_rate();
+    txt_file << format("%-" + getProcLen(proc) + ".6g ") % proc->no_norm_rate();
   }
   txt_file << "\n";
   txt_file << dashes << "\n";
@@ -1066,7 +1066,7 @@ void CombineHarvester::WriteDatacard(std::string const& name,
     if (p->err_d() != 0.0 && p->err_u() != 0.0 &&
         all_dependents_pars.count(p->name()) && sys_set.count(p->name())) {
       txt_file << format((format("%%-%is param %%g %%g") % sys_str_len).str()) %
-                      p->name() % p->val() % ((p->err_u() - p->err_d()) / 2.0);
+               p->name() % p->val() % ((p->err_u() - p->err_d()) / 2.0);
       if (p->range_d() != std::numeric_limits<double>::lowest() &&
           p->range_u() != std::numeric_limits<double>::max()) {
         txt_file << format(" [%.4g,%.4g]") % p->range_d() % p->range_u();
@@ -1081,7 +1081,7 @@ void CombineHarvester::WriteDatacard(std::string const& name,
     if (p->err_d() != 0.0 && p->err_u() != 0.0 &&
         param_set.count(p->name()) && !sys_set.count(p->name())) {
       txt_file << format((format("%%-%is param %%g %%g") % sys_str_len).str()) %
-                      p->name() % p->val() % ((p->err_u() - p->err_d()) / 2.0);
+               p->name() % p->val() % ((p->err_u() - p->err_d()) / 2.0);
       if (p->range_d() != std::numeric_limits<double>::lowest() &&
           p->range_u() != std::numeric_limits<double>::max()) {
         txt_file << format(" [%.4g,%.4g]") % p->range_d() % p->range_u();
@@ -1094,7 +1094,7 @@ void CombineHarvester::WriteDatacard(std::string const& name,
   for (auto syst : systs_) {
     if (syst->type() == "param" && param_set.count(syst->name()) && rateparam_set.count(syst->name())) {
       txt_file << format((format("%%-%is param %%s") % sys_str_len).str()) %
-                      syst->name() % syst->param_str_ext();
+               syst->name() % syst->param_str_ext();
       txt_file << "\n";
     }
   }
@@ -1119,9 +1119,9 @@ void CombineHarvester::WriteDatacard(std::string const& name,
           if (tp == "lnN") seen_lnN = true;
           if (tp == "lnU") seen_lnU = true;
           line[p + 2] =
-              ptr->asymm()
-                  ? (format("%g/%g") % ptr->value_d() % ptr->value_u()).str()
-                  : (format("%g") % ptr->value_u()).str();
+            ptr->asymm()
+            ? (format("%g/%g") % ptr->value_d() % ptr->value_u()).str()
+            : (format("%g") % ptr->value_u()).str();
           break;
         }
         if (tp == "shape" || tp == "shapeN2" || tp == "shapeU") {
@@ -1147,7 +1147,7 @@ void CombineHarvester::WriteDatacard(std::string const& name,
             if (!flags_.at("allow-missing-shapes")) {
               std::stringstream err;
               err << "Trying to write shape uncertainty with missing "
-                     "shapes:\n";
+                  "shapes:\n";
               err << Systematic::PrintHeader << *ptr;
               throw std::runtime_error(FNERROR(err.str()));
             }
@@ -1172,7 +1172,7 @@ void CombineHarvester::WriteDatacard(std::string const& name,
     }
     txt_file << format("%-" + sys_str_short + "s %-7s ") % line[0] % line[1];
     for (unsigned p = 0; p < procs_.size(); ++p) {
-      txt_file << format("%-"+getProcLen(procs_[p])+"s ") % line[p + 2];
+      txt_file << format("%-" + getProcLen(procs_[p]) + "s ") % line[p + 2];
     }
     txt_file << "\n";
   }
@@ -1185,13 +1185,13 @@ void CombineHarvester::WriteDatacard(std::string const& name,
   for (auto const& sys : rateparam_set) {
     FNLOGC(log(), verbosity_ > 1) << "Doing rateParam: " << sys << "\n";
     auto procs_rp = ch_rp.cp().syst_name({sys}).SetFromSysts(
-        std::mem_fn(&ch::Systematic::process));
+                      std::mem_fn(&ch::Systematic::process));
     FNLOGC(log(), verbosity_ > 1) << "Procs for this rateParam: \n";
     for (auto const& proc : procs_rp) {
       FNLOGC(log(), verbosity_ > 1) << "  - " << proc << "\n";
       // Get the set of bins
       auto bins_rp = ch_rp.cp().process({proc}).syst_name({sys}).SetFromSysts(
-          std::mem_fn(&ch::Systematic::bin));
+                       std::mem_fn(&ch::Systematic::bin));
       auto bins_all = this->cp().process({proc}).bin_set();
       if (bins_rp.size() > 0 && bins_rp.size() == bins_all.size()) {
         floating_params.push_back({sys, "*", proc});
@@ -1210,7 +1210,7 @@ void CombineHarvester::WriteDatacard(std::string const& name,
     if (params_.count(rp[0])) {
       ch::Parameter const* par = params_.at(rp[0]).get();
       txt_file << format("%-" + sys_str_short + "s %-10s %-10s %-10s %g") %
-                      rp[0] % "rateParam" % rp[1] % rp[2] % par->val();
+               rp[0] % "rateParam" % rp[1] % rp[2] % par->val();
       // Check if we have to set the range too
       // TODO: should package this into some function in ch::Parameter
       if (par->range_d() != std::numeric_limits<double>::lowest() &&
@@ -1236,11 +1236,11 @@ void CombineHarvester::WriteDatacard(std::string const& name,
       if (arg->getStringAttribute("wspSource")) {
         txt_file << format("%-" + sys_str_short +
                            "s %-10s %-10s %-10s %-20s\n") %
-                        rp[0] % "rateParam" % rp[1] % rp[2] % std::string(arg->getStringAttribute("wspSource"));
+                 rp[0] % "rateParam" % rp[1] % rp[2] % std::string(arg->getStringAttribute("wspSource"));
         continue;
       }
       RooFormulaVar* form =
-          dynamic_cast<RooFormulaVar*>(arg);
+        dynamic_cast<RooFormulaVar*>(arg);
       // Want to extract the formula string, apparently "printMetaArgs" is the
       // only way to do it
       std::stringstream ss;
@@ -1253,18 +1253,18 @@ void CombineHarvester::WriteDatacard(std::string const& name,
       form_str = form_str.substr(first + 1, last - first - 1);
       // unique_ptr because we own the RooArgSet that is generated
       unsigned npars =
-          std::unique_ptr<RooArgSet>(form->getParameters(RooArgList()))->getSize();
+        std::unique_ptr<RooArgSet>(form->getParameters(RooArgList()))->getSize();
       std::string args = "";
       for (unsigned i = 0; i < npars; ++i) {
         all_fn_param_args.insert(std::string(form->getParameter(i)->GetName()));
         args += std::string(form->getParameter(i)->GetName());
-        if (i < (npars-1)) {
+        if (i < (npars - 1)) {
           args += ",";
         }
       }
       txt_file << format("%-" + sys_str_short +
                          "s %-10s %-10s %-10s %-20s %s\n") %
-                      rp[0] % "rateParam" % rp[1] % rp[2] % form_str % args;
+               rp[0] % "rateParam" % rp[1] % rp[2] % form_str % args;
     }
   }
 
@@ -1281,13 +1281,13 @@ void CombineHarvester::WriteDatacard(std::string const& name,
           y->setStringAttribute("wspSource", (std::string(root_file.GetName()) + ":" + tokens[1]).c_str());
           txt_file << format("%-" + sys_str_short +
                              "s %-10s %-20s\n") %
-                          y->GetName() % "extArg"  % std::string(y->getStringAttribute("wspSource"));
-          
+                   y->GetName() % "extArg"  % std::string(y->getStringAttribute("wspSource"));
+
         }
-        else{
+        else {
           Parameter const* p = params_.at(y->GetName()).get();
           txt_file << format("%-" + sys_str_short + "s %-10s %g") %
-                          y->GetName() % "extArg" % p->val();
+                   y->GetName() % "extArg" % p->val();
           if (p->range_d() != std::numeric_limits<double>::lowest() &&
               p->range_u() != std::numeric_limits<double>::max()) {
             txt_file << format(" [%.4g,%.4g]") % p->range_d() % p->range_u();
@@ -1296,16 +1296,16 @@ void CombineHarvester::WriteDatacard(std::string const& name,
         }
 
       }
-      
+
     }
     RooArgSet funcs = rp_ws->allFunctions();
-    for (RooAbsArg *v : funcs){
+    for (RooAbsArg *v : funcs) {
       RooAbsReal *y = dynamic_cast<RooAbsReal*>(v);
       if (y && y->getAttribute("extArg") && y->getStringAttribute("wspSource") && all_fn_param_args.count(std::string(y->GetName()))) {
-          txt_file << format("%-" + sys_str_short +
-                             "s %-10s %-20s\n") %
-                          y->GetName() % "extArg"  % std::string(y->getStringAttribute("wspSource"));
-          continue;
+        txt_file << format("%-" + sys_str_short +
+                           "s %-10s %-20s\n") %
+                 y->GetName() % "extArg"  % std::string(y->getStringAttribute("wspSource"));
+        continue;
 
       }
     }
@@ -1333,7 +1333,7 @@ void CombineHarvester::WriteDatacard(std::string const& name,
     if (p->err_d() != 0.0 && p->err_u() != 0.0 &&
         all_dependents_pars.count(p->name()) && !sys_set.count(p->name()) && !param_set.count(p->name())) {
       txt_file << format((format("%%-%is param %%g %%g") % sys_str_len).str()) %
-                      p->name() % p->val() % ((p->err_u() - p->err_d()) / 2.0);
+               p->name() % p->val() % ((p->err_u() - p->err_d()) / 2.0);
       if (p->range_d() != std::numeric_limits<double>::lowest() &&
           p->range_u() != std::numeric_limits<double>::max()) {
         txt_file << format(" [%.4g,%.4g]") % p->range_d() % p->range_u();
@@ -1349,9 +1349,9 @@ void CombineHarvester::WriteDatacard(std::string const& name,
   for (auto stat_settings : auto_stats_settings_) {
     if (!bin_set.count(stat_settings.first)) continue;
     txt_file << format("%s autoMCStats %g %i %i\n") % stat_settings.first %
-                    stat_settings.second.event_threshold %
-                    stat_settings.second.include_signal %
-                    stat_settings.second.hist_mode;
+             stat_settings.second.event_threshold %
+             stat_settings.second.include_signal %
+             stat_settings.second.hist_mode;
   }
 
   // Finally write the NP groups
@@ -1386,26 +1386,26 @@ void CombineHarvester::WriteDatacard(std::string const& name,
 }
 
 void CombineHarvester::WriteHistToFile(
-    TH1 * hist,
-    TFile * file,
-    std::vector<HistMapping> const& mappings,
-    std::string const& bin,
-    std::string const& process,
-    std::string const& mass,
-    std::string const& nuisance,
-    unsigned type) {
+  TH1 * hist,
+  TFile * file,
+  std::vector<HistMapping> const& mappings,
+  std::string const& bin,
+  std::string const& process,
+  std::string const& mass,
+  std::string const& nuisance,
+  unsigned type) {
   StrPairVec attempts = this->GenerateShapeMapAttempts(process, bin);
   for (unsigned a = 0; a < attempts.size(); ++a) {
     for (unsigned m = 0; m < mappings.size(); ++m) {
       if ((attempts[a].first == mappings[m].process) &&
-        (attempts[a].second == mappings[m].category)) {
+          (attempts[a].second == mappings[m].category)) {
         std::string p = (type == 0 ?
-            mappings[m].pattern : mappings[m].syst_pattern);
+                         mappings[m].pattern : mappings[m].syst_pattern);
         boost::replace_all(p, "$CHANNEL", bin);
         boost::replace_all(p, "$PROCESS", process);
         boost::replace_all(p, "$MASS", mass);
-        if (type == 1) boost::replace_all(p, "$SYSTEMATIC", nuisance+"Down");
-        if (type == 2) boost::replace_all(p, "$SYSTEMATIC", nuisance+"Up");
+        if (type == 1) boost::replace_all(p, "$SYSTEMATIC", nuisance + "Down");
+        if (type == 2) boost::replace_all(p, "$SYSTEMATIC", nuisance + "Up");
         WriteToTFile(hist, file, p);
         return;
       }

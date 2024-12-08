@@ -21,6 +21,7 @@
 <bin file="SMLegacyExample.cpp" name="SMLegacyExample"></bin>
 <bin file="SOBPlot.cpp" name="SOBPlot"></bin>
 <bin file="YieldTable.cpp" name="YieldTable"></bin>
+<bin file="ChronoSpectra.cpp" name="ChronoSpectra"></bin>
 <bin file="hzz4l.cpp" name="hzz4l"></bin>
 <use name="root"/>
 <use name="rootmath"/>

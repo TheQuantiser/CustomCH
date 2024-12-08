@@ -24,7 +24,7 @@ RooArgSet ParametersByName(RooAbsReal const* pdf, RooArgSet const* dat_vars) {
   std::set<std::string> names;
   RooFIter dat_it = dat_vars->fwdIterator();
   RooAbsArg *dat_arg = nullptr;
-  while((dat_arg = dat_it.next())) {
+  while ((dat_arg = dat_it.next())) {
     names.insert(dat_arg->GetName());
   }
 
@@ -32,7 +32,7 @@ RooArgSet ParametersByName(RooAbsReal const* pdf, RooArgSet const* dat_vars) {
   RooArgSet result_set;
   RooFIter vars_it = all_vars->fwdIterator();
   RooAbsArg *vars_arg = nullptr;
-  while((vars_arg = vars_it.next())) {
+  while ((vars_arg = vars_it.next())) {
     if (!names.count(vars_arg->GetName())) {
       result_set.add(*vars_arg);
     }
@@ -48,7 +48,7 @@ std::vector<ch::Parameter> ExtractFitParameters(RooFitResult const& res) {
   params.resize(res.floatParsFinal().getSize());
   for (int i = 0; i < res.floatParsFinal().getSize(); ++i) {
     RooRealVar const* var =
-        dynamic_cast<RooRealVar const*>(res.floatParsFinal().at(i));
+      dynamic_cast<RooRealVar const*>(res.floatParsFinal().at(i));
     params[i].set_name(std::string(var->GetName()));
     params[i].set_val(var->getVal());
     params[i].set_err_d(var->getErrorLo());
@@ -58,7 +58,7 @@ std::vector<ch::Parameter> ExtractFitParameters(RooFitResult const& res) {
 }
 
 std::vector<ch::Parameter> ExtractSampledFitParameters(
-    RooFitResult const& res) {
+  RooFitResult const& res) {
   std::vector<ch::Parameter> params;
   params.resize(res.floatParsFinal().getSize());
   RooArgList const& rands = res.randomizePars();
@@ -76,7 +76,7 @@ std::vector<ch::Parameter> ExtractSampledFitParameters(
 // Property matching & editing
 // ---------------------------------------------------------------------------
 void SetStandardBinNames(CombineHarvester& cb, std::string const& pattern) {
-  cb.ForEachObj([&](ch::Object* obj) {
+  cb.ForEachObj([&](ch::Object * obj) {
     ch::SetStandardBinName(obj, pattern);
   });
 }
@@ -142,7 +142,7 @@ TGraph TGraphFromTable(std::string filename, std::string const& x_column, std::s
       continue;
     }
     res.SetPoint(i, boost::lexical_cast<double>(words.at(x_col)),
-                    boost::lexical_cast<double>(words.at(y_col)));
+                 boost::lexical_cast<double>(words.at(y_col)));
   }
   return res;
 }
@@ -151,7 +151,7 @@ TGraph TGraphFromTable(std::string filename, std::string const& x_column, std::s
 // Misc
 // ---------------------------------------------------------------------------
 std::vector<std::string> JoinStr(
-    std::vector<std::vector<std::string>> const& in) {
+  std::vector<std::vector<std::string>> const& in) {
   return Join<std::string>(in);
 }
 
@@ -181,7 +181,7 @@ TH1F RebinHist(TH1F const& hist) {
 TH1F RestoreBinning(TH1F const& src, TH1F const& ref) {
   TH1F res = ref;
   res.Reset();
-  for (int x = 1; x <= res.GetNbinsX(); ++x) {
+  for (int x = 0; x <= res.GetNbinsX() + 1; ++x) {
     res.SetBinContent(x, src.GetBinContent(x));
     res.SetBinError(x, src.GetBinError(x));
   }
@@ -189,7 +189,7 @@ TH1F RestoreBinning(TH1F const& src, TH1F const& ref) {
 }
 
 std::vector<std::vector<unsigned>> GenerateCombinations(
-    std::vector<unsigned> vec) {
+std::vector<unsigned> vec) {
   unsigned n = vec.size();
   std::vector<unsigned> idx(n, 0);
   std::vector<std::vector<unsigned>> result;
@@ -228,7 +228,7 @@ std::vector<std::string> ParseFileLines(std::string const& file_name) {
   file.open(file_name.c_str());
   if (!file.is_open()) {
     throw std::runtime_error(
-        FNERROR("File " + file_name + " could not be opened"));
+      FNERROR("File " + file_name + " could not be opened"));
   }
   std::string line = "";
   while (std::getline(file, line)) {  // while loop through lines
@@ -247,7 +247,7 @@ bool is_float(std::string const& str) {
 }
 
 std::vector<std::string> MassesFromRange(std::string const& input,
-                                         std::string const& fmt) {
+    std::string const& fmt) {
   std::set<double> mass_set;
   std::vector<std::string> tokens;
   boost::split(tokens, input, boost::is_any_of(","));
@@ -263,7 +263,7 @@ std::vector<std::string> MassesFromRange(std::string const& input,
       double step = boost::lexical_cast<double>(sub_tokens[2]);
       if (hi <= lo)
         throw std::runtime_error(
-            "[MassesFromRange] High mass is smaller than low mass!");
+          "[MassesFromRange] High mass is smaller than low mass!");
       double start = lo;
       while (start < hi + 0.001) {
         mass_set.insert(start);
@@ -295,7 +295,7 @@ std::vector<std::string> ValsFromRange(std::string const& input,
       double step = boost::lexical_cast<double>(sub_tokens[2]);
       if (hi <= lo)
         throw std::runtime_error(
-            "[ValsFromRange] High mass is smaller than low mass!");
+          "[ValsFromRange] High mass is smaller than low mass!");
       double start = lo;
       while (start < hi + 1E-4) {
         mass_set.insert(start);
@@ -316,7 +316,7 @@ boost::filesystem::path make_relative(boost::filesystem::path p_from,
   p_to = boost::filesystem::absolute(p_to);
   boost::filesystem::path ret;
   boost::filesystem::path::const_iterator itrFrom(p_from.begin()),
-      itrTo(p_to.begin());
+        itrTo(p_to.begin());
   // Find common base
   for (boost::filesystem::path::const_iterator toEnd(p_to.end()),
        fromEnd(p_from.end());

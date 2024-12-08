@@ -9,55 +9,55 @@ auto format_syst(const ch::Systematic& val) {
   std::string value_fmt;
   if (val.asymm()) {
     value_fmt = (boost::format("%.4g/%.4g")
-      % val.value_d() % val.value_u()).str();
+                 % val.value_d() % val.value_u()).str();
   } else {
     value_fmt = (boost::format("%.4g") % val.value_u()).str();
   }
   return boost::format("%-6s %-9s %-6s %-8s %-28s %-3i"
-    " %-16s %-4i %-45s %-8s %-13s %-4i %-4i")
-  % val.mass()
-  % val.analysis()
-  % val.era()
-  % val.channel()
-  % val.bin()
-  % val.bin_id()
-  % val.process()
-  % val.signal()
-  % val.name()
-  % val.type()
-  % value_fmt
-  % (bool(val.shape_d()) || bool(val.data_d()) || bool(val.pdf_d()))
-  % (bool(val.shape_u()) || bool(val.data_u()) || bool(val.pdf_u()));
+                       " %-16s %-4i %-45s %-8s %-13s %-4i %-4i")
+         % val.mass()
+         % val.analysis()
+         % val.era()
+         % val.channel()
+         % val.bin()
+         % val.bin_id()
+         % val.process()
+         % val.signal()
+         % val.name()
+         % val.type()
+         % value_fmt
+         % (bool(val.shape_d()) || bool(val.data_d()) || bool(val.pdf_d()))
+         % (bool(val.shape_u()) || bool(val.data_u()) || bool(val.pdf_u()));
 }
 }
 
 namespace ch {
 
 Systematic::Systematic()
-    : Object(),
-      name_(""),
-      type_(""),
-      value_u_(0.0),
-      value_d_(0.0),
-      scale_(1.0),
-      asymm_(false),
-      shape_u_(),
-      shape_d_(),
-      pdf_u_(nullptr),
-      pdf_d_(nullptr),
-      data_u_(nullptr),
-      data_d_(nullptr) {
-  }
+  : Object(),
+    name_(""),
+    type_(""),
+    value_u_(0.0),
+    value_d_(0.0),
+    scale_(1.0),
+    asymm_(false),
+    shape_u_(),
+    shape_d_(),
+    pdf_u_(nullptr),
+    pdf_d_(nullptr),
+    data_u_(nullptr),
+    data_d_(nullptr) {
+}
 
 Systematic::~Systematic() { }
 
-void Systematic::set_name(std::string const& name) { 
+void Systematic::set_name(std::string const& name) {
 //test = std::regex_replace(test, std::regex("def"), "klm");
-    if (data_u_) data_u_->SetName(std::regex_replace(data_u_->GetName(),std::regex(name_),name).c_str());
-    if (data_d_) data_d_->SetName(std::regex_replace(data_d_->GetName(),std::regex(name_),name).c_str());
-    if (pdf_u_) pdf_u_->SetName(std::regex_replace(pdf_u_->GetName(),std::regex(name_),name).c_str());
-    if (pdf_d_) pdf_d_->SetName(std::regex_replace(pdf_d_->GetName(),std::regex(name_),name).c_str());
-    name_ = name; 
+  if (data_u_) data_u_->SetName(std::regex_replace(data_u_->GetName(), std::regex(name_), name).c_str());
+  if (data_d_) data_d_->SetName(std::regex_replace(data_d_->GetName(), std::regex(name_), name).c_str());
+  if (pdf_u_) pdf_u_->SetName(std::regex_replace(pdf_u_->GetName(), std::regex(name_), name).c_str());
+  if (pdf_d_) pdf_d_->SetName(std::regex_replace(pdf_d_->GetName(), std::regex(name_), name).c_str());
+  name_ = name;
 }
 
 void swap(Systematic& first, Systematic& second) {
@@ -78,17 +78,17 @@ void swap(Systematic& first, Systematic& second) {
 }
 
 Systematic::Systematic(Systematic const& other)
-    : Object(other),
-      name_(other.name_),
-      type_(other.type_),
-      value_u_(other.value_u_),
-      value_d_(other.value_d_),
-      scale_(other.scale_),
-      asymm_(other.asymm_),
-      pdf_u_(other.pdf_u_),
-      pdf_d_(other.pdf_d_),
-      data_u_(other.data_u_),
-      data_d_(other.data_d_) {
+  : Object(other),
+    name_(other.name_),
+    type_(other.type_),
+    value_u_(other.value_u_),
+    value_d_(other.value_d_),
+    scale_(other.scale_),
+    asymm_(other.asymm_),
+    pdf_u_(other.pdf_u_),
+    pdf_d_(other.pdf_d_),
+    data_u_(other.data_u_),
+    data_d_(other.data_d_) {
   TH1 *h_u = nullptr;
   if (other.shape_u_) {
     h_u = dynamic_cast<TH1*>(other.shape_u_->Clone());
@@ -104,19 +104,19 @@ Systematic::Systematic(Systematic const& other)
 }
 
 Systematic::Systematic(Systematic&& other)
-    : Object(),
-      name_(""),
-      type_(""),
-      value_u_(0.0),
-      value_d_(0.0),
-      scale_(1.0),
-      asymm_(false),
-      shape_u_(),
-      shape_d_(),
-      pdf_u_(nullptr),
-      pdf_d_(nullptr),
-      data_u_(nullptr),
-      data_d_(nullptr) {
+  : Object(),
+    name_(""),
+    type_(""),
+    value_u_(0.0),
+    value_d_(0.0),
+    scale_(1.0),
+    asymm_(false),
+    shape_u_(),
+    shape_d_(),
+    pdf_u_(nullptr),
+    pdf_d_(nullptr),
+    data_u_(nullptr),
+    data_d_(nullptr) {
   swap(*this, other);
 }
 
@@ -130,7 +130,7 @@ void Systematic::set_shapes(std::unique_ptr<TH1> shape_u,
   // Check that the inputs make sense
   if (bool(shape_u) != bool(shape_d)) {
     throw std::runtime_error(
-        "shape_u and shape_d must be either both valid or both null");
+      "shape_u and shape_d must be either both valid or both null");
   }
   if (!shape_u && !shape_d) {
     shape_u_ = nullptr;
@@ -192,7 +192,7 @@ void Systematic::set_data(RooDataHist* data_u, RooDataHist* data_d,
 }
 
 void Systematic::set_pdf(RooAbsReal* pdf_u, RooAbsReal* pdf_d,
-                          RooAbsReal const* nominal) {
+                         RooAbsReal const* nominal) {
   pdf_u_ = pdf_u;
   pdf_d_ = pdf_d;
 }
@@ -225,8 +225,8 @@ TH1F Systematic::ShapeUAsTH1F() const {
     } else {
       throw std::runtime_error(FNERROR("TH1 shape is not a TH1F or a TH1D"));
     }
-  }  
- return res;
+  }
+  return res;
 }
 
 TH1F Systematic::ShapeDAsTH1F() const {
@@ -243,17 +243,17 @@ TH1F Systematic::ShapeDAsTH1F() const {
     } else {
       throw std::runtime_error(FNERROR("TH1 shape is not a TH1F or a TH1D"));
     }
-  }  
- return res;
+  }
+  return res;
 }
 
 
 std::ostream& Systematic::PrintHeader(std::ostream &out) {
   std::string line =
-   (boost::format("%-6s %-9s %-6s %-8s %-28s %-3i"
-    " %-16s %-4i %-45s %-8s %-13s %-4i %-4i")
-    % "mass" % "analysis" % "era" % "channel" % "bin" % "id" % "process" % "sig"
-    % "nuisance" % "type" % "value" % "sh_d" % "sh_u").str();
+    (boost::format("%-6s %-9s %-6s %-8s %-28s %-3i"
+                   " %-16s %-4i %-45s %-8s %-13s %-4i %-4i")
+     % "mass" % "analysis" % "era" % "channel" % "bin" % "id" % "process" % "sig"
+     % "nuisance" % "type" % "value" % "sh_d" % "sh_u").str();
   std::string div(line.length(), '-');
   out << div  << "\n";
   out << line << "\n";
@@ -271,12 +271,12 @@ std::ostream& operator<< (std::ostream &out, Systematic const& val) {
 }
 
 void Systematic::SwapUpAndDown() {
-  if (not asymm()) 
-      value_u_=1./value_u_;
-  else{
-      double tmp = value_u_;
-      value_u_ = value_d_;
-      value_d_ = tmp;
+  if (not asymm())
+    value_u_ = 1. / value_u_;
+  else {
+    double tmp = value_u_;
+    value_u_ = value_d_;
+    value_d_ = tmp;
   }
   shape_u_.swap(shape_d_);
 }

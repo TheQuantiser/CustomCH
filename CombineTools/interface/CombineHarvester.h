@@ -28,7 +28,7 @@ namespace ch {
 typedef std::vector<std::pair<int, std::string>> Categories;
 
 class CombineHarvester {
- public:
+public:
   /**
    * \name Constructors, destructors and copying
    *
@@ -107,13 +107,13 @@ class CombineHarvester {
    */
   /**@{*/
   int ParseDatacard(std::string const& filename,
-      std::string const& analysis,
-      std::string const& era,
-      std::string const& channel,
-      int bin_id,
-      std::string const& mass);
+                    std::string const& analysis,
+                    std::string const& era,
+                    std::string const& channel,
+                    int bin_id,
+                    std::string const& mass);
   int ParseDatacard(std::string const& filename,
-      std::string parse_rule = "");
+                    std::string parse_rule = "");
 
   void WriteDatacard(std::string const& name, std::string const& root_file);
   void WriteDatacard(std::string const& name, TFile & root_file);
@@ -145,10 +145,11 @@ class CombineHarvester {
   CombineHarvester& era(std::vector<std::string> const& vec, bool cond = true);
   CombineHarvester& channel(std::vector<std::string> const& vec, bool cond = true);
   CombineHarvester& mass(std::vector<std::string> const& vec, bool cond = true);
-  CombineHarvester& attr(std::vector<std::string> const& vec,std::string attr_label, bool cond = true);
+  CombineHarvester& attr(std::vector<std::string> const& vec, std::string attr_label, bool cond = true);
   CombineHarvester& syst_name(std::vector<std::string> const& vec, bool cond = true);
   CombineHarvester& syst_type(std::vector<std::string> const& vec, bool cond = true);
 
+  CombineHarvester& bin_rgx(std::vector<std::string> const& vec, bool cond = true);
   CombineHarvester& process_rgx(std::vector<std::string> const& vec, bool cond = true);
 
   CombineHarvester& signals();
@@ -191,7 +192,7 @@ class CombineHarvester {
    *
    * This method will loop through all ch::Observation, ch::Process and
    * ch::Systematic entries and call the user-supplied function `func`. The
-   * return value is then inserted into the set. 
+   * return value is then inserted into the set.
    *
    * @tparam T A function (or other callable) that must have a single
    * `ch::Object const*` argument.
@@ -201,7 +202,7 @@ class CombineHarvester {
    */
   template <typename T,
             typename R = typename std::decay<
-                typename std::result_of<T(Object const*)>::type>::type>
+              typename std::result_of<T(Object const*)>::type>::type>
   std::set<R> SetFromAll(T func);
 
   /**
@@ -211,7 +212,7 @@ class CombineHarvester {
    */
   template <typename T,
             typename R = typename std::decay<
-                typename std::result_of<T(Observation const*)>::type>::type>
+              typename std::result_of<T(Observation const*)>::type>::type>
   std::set<R> SetFromObs(T func);
 
   /**
@@ -221,7 +222,7 @@ class CombineHarvester {
    */
   template <typename T,
             typename R = typename std::decay<
-                typename std::result_of<T(Process const*)>::type>::type>
+              typename std::result_of<T(Process const*)>::type>::type>
   std::set<R> SetFromProcs(T func);
 
   /**
@@ -231,7 +232,7 @@ class CombineHarvester {
    */
   template <typename T,
             typename R = typename std::decay<
-                typename std::result_of<T(Systematic const*)>::type>::type>
+              typename std::result_of<T(Systematic const*)>::type>::type>
   std::set<R> SetFromSysts(T func);
   /**@}*/
 
@@ -277,10 +278,10 @@ class CombineHarvester {
   void ZeroBins(double min, double max);
   void SetPdfBins(unsigned nbins);
 
-  // 
+  //
   double getParFromWs(const std::string name);
-  void setParInWs(const std::string name,double value) ;
-  void renameParInWs(const std::string& name, const std::string& newName,const std::string& wsName="");
+  void setParInWs(const std::string name, double value) ;
+  void renameParInWs(const std::string& name, const std::string& newName, const std::string& wsName = "");
 
   /**
    * Add parameters to a given group
@@ -369,6 +370,8 @@ class CombineHarvester {
 
   TH2F GetRateCovariance(RooFitResult const& fit, unsigned n_samples);
   TH2F GetRateCorrelation(RooFitResult const& fit, unsigned n_samples);
+
+  TH2F GetHistogramBinCorrelation(RooFitResult const& fit, unsigned n_samples);
   /**@}*/
 
   /**
@@ -430,7 +433,7 @@ class CombineHarvester {
 
   /**
    * Rename a systematic from 'old_name' to 'new_name' and add a parameter
-   * 'new_name' to CH instance 'target' if that parameter doesn't exist yet. 
+   * 'new_name' to CH instance 'target' if that parameter doesn't exist yet.
    * Usage similar to AddSyst()
    */
   void RenameSystematic(CombineHarvester& target, std::string const& old_name, std::string const& new_name);
@@ -464,12 +467,12 @@ class CombineHarvester {
   void MergeBinErrors(double bbb_threshold, double merge_threshold);
   /**@}*/
 
-  void SetAutoMCStats(CombineHarvester &target, double thresh, bool sig=false, int mode=1);
+  void SetAutoMCStats(CombineHarvester &target, double thresh, bool sig = false, int mode = 1);
   void RenameAutoMCStatsBin(std::string const& oldname, std::string const& newname);
   std::set<std::string> GetAutoMCStatsBins() const;
 
   void AddExtArgValue(std::string const& name, double const& value);
- private:
+private:
   friend void swap(CombineHarvester& first, CombineHarvester& second);
 
   // ---------------------------------------------------------------
@@ -488,7 +491,7 @@ class CombineHarvester {
     bool include_signal;
     int hist_mode;
 
-    AutoMCStatsSettings(double thresh, bool sig=false, int mode=1) {
+    AutoMCStatsSettings(double thresh, bool sig = false, int mode = 1) {
       event_threshold = thresh;
       include_signal = sig;
       hist_mode = mode;
@@ -520,21 +523,21 @@ class CombineHarvester {
   // --> implementation in src/CombineHarvester.cc
   // ---------------------------------------------------------------
   void LoadShapes(Observation* entry,
-                     std::vector<HistMapping> const& mappings);
+                  std::vector<HistMapping> const& mappings);
   void LoadShapes(Process* entry,
-                     std::vector<HistMapping> const& mappings);
+                  std::vector<HistMapping> const& mappings);
   void LoadShapes(Systematic* entry,
-                     std::vector<HistMapping> const& mappings);
+                  std::vector<HistMapping> const& mappings);
 
   HistMapping const& ResolveMapping(std::string const& process,
                                     std::string const& bin,
                                     std::vector<HistMapping> const& mappings);
 
   StrPairVec GenerateShapeMapAttempts(std::string process,
-      std::string category);
+                                      std::string category);
 
   std::shared_ptr<RooWorkspace> SetupWorkspace(RooWorkspace const& ws,
-                                    bool can_rename = false);
+      bool can_rename = false);
 
   void ImportParameters(RooArgSet *vars);
 
@@ -549,16 +552,16 @@ class CombineHarvester {
   // Private methods for the shape writing routines
   // ---------------------------------------------------------------
   void WriteHistToFile(
-      TH1 * hist,
-      TFile * file,
-      std::vector<HistMapping> const& mappings,
-      std::string const& bin,
-      std::string const& process,
-      std::string const& mass,
-      std::string const& nuisance,
-      unsigned type);
+    TH1 * hist,
+    TFile * file,
+    std::vector<HistMapping> const& mappings,
+    std::string const& bin,
+    std::string const& process,
+    std::string const& mass,
+    std::string const& nuisance,
+    unsigned type);
 
-void FillHistMappings(std::vector<HistMapping> & mappings);
+  void FillHistMappings(std::vector<HistMapping> & mappings);
 
   // ---------------------------------------------------------------
   // Private methods for shape/yield evaluation
@@ -568,15 +571,15 @@ void FillHistMappings(std::vector<HistMapping> & mappings);
   ProcSystMap GenerateProcSystMap();
 
   double GetRateInternal(ProcSystMap const& lookup,
-    std::string const& single_sys = "");
+                         std::string const& single_sys = "");
 
   TH1F GetShapeInternal(ProcSystMap const& lookup,
-    std::string const& single_sys = "");
+                        std::string const& single_sys = "");
 
   inline double smoothStepFunc(double x) const {
     if (std::fabs(x) >= 1.0/*_smoothRegion*/) return x > 0 ? +1 : -1;
-    double xnorm = x/1.0;/*_smoothRegion*/
-    double xnorm2 = xnorm*xnorm;
+    double xnorm = x / 1.0; /*_smoothRegion*/
+    double xnorm2 = xnorm * xnorm;
     return 0.125 * xnorm * (xnorm2 * (3.*xnorm2 - 10.) + 15);
   }
 
@@ -588,7 +591,7 @@ void FillHistMappings(std::vector<HistMapping> & mappings);
                  RooDataHist const* low, RooDataHist const* high);
 
   // bug fix for RooConstVar compatibility between ROOT626 and workspace created with earlier versions
-  RooWorkspace* fixRooConstVar(RooWorkspace *win, bool useRooRealVar=true, bool clean=true);
+  RooWorkspace* fixRooConstVar(RooWorkspace *win, bool useRooRealVar = true, bool clean = true);
 };
 
 
@@ -634,17 +637,17 @@ void CombineHarvester::ForEachObj(Function func) {
 
 template<typename Function>
 void CombineHarvester::ForEachProc(Function func) {
-  for (auto & item: procs_) func(item.get());
+  for (auto & item : procs_) func(item.get());
 }
 
 template<typename Function>
 void CombineHarvester::ForEachObs(Function func) {
-  for (auto & item: obs_) func(item.get());
+  for (auto & item : obs_) func(item.get());
 }
 
 template<typename Function>
 void CombineHarvester::ForEachSyst(Function func) {
-  for (auto & item: systs_) func(item.get());
+  for (auto & item : systs_) func(item.get());
 }
 
 template<typename Function>
@@ -658,7 +661,8 @@ CombineHarvester& CombineHarvester::FilterAll(Function func) {
 template<typename Function>
 CombineHarvester& CombineHarvester::FilterObs(Function func) {
   boost::remove_erase_if(
-      obs_, [&](std::shared_ptr<Observation> ptr) { return func(ptr.get());
+  obs_, [&](std::shared_ptr<Observation> ptr) {
+    return func(ptr.get());
   });
   return *this;
 }
@@ -666,14 +670,16 @@ CombineHarvester& CombineHarvester::FilterObs(Function func) {
 template<typename Function>
 CombineHarvester& CombineHarvester::FilterProcs(Function func) {
   boost::remove_erase_if(
-      procs_, [&](std::shared_ptr<Process> ptr) { return func(ptr.get());
+  procs_, [&](std::shared_ptr<Process> ptr) {
+    return func(ptr.get());
   });
   return *this;
 }
 template<typename Function>
 CombineHarvester& CombineHarvester::FilterSysts(Function func) {
   boost::remove_erase_if(
-      systs_, [&](std::shared_ptr<Systematic> ptr) { return func(ptr.get());
+  systs_, [&](std::shared_ptr<Systematic> ptr) {
+    return func(ptr.get());
   });
   return *this;
 }

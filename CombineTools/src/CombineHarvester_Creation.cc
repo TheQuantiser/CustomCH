@@ -18,17 +18,18 @@
 
 namespace ch {
 void CombineHarvester::AddObservations(
-    std::vector<std::string> mass,
-    std::vector<std::string> analysis,
-    std::vector<std::string> era,
-    std::vector<std::string> channel,
-    ch::Categories bin) {
+  std::vector<std::string> mass,
+  std::vector<std::string> analysis,
+  std::vector<std::string> era,
+  std::vector<std::string> channel,
+  ch::Categories bin) {
   std::vector<unsigned> lengths = {
-      unsigned(mass.size()),
-      unsigned(analysis.size()),
-      unsigned(era.size()),
-      unsigned(channel.size()),
-      unsigned(bin.size())};
+    unsigned(mass.size()),
+    unsigned(analysis.size()),
+    unsigned(era.size()),
+    unsigned(channel.size()),
+    unsigned(bin.size())
+  };
   auto comb = ch::GenerateCombinations(lengths);
   for (auto const& c : comb) {
     auto obs = std::make_shared<Observation>();
@@ -43,19 +44,20 @@ void CombineHarvester::AddObservations(
 }
 
 void CombineHarvester::AddProcesses(
-    std::vector<std::string> mass,
-    std::vector<std::string> analysis,
-    std::vector<std::string> era,
-    std::vector<std::string> channel,
-    std::vector<std::string> procs,
-    ch::Categories bin,
-    bool signal) {
+  std::vector<std::string> mass,
+  std::vector<std::string> analysis,
+  std::vector<std::string> era,
+  std::vector<std::string> channel,
+  std::vector<std::string> procs,
+  ch::Categories bin,
+  bool signal) {
   std::vector<unsigned> lengths = {
-      unsigned(mass.size()),
-      unsigned(analysis.size()),
-      unsigned(era.size()),
-      unsigned(channel.size()),
-      unsigned(bin.size())};
+    unsigned(mass.size()),
+    unsigned(analysis.size()),
+    unsigned(era.size()),
+    unsigned(channel.size()),
+    unsigned(bin.size())
+  };
   auto comb = ch::GenerateCombinations(lengths);
   for (auto const& c : comb) {
     for (unsigned i = 0; i < procs.size(); ++i) {
@@ -88,9 +90,9 @@ void CombineHarvester::AddSystFromProc(Process const& proc,
   boost::replace_all(subbed_name, "$ERA", proc.era());
   boost::replace_all(subbed_name, "$CHANNEL", proc.channel());
   boost::replace_all(subbed_name, "$ANALYSIS", proc.analysis());
-  std::map<std::string,std::string> attrs = proc.all_attributes();
-  for( const auto it : attrs){
-      boost::replace_all(subbed_name, "$ATTR("+it.first+")",proc.attribute(it.first));
+  std::map<std::string, std::string> attrs = proc.all_attributes();
+  for ( const auto it : attrs) {
+    boost::replace_all(subbed_name, "$ATTR(" + it.first + ")", proc.attribute(it.first));
   }
   auto sys = std::make_shared<Systematic>();
   ch::SetProperties(sys.get(), &proc);
@@ -121,8 +123,8 @@ void CombineHarvester::AddSystFromProc(Process const& proc,
       boost::replace_all(subbed_args, "$ERA", proc.era());
       boost::replace_all(subbed_args, "$CHANNEL", proc.channel());
       boost::replace_all(subbed_args, "$ANALYSIS", proc.analysis());
-      for( const auto it : attrs){
-          boost::replace_all(subbed_args, "$ATTR("+it.first+")",proc.attribute(it.first));
+      for ( const auto it : attrs) {
+        boost::replace_all(subbed_args, "$ATTR(" + it.first + ")", proc.attribute(it.first));
       }
       SetupRateParamFunc(subbed_name, formula, subbed_args);
     }
@@ -136,10 +138,10 @@ void CombineHarvester::AddSystFromProc(Process const& proc,
 
 void CombineHarvester::AddSystVar(std::string const& name,
                                   double val, double err) {
-  Parameter * param = SetupRateParamVar(name,val);
+  Parameter * param = SetupRateParamVar(name, val);
   param->set_val(val);
-  param->set_err_u(+1.0 *err);
-  param->set_err_d(-1.0 *err);
+  param->set_err_u(+1.0 * err);
+  param->set_err_d(-1.0 * err);
   auto sys = std::make_shared<Systematic>();
   sys->set_name(name);
   sys->set_type("param");
@@ -148,8 +150,8 @@ void CombineHarvester::AddSystVar(std::string const& name,
 
 void CombineHarvester::RenameSystematic(CombineHarvester &target, std::string const& old_name,
                                         std::string const& new_name) {
- for(unsigned i = 0; i<systs_.size(); ++i){
-    if(systs_[i]->name()==old_name){
+  for (unsigned i = 0; i < systs_.size(); ++i) {
+    if (systs_[i]->name() == old_name) {
       systs_[i]->set_name(new_name);
       target.CreateParameterIfEmpty(systs_[i]->name());
     }
@@ -197,7 +199,7 @@ void CombineHarvester::ExtractPdfs(CombineHarvester& target,
   std::vector<HistMapping> mapping(1);
   mapping[0].process = "*";
   mapping[0].category = "*";
-  mapping[0].pattern = ws_name+":"+rule;
+  mapping[0].pattern = ws_name + ":" + rule;
   if (norm_rule != "") mapping[0].syst_pattern = ws_name + ":" + norm_rule;
   if (!wspaces_.count(ws_name)) return;
   mapping[0].ws = wspaces_.at(ws_name);
@@ -213,7 +215,7 @@ void CombineHarvester::ExtractData(std::string const &ws_name,
   std::vector<HistMapping> mapping(1);
   mapping[0].process = "*";
   mapping[0].category = "*";
-  mapping[0].pattern = ws_name+":"+rule;
+  mapping[0].pattern = ws_name + ":" + rule;
   if (!wspaces_.count(ws_name)) return;
   mapping[0].ws = wspaces_.at(ws_name);
   for (unsigned  i = 0; i < obs_.size(); ++i) {
@@ -231,9 +233,9 @@ void CombineHarvester::AddBinByBin(double threshold, bool fixed_norm,
 void CombineHarvester::AddBinByBin(double threshold, bool fixed_norm,
                                    CombineHarvester *other) {
   auto bbb_factory = ch::BinByBinFactory()
-      .SetAddThreshold(threshold)
-      .SetFixNorm(fixed_norm)
-      .SetVerbosity(verbosity_);
+                     .SetAddThreshold(threshold)
+                     .SetFixNorm(fixed_norm)
+                     .SetVerbosity(verbosity_);
   bbb_factory.AddBinByBin(*this, *other);
 }
 
@@ -248,9 +250,9 @@ void CombineHarvester::CreateParameterIfEmpty(std::string const &name) {
 void CombineHarvester::MergeBinErrors(double bbb_threshold,
                                       double merge_threshold) {
   auto bbb_factory = ch::BinByBinFactory()
-      .SetAddThreshold(bbb_threshold)
-      .SetMergeThreshold(merge_threshold)
-      .SetVerbosity(verbosity_);
+                     .SetAddThreshold(bbb_threshold)
+                     .SetMergeThreshold(merge_threshold)
+                     .SetVerbosity(verbosity_);
   bbb_factory.MergeBinErrors(*this);
 }
 

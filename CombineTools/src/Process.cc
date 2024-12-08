@@ -7,11 +7,11 @@
 namespace {
 auto format_proc(const ch::Process& val) {
   return boost::format(
-             "%-6s %-9s %-6s %-8s %-28s %-3i %-16s %-4i %-10.5g %-5i") %
-             val.mass() % val.analysis() % val.era() % val.channel() %
-             val.bin() % val.bin_id() % val.process() % val.signal() %
-             val.rate() %
-             (bool(val.shape()) || bool(val.pdf()) || bool(val.data()));
+           "%-6s %-9s %-6s %-8s %-28s %-3i %-16s %-4i %-10.5g %-5i") %
+         val.mass() % val.analysis() % val.era() % val.channel() %
+         val.bin() % val.bin_id() % val.process() % val.signal() %
+         val.rate() %
+         (bool(val.shape()) || bool(val.pdf()) || bool(val.data()));
 }
 }
 
@@ -19,15 +19,15 @@ auto format_proc(const ch::Process& val) {
 namespace ch {
 
 Process::Process()
-    : Object(),
-      rate_(0.0),
-      shape_(),
-      pdf_(nullptr),
-      data_(nullptr),
-      norm_(nullptr),
-      cached_obs_(nullptr),
-      cached_int_(nullptr) {
-  }
+  : Object(),
+    rate_(0.0),
+    shape_(),
+    pdf_(nullptr),
+    data_(nullptr),
+    norm_(nullptr),
+    cached_obs_(nullptr),
+    cached_int_(nullptr) {
+}
 
 Process::~Process() {
   if (cached_int_) delete cached_int_;
@@ -46,13 +46,13 @@ void swap(Process& first, Process& second) {
 }
 
 Process::Process(Process const& other)
-    : Object(other),
-      rate_(other.rate_),
-      pdf_(other.pdf_),
-      data_(other.data_),
-      norm_(other.norm_),
-      cached_obs_(other.cached_obs_),
-      cached_int_(nullptr) {
+  : Object(other),
+    rate_(other.rate_),
+    pdf_(other.pdf_),
+    data_(other.data_),
+    norm_(other.norm_),
+    cached_obs_(other.cached_obs_),
+    cached_int_(nullptr) {
   TH1 *h = nullptr;
   if (other.shape_) {
     h = static_cast<TH1*>(other.shape_->Clone());
@@ -62,14 +62,14 @@ Process::Process(Process const& other)
 }
 
 Process::Process(Process&& other)
-    : Object(),
-      rate_(0.0),
-      shape_(),
-      pdf_(nullptr),
-      data_(nullptr),
-      norm_(nullptr),
-      cached_obs_(nullptr),
-      cached_int_(nullptr) {
+  : Object(),
+    rate_(0.0),
+    shape_(),
+    pdf_(nullptr),
+    data_(nullptr),
+    norm_(nullptr),
+    cached_obs_(nullptr),
+    cached_int_(nullptr) {
   swap(*this, other);
 }
 
@@ -124,7 +124,7 @@ std::unique_ptr<TH1> Process::ClonedScaledShape() const {
 TH1F Process::ShapeAsTH1F() const {
   if (!shape_ && !data_) {
     throw std::runtime_error(
-        FNERROR("Process object does not contain a shape"));
+      FNERROR("Process object does not contain a shape"));
   }
   TH1F res;
   if (this->shape()) {
@@ -142,7 +142,7 @@ TH1F Process::ShapeAsTH1F() const {
   } else if (this->data()) {
     std::string var_name = this->data()->get()->first()->GetName();
     TH1F *tmp = dynamic_cast<TH1F*>(this->data()->createHistogram(
-                           var_name.c_str()));
+                                      var_name.c_str()));
     res = *tmp;
     delete tmp;
     if (res.Integral() > 0.) res.Scale(1. / res.Integral());
@@ -152,10 +152,10 @@ TH1F Process::ShapeAsTH1F() const {
 
 std::ostream& Process::PrintHeader(std::ostream& out) {
   std::string line =
-      (boost::format(
-           "%-6s %-9s %-6s %-8s %-28s %-3i %-16s %-4i %-10.5g %-5i") %
-       "mass" % "analysis" % "era" % "channel" % "bin" % "id" % "process" %
-       "sig" % "rate" % "shape").str();
+    (boost::format(
+       "%-6s %-9s %-6s %-8s %-28s %-3i %-16s %-4i %-10.5g %-5i") %
+     "mass" % "analysis" % "era" % "channel" % "bin" % "id" % "process" %
+     "sig" % "rate" % "shape").str();
   std::string div(line.length(), '-');
   out << div  << std::endl;
   out << line << std::endl;
