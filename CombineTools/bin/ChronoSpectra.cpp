@@ -604,7 +604,7 @@ void processAll(ch::CombineHarvester &cmb,
 // ------------
 // Parses arguments, processes histograms, and writes results to a ROOT file.
 int main(int argc, char *argv[]) {
-
+    std::cout << printTimestamp() << " Running ChronoSpectra (c) MAW 2024 " << "\n" << std::endl;
     gSystem->Load("libHiggsAnalysisCombinedLimit");
     // Define command-line options
     bool show_help = false;
@@ -679,6 +679,8 @@ int main(int argc, char *argv[]) {
     cmb_restore.ParseDatacard(datacard, "", "", "", 0, "125.");
     if (cmb_restore.cp().bin_set().empty() || cmb_restore.cp().process_set().empty()) {
         throw std::runtime_error("Failed to load datacard " + datacard + " into cmb_restore: No bins or processes were found.");
+    } else {
+        std::cout << printTimestamp() << " Loaded text datacard " << datacard << "\n" << std::endl;
     }
     cmb_restore_ptr = &cmb_restore;
     // Load workspace
@@ -686,10 +688,12 @@ int main(int argc, char *argv[]) {
     if (!infile.IsOpen()) throw std::runtime_error("Failed to open workspace file: " + workspace);
     RooWorkspace *ws = dynamic_cast<RooWorkspace *>(infile.Get("w"));
     if (!ws) throw std::runtime_error("Workspace 'w' not found in file: " + workspace);
+    else  std::cout << printTimestamp() << " Loaded workspace from " << workspace << "\n" << std::endl;
     // Initialize CombineHarvester
     ch::CombineHarvester cmb;
     cmb.SetFlag("workspaces-use-clone", true);
-    ch::ParseCombineWorkspace(cmb, *ws, "ModelConfig", dataset, false);
+    ch::ParseCombineWorkspace(cmb, *ws, "ModelConfig", dataset, true);
+    std::cout << printTimestamp() << " Initialized CombineHarvester instance from workspace " << "\n" << std::endl;
     // Freeze parameters if specified
     if (!freeze_arg.empty()) {
         std::vector<std::string> freezeVars;

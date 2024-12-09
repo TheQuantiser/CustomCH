@@ -508,114 +508,145 @@ TH1F CombineHarvester::GetShape() {
 
 
 double CombineHarvester::GetRateInternal(ProcSystMap const& lookup, std::string const& single_sys) {
-  double rate = 0.0; // Initialize the total rate.
+  // Initialize total rate to 0.0
+  double rate = 0.0;
 
-  // Loop over all processes in the CombineHarvester instance.
-  for (unsigned i = 0; i < procs_.size(); ++i) {
-    double p_rate = procs_[i]->rate(); // Base rate for the current process.
-
-    // If a specific nuisance parameter (`single_sys`) is provided:
-    // - Skip processes without the specified nuisance.
-    // - Do not skip if the process has an associated PDF.
-    if (!single_sys.empty() && !procs_[i]->pdf() &&
-    !ch::any_of(lookup[i], [&](Systematic const * sys) {
-    return sys->name() == single_sys;
-    })) {
-      continue; // Skip this process.
-    }
-
-    // Apply systematic uncertainties to the process rate.
-    for (const auto* sys_it : lookup[i]) {
-      if (sys_it->type() == "rateParam") {
-        // Skip rate parameters as they do not directly affect the rate here.
-        continue;
+  // Lambda to apply systematics to a process rate
+  auto apply_systematics = [&](double & process_rate, const std::vector<const ch::Systematic*>& systematics) {
+    // Iterate over all systematics for the process
+    for (const auto* sys : systematics) {
+      if (sys->type() == "rateParam") {
+        continue; // Skip rateParam systematics, as they don't affect the rate here
       }
 
-      // Retrieve the parameter value associated with this systematic.
-      const auto param_it = params_.find(sys_it->name());
+      // Retrieve the associated parameter for this systematic
+      const auto param_it = params_.find(sys->name());
       if (param_it == params_.end()) {
-        throw std::runtime_error("Parameter " + sys_it->name() + " not found in CombineHarvester instance");
+        throw std::runtime_error("Parameter " + sys->name() + " not found in CombineHarvester instance");
       }
       double x = param_it->second->val();
 
-      // Adjust the process rate based on the systematic uncertainty type.
-      if (sys_it->asymm()) {
-        // Asymmetric uncertainty: use logarithmic kappas.
-        p_rate *= logKappaForX(x * sys_it->scale(), sys_it->value_d(), sys_it->value_u());
+      // Apply systematic uncertainty to the process rate
+      if (sys->asymm()) {
+        // For asymmetric uncertainty: use logarithmic kappas
+        process_rate *= logKappaForX(x * sys->scale(), sys->value_d(), sys->value_u());
       } else {
-        // Symmetric uncertainty: scale the rate.
-        p_rate *= std::pow(sys_it->value_u(), x * sys_it->scale());
+        // For symmetric uncertainty: scale the rate
+        process_rate *= std::pow(sys->value_u(), x * sys->scale());
       }
     }
+  };
 
-    // Accumulate the process rate into the total rate.
-    rate += p_rate;
+  // Loop over all processes in the CombineHarvester instance
+  for (size_t i = 0; i < procs_.size(); ++i) {
+    double process_rate = procs_[i]->rate();  // Get the base rate for the current process
+
+    // If `single_sys` is specified, apply systematics only if relevant
+    if (!single_sys.empty()) {
+      const bool has_single_sys = ch::any_of(lookup[i], [&](Systematic const * sys) { return sys->name() == single_sys; });
+
+      // Apply systematics only if the process has the specified systematic
+      if (procs_[i]->pdf() || has_single_sys) {
+        apply_systematics(process_rate, lookup[i]);
+      }
+    } else {
+      // Apply all systematics if `single_sys` is not specified
+      apply_systematics(process_rate, lookup[i]);
+    }
+
+    // Add the process rate to the total rate
+    rate += process_rate;
   }
 
-  // Return the computed total rate.
+  // Return the computed total rate
   return rate;
 }
 
 TH1F CombineHarvester::GetShapeInternal(ProcSystMap const& lookup, std::string const& single_sys) {
-  TH1F cumulative_shape;
-  bool is_shape_initialized = false;
 
-  // Pre-filter systematics based on single_sys if provided
+  // Disable ROOT's automatic directory saving/restoring. This is important for performance
+  // as it avoids the overhead of saving and restoring histogram directory state with each histogram operation.
+  TH1::AddDirectory(false);
+
+  // Initialize the cumulative histogram to store the final combined shape.
+  TH1F cumulative_shape;
+  bool is_shape_initialized = false; // Flag to check if the cumulative shape is initialized.
+
+  // Pre-filter systematics based on `single_sys` (a specific systematic, if provided)
+  // `filtered_lookup` will store systematics for each process, either filtering for `single_sys` or using all systematics.
   std::unordered_map<int, std::vector<const ch::Systematic*>> filtered_lookup;
+
+  // If no specific systematic is provided, use all systematics in the `lookup` map.
   if (single_sys.empty()) {
     for (size_t i = 0; i < lookup.size(); ++i) {
-      filtered_lookup[i] = lookup[i];  // Copy entire vector at index i
+      filtered_lookup[i] = lookup[i];  // Copy the entire vector of systematics for this process index.
     }
   } else {
+    // If `single_sys` is provided, filter the systematics to only include those with the name matching `single_sys`.
     for (size_t i = 0; i < lookup.size(); ++i) {
       for (auto* sys : lookup[i]) {
         if (sys->name() == single_sys) {
-          filtered_lookup[i].push_back(sys);  // Only add systematics that match single_sys
+          filtered_lookup[i].push_back(sys);  // Only add systematics matching the provided `single_sys`.
         }
       }
     }
   }
 
-  // Lambda: Apply rate and shape systematics
+  // Lambda function to apply rate systematics to the process rate.
   auto apply_rate_systematics = [&](double & rate, const Systematic * sys) {
+    // Look up the parameter associated with the systematic `sys` in the `params_` map.
     auto param_it = params_.find(sys->name());
     if (param_it == params_.end()) {
+      // If the parameter is not found, throw an error.
       throw std::runtime_error("Parameter " + sys->name() + " not found in CombineHarvester instance");
     }
+
+    // Retrieve the value of the parameter.
     double param_val = param_it->second->val();
+
+    // Apply the systematic uncertainty. If asymmetric, use `logKappaForX`. Otherwise, apply symmetric scaling.
     if (sys->asymm()) {
-      rate *= logKappaForX(param_val * sys->scale(), sys->value_d(), sys->value_u());
+      rate *= logKappaForX(param_val * sys->scale(), sys->value_d(), sys->value_u());  // Asymmetric scaling
     } else {
-      rate *= std::pow(sys->value_u(), param_val * sys->scale());
+      rate *= std::pow(sys->value_u(), param_val * sys->scale());  // Symmetric scaling
     }
   };
 
+  // Lambda function to apply shape systematics to the process shape histogram.
   auto apply_shape_systematics = [&](TH1F * shape, const Systematic * sys) {
+    // Apply shape-related systematics if the type of the systematic is one of the following.
     if (sys->type() == "shape" || sys->type() == "shapeN2" || sys->type() == "shapeU") {
-      bool linear = sys->type() != "shapeN2";
+      bool linear = sys->type() != "shapeN2";  // "shapeN2" is treated differently in terms of linear interpolation.
+      // Call `ShapeDiff` to modify the shape histogram according to the systematic.
       ShapeDiff(sys->scale(), shape, shape, sys->shape_d(), sys->shape_u(), linear);
     }
   };
 
-  // Lambda: Prepare histogram for process
+  // Lambda function to prepare a histogram for a process.
   auto prepare_histogram = [&](const std::shared_ptr<Process>& proc, TH1F & process_shape) {
+    // If the process already has a shape, use it directly.
     if (proc->shape()) {
       process_shape = proc->ShapeAsTH1F();
-    } else if (proc->pdf()) {
+    } else if (proc->pdf()) {  // If the process has a PDF, we generate a shape from the PDF.
+      // If no observable is set for the process, find a matching data observable.
       if (!proc->observable()) {
         auto* matching_data = FindMatchingData(proc.get());
         std::string var_name = matching_data ? matching_data->get()->first()->GetName() : "CMS_th1x";
         proc->set_observable(dynamic_cast<RooRealVar*>(proc->pdf()->findServer(var_name.c_str())));
       }
-      TH1::AddDirectory(false);
+
+      // Create a temporary histogram based on the observable's bin structure and PDF values.
       auto* tmp = dynamic_cast<TH1F*>(proc->observable()->createHistogram(""));
+      // For each bin, set the value in the histogram based on the observable's PDF value.
       for (int bin = 1; bin <= tmp->GetNbinsX(); ++bin) {
         proc->observable()->setVal(tmp->GetBinCenter(bin));
         tmp->SetBinContent(bin, tmp->GetBinWidth(bin) * proc->pdf()->getVal());
       }
+      // Assign the generated histogram to `process_shape`.
       process_shape = *tmp;
-      delete tmp;
+      delete tmp;  // Clean up temporary histogram.
 
+      // If the process PDF is not self-normalized, normalize the histogram.
       const auto* aspdf = dynamic_cast<RooAbsPdf const*>(proc->pdf());
       if ((!aspdf || !aspdf->selfNormalized()) && process_shape.Integral() > 0.0) {
         process_shape.Scale(1.0 / process_shape.Integral());
@@ -623,45 +654,44 @@ TH1F CombineHarvester::GetShapeInternal(ProcSystMap const& lookup, std::string c
     }
   };
 
-  // Lambda: Handle a single process
+  // Lambda function to handle a single process: apply systematics, modify shape, and combine with cumulative shape.
   auto handle_process = [&](const std::shared_ptr<Process>& proc, int process_index) {
-    double process_rate = proc->rate();
-    TH1F process_shape;
+    double process_rate = proc->rate();  // Get the base rate for the process.
+    TH1F process_shape;  // Histogram to store the shape for this process.
 
-    prepare_histogram(proc, process_shape);
+    prepare_histogram(proc, process_shape);  // Prepare the histogram for this process.
 
-    // Apply systematics to rate and shape
+    // Apply all relevant systematics (both rate and shape systematics).
     for (auto* sys : filtered_lookup[process_index]) {
-      if (sys->type() == "rateParam") continue;
-      apply_rate_systematics(process_rate, sys);
-      apply_shape_systematics(&process_shape, sys);
+      if (sys->type() == "rateParam") continue;  // Skip rate parameters, as they don't affect shape.
+      apply_rate_systematics(process_rate, sys);  // Apply the rate systematics.
+      apply_shape_systematics(&process_shape, sys);  // Apply the shape systematics.
     }
 
-    // Ensure non-negative bins (only when systematics affect shape)
+    // Ensure non-negative bin contents after applying systematics (since shape modifications might introduce negative values).
     for (int bin = 1; bin <= process_shape.GetNbinsX(); ++bin) {
-      if (process_shape.GetBinContent(bin) < 0.0) {
-        process_shape.SetBinContent(bin, 0.0);
-      }
+      process_shape.SetBinContent(bin, std::max(0.0, process_shape.GetBinContent(bin)));
     }
 
-    // Scale and combine with cumulative shape
+    // Scale the shape by the process rate, then combine it with the cumulative shape.
     process_shape.Scale(process_rate);
     if (!is_shape_initialized) {
+      // Initialize the cumulative shape if it hasn't been set yet.
       process_shape.Copy(cumulative_shape);
-      cumulative_shape.Reset();
+      cumulative_shape.Reset();  // Reset the temporary copy after copying.
       is_shape_initialized = true;
     }
-    cumulative_shape.Add(&process_shape);
+    cumulative_shape.Add(&process_shape);  // Add the processed shape to the cumulative shape.
   };
 
-  // Process all entries (use iterator for indexing)
+  // Loop over all processes and handle each one.
   for (size_t i = 0; i < procs_.size(); ++i) {
-    handle_process(procs_[i], i);
+    handle_process(procs_[i], i);  // Process the `i`-th process.
   }
 
+  // Return the final cumulative shape after processing all the processes.
   return cumulative_shape;
 }
-
 
 double CombineHarvester::GetObservedRate() {
   double rate = 0.0;
