@@ -346,34 +346,26 @@ TH2F CombineHarvester::GetRateCovariance(RooFitResult const& fit, unsigned n_sam
     }
   }
 
-  // Normalize and compute covariance matrix
-  for (unsigned i = 0; i < n_procs; ++i) {
-    double mean_i = sum[i] / n_samples;
-    for (unsigned j = i; j < n_procs; ++j) {
-      double mean_j = sum[j] / n_samples;
-      sum_covariance[i][j] = sum_covariance[i][j] / n_samples - mean_i * mean_j;
-    }
-  }
+  // Restore original parameter values
+  this->UpdateParameters(backup);
 
   // Create ROOT histogram for the covariance matrix
   TH2F cov_mat("covariance", "Rate Covariance Matrix",
                n_procs, 0.5, n_procs + 0.5, n_procs, 0.5, n_procs + 0.5);
-
-  // Fill the histogram with the computed covariance values
+  // Normalize and compute covariance matrix
   for (unsigned i = 0; i < n_procs; ++i) {
     cov_mat.GetXaxis()->SetBinLabel(i + 1, labels[i].c_str());
     cov_mat.GetYaxis()->SetBinLabel(i + 1, labels[i].c_str());
+    double mean_i = sum[i] / static_cast<double>(n_samples);
     for (unsigned j = i; j < n_procs; ++j) {
-      double covariance = sum_covariance[i][j];
+      double mean_j = sum[j] / static_cast<double>(n_samples);
+      double covariance = sum_covariance[i][j] / n_samples - mean_i * mean_j;
       cov_mat.SetBinContent(i + 1, j + 1, covariance); // ROOT bins start at 1
       if (i != j) {
         cov_mat.SetBinContent(j + 1, i + 1, covariance); // Mirror to lower triangle
       }
     }
   }
-
-  // Restore original parameter values
-  this->UpdateParameters(backup);
 
   // Return the covariance matrix histogram
   cov_mat.SetOption("colz"); // Ensure "colz" draw option is applied
@@ -469,18 +461,17 @@ TH2F CombineHarvester::GetHistogramBinCorrelation(RooFitResult const& fit, unsig
   TH2F correlation_matrix("bin_correlation", "Histogram Bin Correlation Matrix",
                           n_bins, 0.5, n_bins + 0.5, n_bins, 0.5, n_bins + 0.5);
   for (unsigned i = 1; i <= n_bins; ++i) {
-    double mean_i = sum[i - 1] / n_samples;
-    double var_i = sum2[i - 1] / n_samples - mean_i * mean_i;
-    double std_dev_i = (var_i > 0.0) ? std::sqrt(var_i) : 0.0;
-
+    double mean_i = sum[i - 1] / static_cast<double>(n_samples);
+    double var_i = sum2[i - 1] / static_cast<double>(n_samples) - mean_i * mean_i;
+    if (var_i <= 0.0) continue;
+    double std_dev_i = std::sqrt(var_i);
     for (unsigned j = i; j <= n_bins; ++j) {
-      double mean_j = sum[j - 1] / n_samples;
-      double cov_ij = sum_covariance[i - 1][j - 1] / n_samples - mean_i * mean_j;
-      double var_j = sum2[j - 1] / n_samples - mean_j * mean_j;
-      double std_dev_j = (var_j > 0.0) ? std::sqrt(var_j) : 0.0;
-
-      double correlation = (std_dev_i > 0.0 && std_dev_j > 0.0) ? (cov_ij / (std_dev_i * std_dev_j)) : 0.0;
-
+      double mean_j = sum[j - 1] / static_cast<double>(n_samples);
+      double var_j = sum2[j - 1] / static_cast<double>(n_samples) - mean_j * mean_j;
+      if (var_j <= 0.0) continue;
+      double std_dev_j =  std::sqrt(var_j);
+      double cov_ij = sum_covariance[i - 1][j - 1] / static_cast<double>(n_samples) - mean_i * mean_j;
+      double correlation = cov_ij / (std_dev_i * std_dev_j);
       correlation_matrix.SetBinContent(i, j, correlation);
       if (i != j) {
         correlation_matrix.SetBinContent(j, i, correlation);

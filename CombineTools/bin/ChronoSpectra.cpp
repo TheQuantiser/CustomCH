@@ -9,23 +9,23 @@
 
  Copyright (c) 2024 Mohammad Abrar Wadud
 
- Permission is hereby granted to any person obtaining a copy of this software 
+ Permission is hereby granted to any person obtaining a copy of this software
  (the "Software"), to use the Software for personal, academic, or commercial
  purposes without restriction, including  the rights to execute, and
  distribute the Software, subject to the following conditions:
 
- 1. The Software shall not be modified, altered, or used to create derivative 
+ 1. The Software shall not be modified, altered, or used to create derivative
     works without the explicit written permission of the copyright holder.
 
- 2. The above copyright notice and this permission notice shall be included 
+ 2. The above copyright notice and this permission notice shall be included
     in all copies or substantial portions of the Software.
 
- 3. This Software is provided "as is," without warranty of any kind, express 
-    or implied, including but not limited to the warranties of merchantability, 
-    fitness for a particular purpose, and non-infringement. In no event shall 
-    the authors or copyright holders be liable for any claim, damages, or other 
-    liability, whether in an action of contract, tort, or otherwise, arising 
-    from, out of, or in connection with the Software or the use or other dealings 
+ 3. This Software is provided "as is," without warranty of any kind, express
+    or implied, including but not limited to the warranties of merchantability,
+    fitness for a particular purpose, and non-infringement. In no event shall
+    the authors or copyright holders be liable for any claim, damages, or other
+    liability, whether in an action of contract, tort, or otherwise, arising
+    from, out of, or in connection with the Software or the use or other dealings
     in the Software.
  ============================================================================
 
@@ -186,9 +186,12 @@ ch::CombineHarvester* cmb_restore_ptr = nullptr;
 
 
 std::string printTimestamp() {
-    std::time_t now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    auto now = std::chrono::system_clock::now();
+    auto time_t_now = std::chrono::system_clock::to_time_t(now);
+    std::tm local_tm = *std::localtime(&time_t_now);
+
     std::ostringstream timestamp;
-    timestamp << "[" << std::put_time(std::localtime(&now_time_t), "%Y-%m-%d %H:%M:%S") << "]";
+    timestamp << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S") << "]";
     return timestamp.str();
 }
 
