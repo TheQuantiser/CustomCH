@@ -178,9 +178,9 @@ ChronoSpectra --help \
 #include <iostream>
 #include <chrono>
 #include <iomanip>
-#include <ctime>
 #include <sstream>
 #include <algorithm>
+#include <filesystem>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 #include <TSystem.h>
@@ -647,14 +647,14 @@ int main(int argc, char *argv[]) {
     auto processGroups = parseNamedGroups(groupProcsArg);
 
     // Load datacard for later histogram rebinning
+    if (!std::filesystem::exists(datacard)) throw std::runtime_error("Error: Datacard file '" + datacard + "' does not exist.");
     ch::CombineHarvester cmb_restore;
     cmb_restore.SetFlag("workspaces-use-clone", true);
     cmb_restore.ParseDatacard(datacard, "", "", "", 0, "125.");
     if (cmb_restore.cp().bin_set().empty() || cmb_restore.cp().process_set().empty()) {
-        throw std::runtime_error("Failed to load datacard " + datacard + " into cmb_restore: No bins or processes were found.");
-    } else {
-        std::cout << printTimestamp() << " Loaded text datacard " << datacard << "\n" << std::endl;
+        throw std::runtime_error("Failed to load datacard '" + datacard + "' into cmb_restore: No bins or processes were found.");
     }
+    std::cout << printTimestamp() << " Successfully loaded text datacard: " << datacard << "\n" << std::endl;
     cmb_restore_ptr = &cmb_restore;
 
     // Load workspace

@@ -586,7 +586,7 @@ TH1F CombineHarvester::GetShapeInternal(ProcSystMap const& lookup, std::string c
   }
 
   // Lambda to apply rate systematics to a process rate.
-  auto apply_rate_systematics = [&](double& rate, const Systematic* sys) {
+  auto apply_rate_systematics = [&](double & rate, const Systematic * sys) {
     auto param_it = params_.find(sys->name());
     if (param_it == params_.end()) {
       throw std::runtime_error("Parameter " + sys->name() + " not found in CombineHarvester instance");
@@ -601,7 +601,7 @@ TH1F CombineHarvester::GetShapeInternal(ProcSystMap const& lookup, std::string c
   };
 
   // Lambda to apply shape systematics to a process shape histogram.
-  auto apply_shape_systematics = [&](TH1F* shape, const Systematic* sys) {
+  auto apply_shape_systematics = [&](TH1F * shape, const Systematic * sys) {
     if (sys->type() == "shape" || sys->type() == "shapeN2" || sys->type() == "shapeU") {
       bool linear = sys->type() != "shapeN2";
       ShapeDiff(sys->scale(), shape, shape, sys->shape_d(), sys->shape_u(), linear);
@@ -612,7 +612,7 @@ TH1F CombineHarvester::GetShapeInternal(ProcSystMap const& lookup, std::string c
   std::unique_ptr<TH1F> tmp_hist;
 
   // Lambda to prepare a histogram for a process.
-  auto prepare_histogram = [&](const std::shared_ptr<Process>& proc, TH1F& process_shape) {
+  auto prepare_histogram = [&](const std::shared_ptr<Process>& proc, TH1F & process_shape) {
     if (proc->shape()) {
       process_shape = proc->ShapeAsTH1F();
     } else if (proc->pdf()) {
@@ -722,38 +722,35 @@ void CombineHarvester::ShapeDiff(double x,
                                  const TH1* low,
                                  const TH1* high,
                                  bool linear) {
-  // Precompute the smoothing function value
-  double fx = smoothStepFunc(x);
+  // Precompute the smoothing factor
+  const double fx = smoothStepFunc(x);
+  const int nBins = target->GetNbinsX();
 
-  // Loop through all bins in the target histogram
-  for (int i = 1; i <= target->GetNbinsX(); ++i) {
-    float h = high->GetBinContent(i);
-    float l = low->GetBinContent(i);
-    float n = nom->GetBinContent(i);
+  // Iterate through bins
+  for (int i = 1; i <= nBins; ++i) {
+    const float h = high->GetBinContent(i);
+    const float l = low->GetBinContent(i);
+    const float n = nom->GetBinContent(i);
+    float t = target->GetBinContent(i);
 
-    if (!linear) {
-      float t = target->GetBinContent(i);
+    if (linear) {
+      // Compute linear interpolation
+      const float deltaLin = 0.5f * x * ((h - l) + (h + l - 2.0f * n) * fx);
+      target->SetBinContent(i, t + deltaLin);
 
-      // Transform the target bin content to log scale if positive
-      target->SetBinContent(i, (t > 0.0f) ? std::log(t) : -999.0f);
-
-      // Compute log-scale differences for high and low if positive
-      h = (h > 0.0f && n > 0.0f) ? std::log(h / n) : 0.0f;
-      l = (l > 0.0f && n > 0.0f) ? std::log(l / n) : 0.0f;
-
-      // Update the target bin content using log-scale interpolation
-      target->SetBinContent(i, target->GetBinContent(i) +
-                            0.5 * x * ((h - l) + (h + l) * fx));
-
-      // Transform back to linear scale
-      target->SetBinContent(i, std::exp(target->GetBinContent(i)));
     } else {
-      // Update the target bin content for linear interpolation
-      target->SetBinContent(i, target->GetBinContent(i) +
-                            0.5 * x * ((h - l) + (h + l - 2.0f * n) * fx));
+      // Use log-scale interpolation only if valid values are present
+      const float logT = (t > 0.0f) ? std::log(t) : -999.0f;
+      const float logH = (h > 0.0f && n > 0.0f) ? std::log(h / n) : 0.0f;
+      const float logL = (l > 0.0f && n > 0.0f) ? std::log(l / n) : 0.0f;
+
+      // Compute log-scale interpolation
+      const float deltaLog = 0.5f * x * ((logH - logL) + (logH + logL) * fx);
+      target->SetBinContent(i, std::exp(logT + deltaLog));
     }
   }
 }
+
 
 void CombineHarvester::ShapeDiff(double x,
                                  TH1F* target,
@@ -761,32 +758,38 @@ void CombineHarvester::ShapeDiff(double x,
                                  const RooDataHist* low,
                                  const RooDataHist* high) {
   // Precompute the smoothing function value
-  double fx = smoothStepFunc(x);
+  const double fx = smoothStepFunc(x);
 
-  // Precompute normalization factors to avoid repeated division
-  double norm_high = high->sumEntries();
-  double norm_low = low->sumEntries();
-  double norm_nom = nom->sumEntries();
+  // Precompute normalization factors
+  const double norm_high = high->sumEntries();
+  const double norm_low = low->sumEntries();
+  const double norm_nom = nom->sumEntries();
 
+  // Validate normalization to prevent division by zero
   if (norm_high <= 0.0 || norm_low <= 0.0 || norm_nom <= 0.0) {
     throw std::runtime_error("Error: Zero or negative normalization factor in ShapeDiff");
   }
 
-  // Loop through all bins in the target histogram
-  for (int i = 1; i <= target->GetNbinsX(); ++i) {
-    // Retrieve bin information for high, low, and nominal shapes
+  // Loop through bins (ROOT uses 1-based indexing)
+  const int nBins = target->GetNbinsX();
+
+  for (int i = 1; i <= nBins; ++i) {
+    // Move to the corresponding RooDataHist bins
     high->get(i - 1);
     low->get(i - 1);
     nom->get(i - 1);
 
-    // Normalize bin weights
-    float h = high->weight() / norm_high;
-    float l = low->weight() / norm_low;
-    float n = nom->weight() / norm_nom;
+    // Calculate normalized bin weights
+    const float h = static_cast<float>(high->weight() / norm_high);
+    const float l = static_cast<float>(low->weight() / norm_low);
+    const float n = static_cast<float>(nom->weight() / norm_nom);
 
-    // Update the target bin content using linear interpolation
-    target->SetBinContent(i, target->GetBinContent(i) +
-                          0.5 * x * ((h - l) + (h + l - 2.0 * n) * fx));
+    // Pre-compute the difference and correction terms
+    const float diff = h - l;
+    const float corr = (h + l - 2.0f * n) * fx;
+
+    // Update target bin content
+    target->SetBinContent(i, target->GetBinContent(i) + 0.5f * x * (diff + corr));
   }
 }
 
