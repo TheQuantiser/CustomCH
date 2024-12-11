@@ -241,9 +241,18 @@ void displayStartupMessage() {
     std::cout << "  provided appropriate credit is given.\n\n";
 
     std::cout << "  Full License: https://creativecommons.org/licenses/by/4.0/\n\n";
-    std::cout << "  Report issues or learn more: [Add Official Repository Link]\n";
+    std::cout << "  Official repository: https://github.com/TheQuantiser/CombineHarvester/blob/main/CombineTools/bin/ChronoSpectra.cpp\n";
     std::cout << "==============================================================\n\n";
 };
+
+// Function to apply style settings to a TH2F
+void ApplyTH2FStyle(TH2F& matrix) {
+    matrix.SetOption("colz");
+    matrix.SetDrawOption("colz");
+    matrix.SetContour(2000);
+    matrix.GetXaxis()->LabelsOption("v");
+    matrix.GetZaxis()->SetMoreLogLabels();
+}
 
 // Function: parseNamedGroups
 // --------------------------
@@ -353,11 +362,7 @@ void writeCorrToFile(std::map<std::string, std::map<std::string, TH2F>> &matrixM
             std::string path = prefix + "/" + binName + "/" + procName + suffix;
             std::cout << printTimestamp() << "\t--> " << path << std::endl;
 
-            // Configure matrix display options
-            matrix.SetOption("colz");
-            matrix.SetDrawOption("colz");
-            matrix.GetXaxis()->LabelsOption("v");
-            matrix.GetZaxis()->SetMoreLogLabels();
+            ApplyTH2FStyle(matrix);
 
             // Write the matrix to the output file
             ch::WriteToTFile(&matrix, &outfile, path);
@@ -654,7 +659,7 @@ int main(int argc, char *argv[]) {
     if (cmb_restore.cp().bin_set().empty() || cmb_restore.cp().process_set().empty()) {
         throw std::runtime_error("Failed to load datacard '" + datacard + "' into cmb_restore: No bins or processes were found.");
     }
-    std::cout << printTimestamp() << " Successfully loaded text datacard: " << datacard << "\n" << std::endl;
+    std::cout << "\n\n" << printTimestamp() << " Successfully loaded text datacard: " << datacard << "\n" << std::endl;
     cmb_restore_ptr = &cmb_restore;
 
     // Load workspace
@@ -668,7 +673,7 @@ int main(int argc, char *argv[]) {
     ch::CombineHarvester cmb;
     cmb.SetFlag("workspaces-use-clone", true);
     ch::ParseCombineWorkspace(cmb, *ws, "ModelConfig", dataset, false);
-    std::cout << printTimestamp() << " Initialized CombineHarvester instance from workspace " << "\n" << std::endl;
+    std::cout << "\n\n" << printTimestamp() << " Initialized CombineHarvester instance from workspace " << "\n" << std::endl;
 
     // Freeze parameters if specified
     if (!freeze_arg.empty()) {
@@ -711,52 +716,73 @@ int main(int argc, char *argv[]) {
 
     // Generate post-fit histograms if requested
     if (postfit) {
-        // Load RooFitResult and update parameters
-        RooFitResult fitRes = ch::OpenFromTFile<RooFitResult>(fitresult);
-        cmb.UpdateParameters(fitRes);
+        // Load RooFitResult safely
+        std::unique_ptr<RooFitResult> fitResPtr;
+        try {
+            fitResPtr = std::make_unique<RooFitResult>(ch::OpenFromTFile<RooFitResult>(fitresult));
+        } catch (const std::exception &e) {
+            std::cerr << "Failed to load RooFitResult: " << e.what() << std::endl;
+            std::cerr << "Exiting..." << std::endl;
+            return 1;
+        }
 
-        // Prepare containers for post-fit results
+        RooFitResult* fitRes = (fitResPtr && fitResPtr->floatParsFinal().getSize() > 0)  ? fitResPtr.get() : nullptr;
+
+        if (fitRes) {
+            std::cout << printTimestamp() << " Valid fit result found (" << fitresult << "), with " << fitRes->floatParsFinal().getSize() << " parameters." << std::endl;
+        } else {
+            std::cerr << "Fit result is invalid!" << std::endl;
+            std::cerr << "Exiting..." << std::endl;
+            return 1;
+        }
+
+        // Update model parameters to post-fit values
+        cmb.UpdateParameters(*fitRes);
+
+        // Prepare containers
         std::map<std::string, std::map<std::string, TH1F>> postfitHists;
         std::map<std::string, std::map<std::string, TH2F>> RateCorrMap, HistBinCorrMap;
 
         // Process all post-fit histograms and correlations
-        processAll(cmb, postfitHists, binGroups, processGroups, samples, &fitRes, &RateCorrMap, &HistBinCorrMap);
+        processAll(cmb, postfitHists, binGroups, processGroups, samples, fitRes, &RateCorrMap, &HistBinCorrMap);
 
         // Write histograms and correlation matrices to file
         writeHistogramsToFile(postfitHists, outfile, "postfit");
         writeCorrToFile(RateCorrMap, outfile, "postfit", "_RateCorr");
         writeCorrToFile(HistBinCorrMap, outfile, "postfit", "_HistBinCorr");
 
-        // Generate parameter correlation matrix
-        const RooArgList &paramList = fitRes.floatParsFinal();
-        const unsigned nPar = paramList.getSize();
-
+        // Generate and populate parameter correlation matrix
+        const RooArgList* paramList = &fitRes->floatParsFinal();
+        const unsigned nPar = paramList->getSize();
         TH2F parCorrMatrix(
             "ParCorrMat", "Parameter Correlation Matrix",
             nPar, 0.5, nPar + 0.5, nPar, 0.5, nPar + 0.5
         );
 
-        // Populate parameter correlation matrix
         for (unsigned i = 0; i < nPar; ++i) {
-            const char *paramName = paramList[i].GetName();
+            const char* paramName = (*paramList)[i].GetName();
             parCorrMatrix.GetXaxis()->SetBinLabel(i + 1, paramName);
             parCorrMatrix.GetYaxis()->SetBinLabel(i + 1, paramName);
 
             for (unsigned j = i; j < nPar; ++j) {
-                const double corrValue = fitRes.correlationMatrix()(i, j);
+                const double corrValue = fitRes->correlationMatrix()(i, j);
                 parCorrMatrix.SetBinContent(i + 1, j + 1, corrValue);
                 if (i != j) parCorrMatrix.SetBinContent(j + 1, i + 1, corrValue);
             }
         }
 
-        // Set drawing options and write the matrix
-        parCorrMatrix.SetOption("colz");
-        parCorrMatrix.SetDrawOption("colz");
-        parCorrMatrix.GetXaxis()->LabelsOption("v");
-        ch::WriteToTFile(&parCorrMatrix, &outfile, "postfit/ParCorrMat");
+        ApplyTH2FStyle(parCorrMatrix);
+        ch::WriteToTFile(&parCorrMatrix, &outfile, "postfit/parCorrMat");
+        std::cout << "\n" << printTimestamp() << " Parameter correlations extracted -> postfit/parCorrMat" << std::endl;
 
-        std::cout << "\n\n" << printTimestamp() << " Writing Parameter Correlation Matrix "
-                  << "postfit/ParCorrMat" << " to file: " << outfile.GetName() << std::endl;
+        // Compute and write global rate correlation matrix
+        if (samples > 0) {
+            TH2F globalRateCorrMatrix = cmb.cp().GetRateCorrelation(*fitRes, samples);
+            ApplyTH2FStyle(globalRateCorrMatrix);
+            ch::WriteToTFile(&globalRateCorrMatrix, &outfile, "postfit/globalRateCorr");
+            std::cout << printTimestamp() << std::setw(50) << std::left
+                      << " Global rate correlations computed -> postfit/globalRateCorr" << std::endl;
+        }
     }
 
     // Cleanup
@@ -764,7 +790,7 @@ int main(int argc, char *argv[]) {
     infile.Close();
     outfile.Close();
     cmb_restore_ptr = nullptr;
-
+    std::cout << "\n\n" << printTimestamp() << " Output file: " << outfile.GetName() << std::endl;
     std::cout << "\n\n\n\n" << printTimestamp() << " Task complete!\n\n\n\n" << std::endl;
     return 0;
 }
