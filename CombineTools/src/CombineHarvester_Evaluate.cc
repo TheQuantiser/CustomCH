@@ -540,17 +540,14 @@ double CombineHarvester::GetRateInternal(ProcSystMap const& lookup, std::string 
   for (size_t i = 0; i < procs_.size(); ++i) {
     double process_rate = procs_[i]->rate();  // Get the base rate for the current process
 
-    // If `single_sys` is specified, apply systematics only if relevant
-    if (!single_sys.empty()) {
-      const bool has_single_sys = ch::any_of(lookup[i], [&](Systematic const * sys) { return sys->name() == single_sys; });
-
-      // Apply systematics only if the process has the specified systematic
-      if (procs_[i]->pdf() || has_single_sys) {
-        apply_systematics(process_rate, lookup[i]);
-      }
-    } else {
-      // Apply all systematics if `single_sys` is not specified
+    if (single_sys.empty() || procs_[i]->pdf()) {
+      // Apply all systematics for pdf or if `single_sys` is not specified
       apply_systematics(process_rate, lookup[i]);
+    } else {
+      // If `single_sys` is specified, apply systematics only if relevant
+      const bool has_single_sys = ch::any_of(lookup[i], [&](Systematic const * sys) { return sys->name() == single_sys; });
+      // Apply systematics only if the process has the specified systematic
+      if (has_single_sys) apply_systematics(process_rate, lookup[i]);
     }
 
     // Add the process rate to the total rate
@@ -560,6 +557,7 @@ double CombineHarvester::GetRateInternal(ProcSystMap const& lookup, std::string 
   // Return the computed total rate
   return rate;
 }
+
 TH1F CombineHarvester::GetShapeInternal(ProcSystMap const& lookup, std::string const& single_sys) {
   // Disable ROOT's automatic directory saving/restoring to improve performance.
   TH1::AddDirectory(false);

@@ -275,22 +275,19 @@ std::map<std::string, std::vector<std::string>> parseNamedGroups(const std::stri
 
         size_t colonPos = group.find(':');
         if (colonPos == std::string::npos || colonPos == 0 || colonPos == group.size() - 1) {
-            std::cerr << "Warning: Invalid group format: '" << group << "' (missing or misplaced ':')\n";
-            continue;
+            throw std::runtime_error("Invalid group format: '" + group + "' (missing or misplaced ':')");
         }
 
         std::string groupName = group.substr(0, colonPos);
         boost::trim(groupName);
 
         if (groupName.empty() || groupName.find(' ') != std::string::npos) {
-            std::cerr << "Warning: Invalid group name: '" << groupName << "'\n";
-            continue;
+            throw std::runtime_error("Invalid group name: '" + groupName + "'");
         }
 
         auto [it, inserted] = namedGroups.emplace(groupName, std::vector<std::string> {});
         if (!inserted) {
-            std::cerr << "Warning: Duplicate group name found: '" << groupName << "'\n";
-            continue;
+            throw std::runtime_error("Duplicate group name found: '" + groupName + "'");
         }
 
         std::vector<std::string> items;
@@ -300,9 +297,8 @@ std::map<std::string, std::vector<std::string>> parseNamedGroups(const std::stri
         }), items.end());
 
         if (items.empty()) {
-            std::cerr << "Warning: Group '" << groupName << "' contains no valid items.\n";
             namedGroups.erase(groupName);
-            continue;
+            throw std::runtime_error("Group '" + groupName + "' contains no valid items.");
         }
 
         it->second = std::move(items);
@@ -651,6 +647,25 @@ int main(int argc, char *argv[]) {
     auto binGroups = parseNamedGroups(groupBinsArg);
     auto processGroups = parseNamedGroups(groupProcsArg);
 
+    std::unique_ptr<RooFitResult> fitResPtr;
+    RooFitResult* fitRes = nullptr;
+    if (postfit) {
+        // Load RooFitResult safely
+        try {
+            fitResPtr = std::make_unique<RooFitResult>(ch::OpenFromTFile<RooFitResult>(fitresult));
+        } catch (const std::exception &e) {
+            throw std::runtime_error("Failed to load RooFitResult: " + std::string(e.what()));
+        }
+
+        fitRes = (fitResPtr && fitResPtr->floatParsFinal().getSize() > 0)  ? fitResPtr.get() : nullptr;
+
+        if (fitRes) {
+            std::cout << printTimestamp() << " Valid fit result found (" << fitresult << "), with " << fitRes->floatParsFinal().getSize() << " parameters." << std::endl;
+        } else {
+            throw std::runtime_error("Fit result is invalid!");
+        }
+    }
+
     // Load datacard for later histogram rebinning
     if (!std::filesystem::exists(datacard)) throw std::runtime_error("Error: Datacard file '" + datacard + "' does not exist.");
     ch::CombineHarvester cmb_restore;
@@ -675,30 +690,33 @@ int main(int argc, char *argv[]) {
     ch::ParseCombineWorkspace(cmb, *ws, "ModelConfig", dataset, false);
     std::cout << "\n\n" << printTimestamp() << " Initialized CombineHarvester instance from workspace " << "\n" << std::endl;
 
-    // Freeze parameters if specified
-    if (!freeze_arg.empty()) {
-        std::vector<std::string> freezeVars;
-        boost::split(freezeVars, freeze_arg, boost::is_any_of(","));
+    // Lambda to freeze parameters
+    auto freeze_parameters = [&]() {
+        if (!freeze_arg.empty()) {
+            std::vector<std::string> freezeVars;
+            boost::split(freezeVars, freeze_arg, boost::is_any_of(","));
 
-        for (const auto &item : freezeVars) {
-            std::vector<std::string> parts;
-            boost::split(parts, item, boost::is_any_of("="));
+            for (const auto &item : freezeVars) {
+                std::vector<std::string> parts;
+                boost::split(parts, item, boost::is_any_of("="));
 
-            ch::Parameter *par = cmb.GetParameter(parts[0]);
+                ch::Parameter *par = cmb.GetParameter(parts[0]);
 
-            if (!par)
-                throw std::runtime_error("Parameter not found: " + parts[0]);
+                if (!par) throw std::runtime_error("Parameter not found: " + parts[0]);
 
-            // Set value if specified
-            if (parts.size() == 2)
-                par->set_val(boost::lexical_cast<double>(parts[1]));
+                // Set value if specified
+                if (parts.size() == 2) par->set_val(boost::lexical_cast<double>(parts[1]));
 
-            par->set_frozen(true);
+                par->set_frozen(true);
 
-            std::cout << "Freezing parameter: " << parts[0]
-                      << (parts.size() == 2 ? " to " + parts[1] : "") << std::endl;
+                std::cout << "Freezing parameter: " << parts[0]
+                          << (parts.size() == 2 ? " to " + parts[1] : "") << std::endl;
+            }
         }
-    }
+    };
+
+    // Freeze parameters if specified
+    freeze_parameters();
 
     // Create output ROOT file
     TFile outfile(output.c_str(), "RECREATE");
@@ -716,28 +734,12 @@ int main(int argc, char *argv[]) {
 
     // Generate post-fit histograms if requested
     if (postfit) {
-        // Load RooFitResult safely
-        std::unique_ptr<RooFitResult> fitResPtr;
-        try {
-            fitResPtr = std::make_unique<RooFitResult>(ch::OpenFromTFile<RooFitResult>(fitresult));
-        } catch (const std::exception &e) {
-            std::cerr << "Failed to load RooFitResult: " << e.what() << std::endl;
-            std::cerr << "Exiting..." << std::endl;
-            return 1;
-        }
-
-        RooFitResult* fitRes = (fitResPtr && fitResPtr->floatParsFinal().getSize() > 0)  ? fitResPtr.get() : nullptr;
-
-        if (fitRes) {
-            std::cout << printTimestamp() << " Valid fit result found (" << fitresult << "), with " << fitRes->floatParsFinal().getSize() << " parameters." << std::endl;
-        } else {
-            std::cerr << "Fit result is invalid!" << std::endl;
-            std::cerr << "Exiting..." << std::endl;
-            return 1;
-        }
 
         // Update model parameters to post-fit values
         cmb.UpdateParameters(*fitRes);
+
+        // // Freeze parameters if specified
+        // freeze_parameters();
 
         // Prepare containers
         std::map<std::string, std::map<std::string, TH1F>> postfitHists;
