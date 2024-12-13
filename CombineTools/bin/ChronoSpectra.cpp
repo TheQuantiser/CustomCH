@@ -502,11 +502,11 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
 
     // Add legend entries
     int ndecpos1 = GetSigDecPos({nominal_integral, up_integral, down_integral});
-    ndecpos1 = std::min(std::abs(ndecpos1 + 3), 2);
+    ndecpos1 = std::min(std::abs(ndecpos1), 2);
     double up_integral_deviation = 100. * (up_integral - nominal_integral) / nominal_integral;
     double down_integral_deviation = 100. * (down_integral - nominal_integral) / nominal_integral;
     int ndecpos2 = GetSigDecPos({down_integral_deviation, up_integral_deviation});
-    ndecpos2 = std::min(std::abs(ndecpos2), 1);
+    ndecpos2 = (ndecpos2 > 0) ? std::min(ndecpos2, 2) : 0;
     legend.AddEntry(&nominal, ("Nominal (n= " + FormatDecPos(ndecpos1, nominal_integral) + ")").c_str(), "l");
     legend.AddEntry(&up, ("Up (n= " + FormatDecPos(ndecpos1, up_integral) + ", " + (up_integral_deviation > 0 ? "+" : "") + FormatDecPos(ndecpos2, up_integral_deviation) + "%)").c_str(), "l");
     legend.AddEntry(&down, ("Down (n=" + FormatDecPos(ndecpos1, down_integral) + ", " + (down_integral_deviation > 0 ? "+" : "") + FormatDecPos(ndecpos2, down_integral_deviation) + "%)").c_str(), "l");
@@ -557,7 +557,7 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     rel_diff_up->GetYaxis()->SetNdivisions(505);
     rel_diff_up->SetTitle("");
     rel_diff_up->GetYaxis()->SetMaxDigits(3);
-    TGaxis::SetExponentOffset(-0.15, -0.1, "y");
+    TGaxis::SetExponentOffset(-0.15, -0.15, "y");
 
     rel_diff_up->Draw("hist");
 
