@@ -76,7 +76,8 @@ double CombineHarvester::GetUncertainty() {
     // Add the split-normal variance contribution for this parameter.
     // See https://en.wikipedia.org/wiki/Split_normal_distribution
     // Some critiques here: https://www.slac.stanford.edu/econf/C030908/papers/WEMT002.pdf
-    variance += (1.0 - (2.0 / M_PI)) * std::pow(sigma_2 - sigma_1, 2) + sigma_1 * sigma_2;
+    // variance += (1.0 - (2.0 / M_PI)) * std::pow(sigma_2 - sigma_1, 2) + sigma_1 * sigma_2;
+    variance += (sigma_1 * sigma_1 + sigma_2 * sigma_2) / 2.;
   }
 
   // Return the total uncertainty as the square root of the accumulated variance
@@ -167,7 +168,8 @@ TH1F CombineHarvester::GetShapeWithUncertainty() {
     // Some critiques here: https://www.slac.stanford.edu/econf/C030908/papers/WEMT002.pdf
     const double sigma_1 = std::fabs(nominal_rate - rate_d); // Left-side deviation
     const double sigma_2 = std::fabs(rate_u - nominal_rate); // Right-side deviation
-    rate_variance += (1.0 - (2.0 / M_PI)) * std::pow(sigma_2 - sigma_1, 2) + sigma_1 * sigma_2;
+    // rate_variance += (1.0 - (2.0 / M_PI)) * std::pow(sigma_2 - sigma_1, 2) + sigma_1 * sigma_2;
+    rate_variance += (sigma_1 * sigma_1 + sigma_2 * sigma_2) / 2.;
 
     // Update bin variances using split-normal distribution
     for (int bin_idx = 1; bin_idx <= n_bins; ++bin_idx) {
@@ -177,8 +179,9 @@ TH1F CombineHarvester::GetShapeWithUncertainty() {
 
       const double bin_sigma_1 = std::fabs(bin_nom - bin_d);
       const double bin_sigma_2 = std::fabs(bin_u - bin_nom);
-      bin_variances[bin_idx - 1] += (1.0 - (2.0 / M_PI)) * std::pow(bin_sigma_2 - bin_sigma_1, 2) +
-                                    bin_sigma_1 * bin_sigma_2;
+      // bin_variances[bin_idx - 1] += (1.0 - (2.0 / M_PI)) * std::pow(bin_sigma_2 - bin_sigma_1, 2) +
+      //                               bin_sigma_1 * bin_sigma_2;
+      bin_variances[bin_idx - 1] += (bin_sigma_1 * bin_sigma_1 + bin_sigma_2 * bin_sigma_2) / 2.;
     }
   }
 

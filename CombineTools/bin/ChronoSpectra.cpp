@@ -147,6 +147,10 @@
  --sepBinRateCorr         : Compute separate rate correlations for bins within bin groups (skipped if false)
                              (implicit: true; default: false).
                             No input required for `true`.
+ --plotShapeSyst          : Plot up/dn shape variations for each parameter and save to directory specified by systSaveDir (skipped if false)
+                             (implicit: true; default: false).
+                             No input required for `true`.
+--systSaveDir             : Directory for saving pdf and png plots of systematic shape variations for each parameter.
 
  --------------
  Example Usage:
@@ -188,12 +192,24 @@ ChronoSpectra --help \
 #include "CombineHarvester/CombineTools/interface/CombineHarvester.h"
 #include "CombineHarvester/CombineTools/interface/ParseCombineWorkspace.h"
 #include "CombineHarvester/CombineTools/interface/TFileIO.h"
+#include "TROOT.h"
+#include <TCanvas.h>
+#include <TH1F.h>
+#include <TLegend.h>
+#include <TLegendEntry.h>
+#include <TPad.h>
+#include <TStyle.h>
+#include <TLine.h>
+#include <TPaveText.h>
+#include <TGaxis.h>
+
 
 // User input parser
 boost::program_options::options_description config("Configuration");
 
 // Command-line arguments
-std::string datacard, workspace, fitresult, output, groupBinsArg, groupProcsArg, freeze_arg, dataset = "data_obs";
+std::string datacard, workspace, fitresult, output, groupBinsArg,
+    groupProcsArg, freeze_arg, dataset = "data_obs", systSaveDir = "shapeSystPlots";
 
 // User input parameter storage
 unsigned samples = 2000;
@@ -203,8 +219,9 @@ bool getRateCorr = false, getHistBinCorr = false;
 bool sepProcHists = false, sepBinHists = false;
 bool sepProcHistBinCorr = false, sepBinHistBinCorr = false;
 bool sepBinRateCorr = false;
+bool plotShapeSyst = true;
+bool logy = false;
 ch::CombineHarvester* cmb_restore_ptr = nullptr;
-
 
 std::string printTimestamp() {
     auto now = std::chrono::system_clock::now();
@@ -317,6 +334,264 @@ std::map<std::string, std::vector<std::string>> parseNamedGroups(const std::stri
     return namedGroups;
 }
 
+void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& paramName, const std::string& saveName) {
+    // Extract the parameter
+    ch::Parameter* param = cmb.GetParameter(paramName);
+    if (!param) {
+        throw std::runtime_error("Parameter not found: " + paramName);
+    }
+
+    const double original_val = param->val();
+    const double err_u = param->err_u();
+    const double err_d = param->err_d();
+
+    // Lambda for histogram creation
+    auto CreateShape = [&](double value) {
+        param->set_val(value);
+        return cmb.GetShape();
+    };
+
+    // Create nominal, up, and down shapes
+    TH1F nominal = CreateShape(original_val);
+    TH1F up = CreateShape(original_val + err_u);
+    TH1F down = CreateShape(original_val + err_d);
+
+    const double nominal_integral = nominal.Integral();
+    const double up_integral = up.Integral();
+    const double down_integral = down.Integral();
+
+    if (std::abs(nominal_integral - up_integral) < 1E-7 && std::abs(down_integral - nominal_integral) < 1E-7 && std::abs(up_integral - down_integral) < 1E-7) return;
+
+    param->set_val(original_val);  // Restore original value
+
+    // Create canvas
+    TCanvas canvas("canvas", "canvas", 2800, 2400);
+
+    // Upper pad (log scale)
+    TPad pad0("pad0", "", 0., 0.4, 1., 1.);
+    pad0.SetLeftMargin(0.25);
+    pad0.SetRightMargin(0.05);
+    pad0.SetBottomMargin(0.015);
+    pad0.SetTopMargin(0.1);
+    pad0.SetGrid(1, 1);
+    pad0.Draw();
+    pad0.cd();
+
+    std::string plotName = saveName + "_" + paramName;
+    nominal.SetTitle(plotName.c_str());
+    nominal.GetYaxis()->SetMoreLogLabels();
+    nominal.GetYaxis()->CenterTitle();
+    nominal.GetYaxis()->SetTitleOffset(0.96);
+    nominal.GetXaxis()->SetLabelSize(0.);
+    nominal.GetXaxis()->SetTitleSize(0.);
+    nominal.GetYaxis()->SetTitleSize(0.1);
+    nominal.GetYaxis()->SetLabelSize(0.085);
+    nominal.SetLineColor(kBlack);
+    nominal.SetLineWidth(5);
+    up.SetLineColor(kRed);
+    up.SetLineWidth(5);
+    down.SetLineColor(kBlue);
+    down.SetLineWidth(5);
+
+    // nominal.Draw("hist");
+    // up.Draw("hist same");
+    // down.Draw("hist same");
+
+    // Lambda to calculate min/max
+    auto GetHistMinMax = [](const std::vector<TH1F*>& hists) {
+        double minVal = std::numeric_limits<double>::max();
+        double maxVal = -std::numeric_limits<double>::max();
+        for (const auto* hist : hists) {
+            minVal = std::min(minVal, hist->GetMinimum());
+            maxVal = std::max(maxVal, hist->GetMaximum());
+        }
+        return std::make_pair(minVal, maxVal);
+    };
+
+    auto [yMin, yMax] = GetHistMinMax({&nominal, &up, &down});
+
+    if (logy) {
+        pad0.SetLogy();
+        yMin = std::max(yMin * 0.8, 0.01); // Apply padding and avoid zero
+        yMax *= 1.2; // Apply upper padding
+    } else {
+        double yMinPadding = 0.05;
+        double yMaxPadding = 0.05;
+        double linUnit = (yMax - yMin) / (1.0 - yMinPadding - yMaxPadding);
+        yMin = yMin - yMinPadding * linUnit;
+        yMax = yMax + yMaxPadding * linUnit;
+    }
+
+    nominal.SetMinimum(yMin);
+    nominal.SetMaximum(yMax);
+    // nominal.GetYaxis()->SetRangeUser(yMin, yMax);
+
+    nominal.Draw("hist same");
+    up.Draw("hist same");
+    down.Draw("hist same");
+    gPad->RedrawAxis();
+    gPad->RedrawAxis("G");
+    gPad->Update();
+    gPad->Modified();
+    gPad->Update();
+    canvas.RedrawAxis();
+    canvas.Update();
+    canvas.Modified();
+
+    pad0.Update();
+
+    TPaveText *hTitle = (TPaveText*)(pad0.GetPrimitive("title"));
+    hTitle->SetTextSize(0.06);
+    pad0.Modified();
+
+    TLegend legend(0.57, 0.67, 0.95, 0.9);
+    // TLegend legend(0.4, 0.25);
+    legend.SetNColumns(1);
+    legend.SetTextSize(0.046);
+    legend.SetFillStyle(1000);
+
+
+    // Lambda function to determine the decimal position of the smallest significant difference
+    // in a list of double values.
+    auto GetSigDecPos = [](const std::vector<double>& values) -> int {
+        if (values.size() < 2) return -1;  // Not enough numbers to compare
+
+        double minDiff = std::numeric_limits<double>::max();
+
+        for (size_t i = 0; i < values.size(); ++i) {
+            double abs_val_i = std::abs(values[i]);
+            for (size_t j = i + 1; j < values.size(); ++j) {
+                double abs_val_j = std::abs(values[j]);
+                double diff = std::abs(abs_val_i - abs_val_j);
+                diff = std::min(std::min(abs_val_i, abs_val_j), diff);
+                if (diff > 0.0 && diff < minDiff) {
+                    minDiff = diff;
+                }
+            }
+        }
+
+        if (minDiff == std::numeric_limits<double>::max()) return -1;
+
+        int decimalPosition = -static_cast<int>(std::round(std::log10(minDiff)));
+
+        return decimalPosition;
+    };
+
+
+    // Lambda function to format a double value with a specified number of decimal positions
+    // This function takes an integer `ndec` and a double `x`, formats `x` to `ndec` decimal
+    // places, and returns the formatted number as a string.
+    auto FormatDecPos = [](int ndec, double x) -> std::string {
+        std::ostringstream stream;
+
+        // Calculate the rounding factor as 10 raised to the power of `ndec`.
+        double factor = std::pow(10.0, ndec);
+
+        // Apply rounding logic using the calculated factor.
+        x = std::round(x * factor) / factor;
+
+        // Determine precision for positive `ndec`.
+        int precision = (ndec > 0) ? ndec : 0;
+
+        // Format the number with fixed-point notation and set precision
+        stream << std::fixed << std::setprecision(precision) << x;
+
+        // Return the formatted string
+        return stream.str();
+    };
+
+    // Add legend entries
+    int ndecpos1 = GetSigDecPos({nominal_integral, up_integral, down_integral});
+    ndecpos1 = std::min(std::abs(ndecpos1 + 3), 2);
+    double up_integral_deviation = 100. * (up_integral - nominal_integral) / nominal_integral;
+    double down_integral_deviation = 100. * (down_integral - nominal_integral) / nominal_integral;
+    int ndecpos2 = GetSigDecPos({down_integral_deviation, up_integral_deviation});
+    ndecpos2 = std::min(std::abs(ndecpos2), 1);
+    legend.AddEntry(&nominal, ("Nominal (n= " + FormatDecPos(ndecpos1, nominal_integral) + ")").c_str(), "l");
+    legend.AddEntry(&up, ("Up (n= " + FormatDecPos(ndecpos1, up_integral) + ", " + (up_integral_deviation > 0 ? "+" : "") + FormatDecPos(ndecpos2, up_integral_deviation) + "%)").c_str(), "l");
+    legend.AddEntry(&down, ("Down (n=" + FormatDecPos(ndecpos1, down_integral) + ", " + (down_integral_deviation > 0 ? "+" : "") + FormatDecPos(ndecpos2, down_integral_deviation) + "%)").c_str(), "l");
+    legend.Draw();
+
+    canvas.cd();
+
+    // Lower pad (linear scale)
+    TPad pad1("pad1", "", 0., 0., 1., 0.4);
+    pad1.SetLeftMargin(0.25);
+    pad1.SetRightMargin(0.05);
+    pad1.SetBottomMargin(0.38);
+    pad1.SetTopMargin(0.0);
+    pad1.SetGrid(1, 1);
+    pad1.Draw();
+    pad1.cd();
+
+    TH1F* rel_diff_up = (TH1F*)up.Clone("rel_diff_up");
+    TH1F* rel_diff_down = (TH1F*)down.Clone("rel_diff_down");
+    rel_diff_up->Reset();
+    rel_diff_down->Reset();
+    // Calculate relative differences
+    for (int bin = 1; bin <= rel_diff_up->GetNbinsX(); ++bin) {
+        double nom_val = nominal.GetBinContent(bin);
+        if (nom_val > 0) {
+            rel_diff_up->SetBinContent(bin, 100. * (up.GetBinContent(bin) - nom_val) / nom_val);
+            rel_diff_down->SetBinContent(bin, 100. * (down.GetBinContent(bin) - nom_val) / nom_val);
+        } else {
+            rel_diff_up->SetBinContent(bin, 0); // Unfilled behavior
+            rel_diff_down->SetBinContent(bin, 0); // Unfilled behavior
+        }
+    }
+
+    rel_diff_up->SetLineColor(kRed);
+    rel_diff_down->SetLineColor(kBlue);
+    rel_diff_up->SetLineWidth(5);
+    rel_diff_down->SetLineWidth(5);
+
+    rel_diff_up->GetYaxis()->SetTitle("#splitline{Variation}{    (%)}");
+    rel_diff_up->GetYaxis()->CenterTitle();
+    rel_diff_up->GetXaxis()->CenterTitle();
+    rel_diff_up->GetYaxis()->SetTitleOffset(0.67);
+    rel_diff_up->GetXaxis()->SetTitleOffset(1.);
+    rel_diff_up->GetXaxis()->SetTitleSize(0.145);
+    rel_diff_up->GetYaxis()->SetTitleSize(0.145);
+    rel_diff_up->GetXaxis()->SetLabelSize(0.13);
+    rel_diff_up->GetYaxis()->SetLabelSize(0.13);
+    rel_diff_up->GetYaxis()->SetNdivisions(505);
+    rel_diff_up->SetTitle("");
+    rel_diff_up->GetYaxis()->SetMaxDigits(3);
+    TGaxis::SetExponentOffset(-0.15, -0.1, "y");
+
+    rel_diff_up->Draw("hist");
+
+    double xMin = rel_diff_up->GetXaxis()->GetXmin();
+    double xMax = rel_diff_up->GetXaxis()->GetXmax();
+    TLine line(xMin, 0.0, xMax, 0.0);
+    line.SetLineColor(kBlack);
+    line.SetLineWidth(6);
+    // line.SetLineStyle(7);
+
+    rel_diff_up->Draw("hist same");
+    line.Draw();
+    rel_diff_down->Draw("hist same");
+
+    auto [rMin, rMax] = GetHistMinMax({rel_diff_up, rel_diff_down});
+    // rel_diff_up->SetMinimum(rMin - 0.2 * std::abs(rMax - rMin));
+    // rel_diff_up->SetMaximum(rMax + 0.2 * std::abs(rMax - rMin));
+    double rOffset = std::max(std::abs(rMin), std::abs(rMax)) * 0.2;
+    rel_diff_up->SetMinimum(std::min(-rOffset, rMin - rOffset));
+    rel_diff_up->SetMaximum(std::max(rOffset, rMax + rOffset));
+
+    gPad->RedrawAxis();
+    gPad->RedrawAxis("G");
+    gPad->Update();
+    gPad->Modified();
+    gPad->Update();
+    canvas.RedrawAxis();
+    canvas.Update();
+    canvas.Modified();
+
+    // canvas.SaveAs((systSaveDir + "/" + plotName + ".pdf").c_str());
+    canvas.SaveAs((systSaveDir + "/" + plotName + ".png").c_str());
+}
+
 void writeHistogramsToFile(std::map<std::string, std::map<std::string, TH1F>> &histograms,
                            TFile &outfile,
                            const std::string &prefix) {
@@ -324,15 +599,12 @@ void writeHistogramsToFile(std::map<std::string, std::map<std::string, TH1F>> &h
 
     for (auto &[binName, procMap] : histograms) {
         for (auto &[procName, histogram] : procMap) {
-            // Construct and log the path
             std::string path = prefix + "/" + binName + "/" + procName;
-
+            histogram.SetTitle(procName.c_str());
             std::cout << printTimestamp()
                       << "\t--> " << std::setw(50) << std::left << path
                       << " = " << histogram.Integral()
                       << " ± " << histogram.GetBinContent(0) << std::endl;
-
-            // Write histogram to file
             ch::WriteToTFile(&histogram, &outfile, path);
         }
     }
@@ -391,6 +663,13 @@ void processAll(ch::CombineHarvester &cmb,
 
     // Determine whether to apply sampling uncertainties
     bool doSamplingUnc = isPostfit & (samples > 0);
+
+    auto plotSystematics = [&](ch::CombineHarvester & subCmb, const std::string & binName, const std::string & procName) -> void {
+        for (const auto& param : subCmb.GetParameters()) {
+            const std::string & paramName = param.name();
+            plotShapeSystVariations(subCmb, paramName, binName + "_" + procName);
+        }
+    };
 
     // Lambda: Create histograms with or without uncertainty
     auto createHistogram = [&](ch::CombineHarvester & subCmb, const std::string & binName, const std::string & procName) -> void {
@@ -494,10 +773,17 @@ void processAll(ch::CombineHarvester &cmb,
         for (const auto &proc : binCmb.cp().process_set()) {
             bool isProcGrouped = processedProcesses.count(proc) > 0;
 
+            ch::CombineHarvester singleProcCmb = binCmb.cp().process({proc});
+
+            // Plot prefit systematic shape variations for each parameter
+            if (plotShapeSyst && !isPostfit && (singleProcCmb.bin_set().size() == 1)) {
+                plotSystematics(singleProcCmb, binName, proc);
+            }
+
             // Skip grouped processes unless explicitly required
             if (isProcGrouped && !sepProcHists && !sepProcHistBinCorr) continue;
 
-            ch::CombineHarvester singleProcCmb = binCmb.cp().process({proc});
+
 
             if (singleProcCmb.cp().process_set().empty()) {
                 std::cerr << "Warning: Process '" << proc << "' not found." << std::endl;
@@ -568,6 +854,12 @@ int main(int argc, char *argv[]) {
 
     displayStartupMessage();
 
+    gROOT->SetBatch();
+    gStyle->SetOptStat(0);
+    gStyle->SetLineScalePS(1);
+    gStyle->SetCanvasPreferGL(1);
+    // gStyle->SetOptTitle(0);
+
     gSystem->Load("libHiggsAnalysisCombinedLimit");
     // Define command-line options
     bool show_help = false;
@@ -592,7 +884,10 @@ int main(int argc, char *argv[]) {
     ("sepBinHists", boost::program_options::value<bool>(&sepBinHists)->default_value(false)->implicit_value(true), "Generate separate histograms for bins within bin groups (skipped if false) (implicit: true; default: false). No input required for `true`.")
     ("sepProcHistBinCorr", boost::program_options::value<bool>(&sepProcHistBinCorr)->default_value(false)->implicit_value(true), "Compute separate histogram bin correlations for processes within process groups (skipped if false) (implicit: true; default: false). No input required for `true`.")
     ("sepBinHistBinCorr", boost::program_options::value<bool>(&sepBinHistBinCorr)->default_value(false)->implicit_value(true), "Compute separate histogram bin correlations for bins within bin groups (skipped if false) (implicit: true; default: false). No input required for `true`.")
-    ("sepBinRateCorr", boost::program_options::value<bool>(&sepBinRateCorr)->default_value(false)->implicit_value(true), "Compute separate rate correlations for bins within bin groups (skipped if false) (implicit: true; default: false). No input required for `true`.");
+    ("sepBinRateCorr", boost::program_options::value<bool>(&sepBinRateCorr)->default_value(false)->implicit_value(true), "Compute separate rate correlations for bins within bin groups (skipped if false) (implicit: true; default: false). No input required for `true`.")
+    ("plotShapeSyst", boost::program_options::value<bool>(&plotShapeSyst)->default_value(false)->implicit_value(true), "Plot up/dn shape variations for each parameter and save to directory specified by systSaveDir. Skipped for grouped bins or grouped processes. (skipped if false) (implicit: true; default: false). No input required for `true`.")
+    ("systSaveDir", boost::program_options::value<std::string>(&systSaveDir)->default_value(systSaveDir), "Directory for saving pdf and png plots of systematic shape variations for each parameter.")
+    ("logy", boost::program_options::value<bool>(&logy)->default_value(false)->implicit_value(true), "Set y-axis to log scale in systematic plots.");
 
     boost::program_options::variables_map vm;
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, config), vm);
@@ -614,7 +909,7 @@ int main(int argc, char *argv[]) {
     boost::program_options::notify(vm);
 
     // Print all parameters and their values
-    std::cout << "\n\n<<" << printTimestamp() << "Using option values:" << std::endl;
+    std::cout << "\n\n>>" << printTimestamp() << " Using option values:" << std::endl;
     for (const auto &option : config.options()) {
         const std::string &name = option->long_name();
         std::cout << "--" << name << ": ";
@@ -666,6 +961,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    std::cout << std::endl;
+
     // Load datacard for later histogram rebinning
     if (!std::filesystem::exists(datacard)) throw std::runtime_error("Error: Datacard file '" + datacard + "' does not exist.");
     ch::CombineHarvester cmb_restore;
@@ -709,7 +1006,7 @@ int main(int argc, char *argv[]) {
 
                 par->set_frozen(true);
 
-                std::cout << "Freezing parameter: " << parts[0]
+                std::cout << "\n" << printTimestamp() << " Freezing parameter: " << parts[0]
                           << (parts.size() == 2 ? " to " + parts[1] : "") << std::endl;
             }
         }
@@ -722,6 +1019,35 @@ int main(int argc, char *argv[]) {
     TFile outfile(output.c_str(), "RECREATE");
     if (!outfile.IsOpen()) throw std::runtime_error("Failed to create output file: " + output);
     TH1::AddDirectory(false);
+
+    // if (plotShapeSyst && !systSaveDir.empty()) {
+    //     bool tmpSuccess = std::filesystem::create_directories(systSaveDir);
+    //     if (!tmpSuccess) throw std::runtime_error("Failed to create systematics plotting directory: " + systSaveDir);
+    //     std::cout << "\n" << printTimestamp() << " Created systematics plotting directory: " << systSaveDir << std::endl;
+    // }
+    // std::cout << __LINE__ << " " << plotShapeSyst << (!systSaveDir.empty()) << std::endl;
+    if (plotShapeSyst && !systSaveDir.empty()) {
+        gSystem->MakeDirectory(systSaveDir.c_str());
+        // if (!gSystem->AccessPathName(systSaveDir.c_str())) {  // Check if directory already exists
+        //     if ( != 0) {
+        //         throw std::runtime_error("Failed to create systematics plotting directory: " + systSaveDir);
+        //     }
+        // }
+
+        // Verify the directory exists after creation
+        if (gSystem->AccessPathName(systSaveDir.c_str())) {
+            throw std::runtime_error("Failed to create systematics plotting directory: " + systSaveDir);
+        }
+
+        std::cout << "\n" << printTimestamp() << " Created systematics plotting directory: " << systSaveDir << std::endl;
+    }
+
+    // if (plotShapeSyst && !systSaveDir.empty() && gSystem->AccessPathName(systSaveDir.c_str()) &&
+    //         gSystem->MakeDirectory(systSaveDir.c_str()) != 0) {
+    //     throw std::runtime_error("Failed to create systematics plotting directory: " + systSaveDir);
+    // } else {
+    //     std::cout << "\n" << printTimestamp() << " Created systematics plotting directory: " << systSaveDir << std::endl;
+    // }
 
     // Generate pre-fit histograms if requested
     if (!skipprefit) {
