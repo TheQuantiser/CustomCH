@@ -62,6 +62,7 @@
  ==========================
  Installation instructions:
  ==========================
+    cmssw-el9
     cmsrel CMSSW_14_1_0_pre4
     cd CMSSW_14_1_0_pre4/src
     cmsenv
@@ -71,7 +72,7 @@
     git checkout v10.0.2
     cd $CMSSW_BASE/src/
     git clone https://github.com/TheQuantiser/CombineHarvester.git
-    scram b
+    scram b -j$(nproc)
     cmsenv
 
  ---------
@@ -200,9 +201,8 @@ ChronoSpectra --help \
 #include <TPad.h>
 #include <TStyle.h>
 #include <TLine.h>
-#include <TPaveText.h>
-#include <TColor.h>
 #include <TGaxis.h>
+#include <TPaveText.h>
 
 
 // User input parser
@@ -350,7 +350,6 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     auto CreateShape = [&](double value) {
         param->set_val(value);
         return cmb.GetShape();
-        param->set_val(original_val);
     };
 
     // Create nominal, up, and down shapes
@@ -362,6 +361,7 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     down.SetName("h_down");
 
     // Restore original value
+    param->set_val(original_val);
 
     const double nominal_integral = nominal.Integral();
     const double up_integral = up.Integral();
@@ -386,9 +386,6 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     pad0.Draw();
     pad0.cd();
 
-    const std::string color_up = "#005a32";
-    const std::string color_down = "#084594";
-
     std::string plotName = saveName + "_" + paramName;
     nominal.SetTitle(plotName.c_str());
     nominal.GetYaxis()->SetMoreLogLabels();
@@ -401,9 +398,9 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     nominal.GetYaxis()->SetLabelSize(0.085);
     nominal.SetLineColor(kBlack);
     nominal.SetLineWidth(5);
-    up.SetLineColor(TColor::GetColor(color_up.c_str()));
+    up.SetLineColor(kRed);
     up.SetLineWidth(5);
-    down.SetLineColor(TColor::GetColor(color_down.c_str()));
+    down.SetLineColor(kGreen);
     down.SetLineWidth(5);
 
     nominal.Draw("hist");
@@ -435,10 +432,8 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
         yMax = yMax + yMaxPadding * linUnit;
     }
 
-    // std::cout << plotName << " yMin=" << yMin << ", yMax=" << yMax << std::endl;
     nominal.SetMinimum(yMin);
     nominal.SetMaximum(yMax);
-    // nominal.GetYaxis()->SetRangeUser(yMin, yMax);
 
     nominal.Draw("hist");
     up.Draw("hist same");
@@ -453,11 +448,10 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     pad0.Modified();
 
     TLegend legend(0.6, 0.67, 0.95, 0.9);
-    // TLegend legend(0.4, 0.25);
     legend.SetNColumns(1);
     legend.SetTextSize(0.046);
     legend.SetFillStyle(1000);
-    legend.SetFillColor(TColor::GetColor("#d9d9d9"));
+    legend.SetFillColor(kGray);
 
     // Lambda function to determine the decimal position of the smallest significant difference
     // in a list of double values.
@@ -532,50 +526,51 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     pad1.Draw();
     pad1.cd();
 
-    TH1F* rel_diff_up = (TH1F*)up.Clone("rel_diff_up");
-    TH1F* rel_diff_down = (TH1F*)down.Clone("rel_diff_down");
-    rel_diff_up->Reset();
-    rel_diff_down->Reset();
+    TH1F rel_diff_up = TH1F(up);
+    TH1F rel_diff_down = TH1F(down);
+    rel_diff_up.SetName("rel_diff_up");
+    rel_diff_down.SetName("rel_diff_down");
+    rel_diff_up.Reset();
+    rel_diff_down.Reset();
     // Calculate relative differences
-    for (int bin = 1; bin <= rel_diff_up->GetNbinsX(); ++bin) {
+    for (int bin = 1; bin <= rel_diff_up.GetNbinsX(); ++bin) {
         double nom_val = nominal.GetBinContent(bin);
         if (nom_val > 0) {
-            rel_diff_up->SetBinContent(bin, 100. * (up.GetBinContent(bin) - nom_val) / nom_val);
-            rel_diff_down->SetBinContent(bin, 100. * (down.GetBinContent(bin) - nom_val) / nom_val);
+            rel_diff_up.SetBinContent(bin, 100. * (up.GetBinContent(bin) - nom_val) / nom_val);
+            rel_diff_down.SetBinContent(bin, 100. * (down.GetBinContent(bin) - nom_val) / nom_val);
         }
         else {
-            rel_diff_up->SetBinContent(bin, 0); // Unfilled behavior
-            rel_diff_down->SetBinContent(bin, 0); // Unfilled behavior
+            rel_diff_up.SetBinContent(bin, 0); // Unfilled behavior
+            rel_diff_down.SetBinContent(bin, 0); // Unfilled behavior
         }
     }
 
-    rel_diff_up->SetLineColor(TColor::GetColor(color_up.c_str()));
-    rel_diff_down->SetLineColor(TColor::GetColor(color_down.c_str()));
-    rel_diff_up->SetLineWidth(5);
-    rel_diff_down->SetLineWidth(5);
-    rel_diff_up->GetYaxis()->SetTitle("#splitline{Variation}{    (%)}");
-    rel_diff_up->GetYaxis()->CenterTitle();
-    rel_diff_up->GetXaxis()->CenterTitle();
-    rel_diff_up->GetYaxis()->SetTitleOffset(0.67);
-    rel_diff_up->GetXaxis()->SetTitleOffset(1.);
-    rel_diff_up->GetXaxis()->SetTitleSize(0.145);
-    rel_diff_up->GetYaxis()->SetTitleSize(0.145);
-    rel_diff_up->GetXaxis()->SetLabelSize(0.13);
-    rel_diff_up->GetYaxis()->SetLabelSize(0.13);
-    rel_diff_up->GetYaxis()->SetNdivisions(505);
-    rel_diff_up->SetTitle("");
-    rel_diff_up->GetYaxis()->SetMaxDigits(3);
+    rel_diff_up.SetLineColor(kRed);
+    rel_diff_down.SetLineColor(kGreen);
+    rel_diff_up.SetLineWidth(5);
+    rel_diff_down.SetLineWidth(5);
+    rel_diff_up.GetYaxis()->SetTitle("#splitline{Variation}{    (%)}");
+    rel_diff_up.GetYaxis()->CenterTitle();
+    rel_diff_up.GetXaxis()->CenterTitle();
+    rel_diff_up.GetYaxis()->SetTitleOffset(0.67);
+    rel_diff_up.GetXaxis()->SetTitleOffset(1.);
+    rel_diff_up.GetXaxis()->SetTitleSize(0.145);
+    rel_diff_up.GetYaxis()->SetTitleSize(0.145);
+    rel_diff_up.GetXaxis()->SetLabelSize(0.13);
+    rel_diff_up.GetYaxis()->SetLabelSize(0.13);
+    rel_diff_up.GetYaxis()->SetNdivisions(505);
+    rel_diff_up.SetTitle("");
+    rel_diff_up.GetYaxis()->SetMaxDigits(3);
 
-    rel_diff_up->Draw("hist");
+    rel_diff_up.Draw("hist");
 
-    double xMin = rel_diff_up->GetXaxis()->GetXmin();
-    double xMax = rel_diff_up->GetXaxis()->GetXmax();
+    double xMin = rel_diff_up.GetXaxis()->GetXmin();
+    double xMax = rel_diff_up.GetXaxis()->GetXmax();
     TLine line(xMin, 0.0, xMax, 0.0);
     line.SetLineColor(kBlack);
     line.SetLineWidth(6);
-    // line.SetLineStyle(7);
 
-    auto [rMin, rMax] = GetHistMinMax({rel_diff_up, rel_diff_down});
+    auto [rMin, rMax] = GetHistMinMax({&rel_diff_up, &rel_diff_down});
     double rOffset = std::abs(rMax - rMin) * 0.2;
     rMin = std::min(-rOffset, rMin - rOffset);
     rMin = std::min(rMin, -0.01);
@@ -584,31 +579,19 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
         rMin = -5.2;
         rMax = 5.2;
     }
-    rel_diff_up->SetMinimum(rMin);
-    rel_diff_up->SetMaximum(rMax);
-    rel_diff_up->SetMinimum(rMin);
-    rel_diff_up->SetMaximum(rMax);
+    rel_diff_up.SetMinimum(rMin);
+    rel_diff_up.SetMaximum(rMax);
+    rel_diff_up.SetMinimum(rMin);
+    rel_diff_up.SetMaximum(rMax);
 
-    // std::cout << plotName << " rMin=" << rMin << ", rMax=" << rMax << std::endl;
-
-    rel_diff_up->Draw("hist");
+    rel_diff_up.Draw("hist");
     line.Draw();
-    rel_diff_down->Draw("hist same");
+    rel_diff_down.Draw("hist same");
     pad1.RedrawAxis();
     pad1.Update();
     pad1.Modified();
 
-
-    // canvas.SaveAs((systSaveDir + "/" + plotName + ".pdf").c_str());
     canvas.SaveAs((systSaveDir + "/" + plotName + ".png").c_str());
-
-    nominal.Reset();
-    up.Reset();
-    down.Reset();
-    rel_diff_up->Reset();
-    rel_diff_down->Reset();
-    rel_diff_up->Delete();
-    rel_diff_down->Delete();
 }
 
 void writeHistogramsToFile(std::map<std::string, std::map<std::string, TH1F>> &histograms,
@@ -696,7 +679,7 @@ void processAll(ch::CombineHarvester &cmb,
         histograms[binName][procName] = doSamplingUnc  ? subCmb.cp().GetShapeWithUncertainty(*fitRes, samples) : subCmb.cp().GetShapeWithUncertainty();
         const TH1F &tmp = histograms[binName][procName];
         std::cout << printTimestamp() << std::setw(50) << std::left << std::string("\t") + binName + "/" + procName << " -> "
-        << tmp.Integral() << " +- " << tmp.GetBinContent(0) << std::endl;
+        << tmp.Integral() << " ± " << tmp.GetBinContent(0) << std::endl;
     };
 
     // Lambda: Handle rate correlations
@@ -877,7 +860,6 @@ int main(int argc, char *argv[]) {
     gStyle->SetOptStat(0);
     gStyle->SetLineScalePS(1);
     gStyle->SetCanvasPreferGL(1);
-    // gStyle->SetOptTitle(0);
 
     gSystem->Load("libHiggsAnalysisCombinedLimit");
     // Define command-line options
@@ -892,7 +874,7 @@ int main(int argc, char *argv[]) {
     ("fitresult", boost::program_options::value<std::string>(&fitresult)->default_value(""), "Path to RooFitResult file (default: none). Format: `filename:fit_name`.")
     ("postfit", boost::program_options::value<bool>(&postfit)->default_value(false)->implicit_value(true), "Enable generation of post-fit histograms (implicit: true; default: false). No input required for `true`. Requires a fit result file.")
     ("skipprefit", boost::program_options::value<bool>(&skipprefit)->default_value(false)->implicit_value(true), "Skip generation of pre-fit histograms (implicit: true; default: false). No input required for `true`. At least one of `--postfit` or `!skipprefit` must be enabled.")
-    ("samples", boost::program_options::value<unsigned>(&samples)->default_value(0), "Number of samples for uncertainty estimation (default: 0).")
+    ("samples", boost::program_options::value<unsigned>(&samples)->default_value(2000), "Number of samples for uncertainty estimation (default: 2000).")
     ("freeze", boost::program_options::value<std::string>(&freeze_arg)->default_value(""), "Freeze parameters during the fit (default: none). Example format: `PARAM1,PARAM2=X`.")
     ("groupBins", boost::program_options::value<std::string>(&groupBinsArg)->default_value(""), "Group bins under named groups (default: none). Format: `group1:bin1,bin2;group2:bin3`.")
     ("groupProcs", boost::program_options::value<std::string>(&groupProcsArg)->default_value(""), "Group processes under named groups (default: none). Format: `group1:proc1,proc2;group2:proc3`.")
@@ -912,7 +894,6 @@ int main(int argc, char *argv[]) {
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, config), vm);
 
     // Check for help flag before validating required options
-
     if (vm.count("help") && vm["help"].as<bool>()) {
         std::cout << "\n" << config << std::endl << "\nExample Usage:\n"
                   << "ChronoSpectra --workspace workspace.root --datacard datacard.txt --output output.root --dataset data_obs --postfit "
@@ -1008,7 +989,8 @@ int main(int argc, char *argv[]) {
 
     // Lambda to freeze parameters
     auto freeze_parameters = [&]() {
-        if (!freeze_arg.empty()) {
+        if (freeze_arg.empty()) return;
+         // {
             std::vector<std::string> freezeVars;
             boost::split(freezeVars, freeze_arg, boost::is_any_of(","));
 
@@ -1028,7 +1010,7 @@ int main(int argc, char *argv[]) {
                 std::cout << "\n" << printTimestamp() << " Freezing parameter: " << parts[0]
                           << (parts.size() == 2 ? " to " + parts[1] : "") << std::endl;
             }
-        }
+        // }
     };
 
     // Freeze parameters if specified
@@ -1039,19 +1021,8 @@ int main(int argc, char *argv[]) {
     if (!outfile.IsOpen()) throw std::runtime_error("Failed to create output file: " + output);
     TH1::AddDirectory(false);
 
-    // if (plotShapeSyst && !systSaveDir.empty()) {
-    //     bool tmpSuccess = std::filesystem::create_directories(systSaveDir);
-    //     if (!tmpSuccess) throw std::runtime_error("Failed to create systematics plotting directory: " + systSaveDir);
-    //     std::cout << "\n" << printTimestamp() << " Created systematics plotting directory: " << systSaveDir << std::endl;
-    // }
-    // std::cout << __LINE__ << " " << plotShapeSyst << (!systSaveDir.empty()) << std::endl;
     if (plotShapeSyst && !systSaveDir.empty()) {
         gSystem->MakeDirectory(systSaveDir.c_str());
-        // if (!gSystem->AccessPathName(systSaveDir.c_str())) {  // Check if directory already exists
-        //     if ( != 0) {
-        //         throw std::runtime_error("Failed to create systematics plotting directory: " + systSaveDir);
-        //     }
-        // }
 
         // Verify the directory exists after creation
         if (gSystem->AccessPathName(systSaveDir.c_str())) {
@@ -1060,13 +1031,6 @@ int main(int argc, char *argv[]) {
 
         std::cout << "\n" << printTimestamp() << " Created systematics plotting directory: " << systSaveDir << std::endl;
     }
-
-    // if (plotShapeSyst && !systSaveDir.empty() && gSystem->AccessPathName(systSaveDir.c_str()) &&
-    //         gSystem->MakeDirectory(systSaveDir.c_str()) != 0) {
-    //     throw std::runtime_error("Failed to create systematics plotting directory: " + systSaveDir);
-    // } else {
-    //     std::cout << "\n" << printTimestamp() << " Created systematics plotting directory: " << systSaveDir << std::endl;
-    // }
 
     // Generate pre-fit histograms if requested
     if (!skipprefit) {
