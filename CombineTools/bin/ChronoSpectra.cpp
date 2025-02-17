@@ -201,6 +201,7 @@ ChronoSpectra --help \
 #include <TStyle.h>
 #include <TLine.h>
 #include <TPaveText.h>
+#include <TColor.h>
 #include <TGaxis.h>
 
 
@@ -366,10 +367,14 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     const double up_integral = up.Integral();
     const double down_integral = down.Integral();
 
-    if (std::abs(nominal_integral - up_integral) < 1E-7 && std::abs(down_integral - nominal_integral) < 1E-7 && std::abs(up_integral - down_integral) < 1E-7) return;
+    const double skip_thres = 1E-7 * std::abs(nominal_integral);
+
+    if (!(nominal_integral > 0.) || (std::abs(nominal_integral - up_integral) < skip_thres && std::abs(down_integral - nominal_integral) < skip_thres && std::abs(up_integral - down_integral) < skip_thres)) return;
 
     // Create canvas
     TCanvas canvas("canvas", "canvas", 2800, 2400);
+
+    TGaxis::SetExponentOffset(-0.15, -0.15, "y");
 
     // Upper pad (log scale)
     TPad pad0("pad0", "", 0., 0.4, 1., 1.);
@@ -380,6 +385,9 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     pad0.SetGrid(1, 1);
     pad0.Draw();
     pad0.cd();
+
+    const std::string color_up = "#005a32";
+    const std::string color_down = "#084594";
 
     std::string plotName = saveName + "_" + paramName;
     nominal.SetTitle(plotName.c_str());
@@ -393,9 +401,9 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     nominal.GetYaxis()->SetLabelSize(0.085);
     nominal.SetLineColor(kBlack);
     nominal.SetLineWidth(5);
-    up.SetLineColor(kRed);
+    up.SetLineColor(TColor::GetColor(color_up.c_str()));
     up.SetLineWidth(5);
-    down.SetLineColor(kBlue);
+    down.SetLineColor(TColor::GetColor(color_down.c_str()));
     down.SetLineWidth(5);
 
     nominal.Draw("hist");
@@ -449,7 +457,7 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     legend.SetNColumns(1);
     legend.SetTextSize(0.046);
     legend.SetFillStyle(1000);
-
+    legend.SetFillColor(TColor::GetColor("#d9d9d9"));
 
     // Lambda function to determine the decimal position of the smallest significant difference
     // in a list of double values.
@@ -535,14 +543,14 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
             rel_diff_up->SetBinContent(bin, 100. * (up.GetBinContent(bin) - nom_val) / nom_val);
             rel_diff_down->SetBinContent(bin, 100. * (down.GetBinContent(bin) - nom_val) / nom_val);
         }
-        // else {
-        //     rel_diff_up->SetBinContent(bin, 0); // Unfilled behavior
-        //     rel_diff_down->SetBinContent(bin, 0); // Unfilled behavior
-        // }
+        else {
+            rel_diff_up->SetBinContent(bin, 0); // Unfilled behavior
+            rel_diff_down->SetBinContent(bin, 0); // Unfilled behavior
+        }
     }
 
-    rel_diff_up->SetLineColor(kRed);
-    rel_diff_down->SetLineColor(kBlue);
+    rel_diff_up->SetLineColor(TColor::GetColor(color_up.c_str()));
+    rel_diff_down->SetLineColor(TColor::GetColor(color_down.c_str()));
     rel_diff_up->SetLineWidth(5);
     rel_diff_down->SetLineWidth(5);
     rel_diff_up->GetYaxis()->SetTitle("#splitline{Variation}{    (%)}");
@@ -557,7 +565,6 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     rel_diff_up->GetYaxis()->SetNdivisions(505);
     rel_diff_up->SetTitle("");
     rel_diff_up->GetYaxis()->SetMaxDigits(3);
-    TGaxis::SetExponentOffset(-0.15, -0.15, "y");
 
     rel_diff_up->Draw("hist");
 
@@ -569,10 +576,14 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     // line.SetLineStyle(7);
 
     auto [rMin, rMax] = GetHistMinMax({rel_diff_up, rel_diff_down});
-    double rOffset = std::max(std::abs(rMin), std::abs(rMax)) * 0.2;
+    double rOffset = std::abs(rMax - rMin) * 0.2;
     rMin = std::min(-rOffset, rMin - rOffset);
     rMin = std::min(rMin, -0.01);
     rMax = std::max(rOffset, rMax + rOffset);
+    if (std::abs(rMin - 1.) < 1E-8 && std::abs(rMax - 1.) < 1E-8) {
+        rMin = -5.2;
+        rMax = 5.2;
+    }
     rel_diff_up->SetMinimum(rMin);
     rel_diff_up->SetMaximum(rMax);
     rel_diff_up->SetMinimum(rMin);
