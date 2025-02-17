@@ -349,20 +349,24 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     auto CreateShape = [&](double value) {
         param->set_val(value);
         return cmb.GetShape();
+        param->set_val(original_val);
     };
 
     // Create nominal, up, and down shapes
     TH1F nominal = CreateShape(original_val);
+    nominal.SetName("h_nominal");
     TH1F up = CreateShape(original_val + err_u);
+    up.SetName("h_up");
     TH1F down = CreateShape(original_val + err_d);
+    down.SetName("h_down");
+
+    // Restore original value
 
     const double nominal_integral = nominal.Integral();
     const double up_integral = up.Integral();
     const double down_integral = down.Integral();
 
     if (std::abs(nominal_integral - up_integral) < 1E-7 && std::abs(down_integral - nominal_integral) < 1E-7 && std::abs(up_integral - down_integral) < 1E-7) return;
-
-    param->set_val(original_val);  // Restore original value
 
     // Create canvas
     TCanvas canvas("canvas", "canvas", 2800, 2400);
@@ -380,6 +384,7 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     std::string plotName = saveName + "_" + paramName;
     nominal.SetTitle(plotName.c_str());
     nominal.GetYaxis()->SetMoreLogLabels();
+    nominal.GetYaxis()->SetTitle("Events/bin");
     nominal.GetYaxis()->CenterTitle();
     nominal.GetYaxis()->SetTitleOffset(0.96);
     nominal.GetXaxis()->SetLabelSize(0.);
@@ -393,9 +398,9 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     down.SetLineColor(kBlue);
     down.SetLineWidth(5);
 
-    // nominal.Draw("hist");
-    // up.Draw("hist same");
-    // down.Draw("hist same");
+    nominal.Draw("hist");
+    up.Draw("hist same");
+    down.Draw("hist same");
 
     // Lambda to calculate min/max
     auto GetHistMinMax = [](const std::vector<TH1F*>& hists) {
@@ -422,29 +427,24 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
         yMax = yMax + yMaxPadding * linUnit;
     }
 
+    // std::cout << plotName << " yMin=" << yMin << ", yMax=" << yMax << std::endl;
     nominal.SetMinimum(yMin);
     nominal.SetMaximum(yMax);
     // nominal.GetYaxis()->SetRangeUser(yMin, yMax);
 
-    nominal.Draw("hist same");
+    nominal.Draw("hist");
     up.Draw("hist same");
     down.Draw("hist same");
-    gPad->RedrawAxis();
-    gPad->RedrawAxis("G");
-    gPad->Update();
-    gPad->Modified();
-    gPad->Update();
-    canvas.RedrawAxis();
-    canvas.Update();
-    canvas.Modified();
 
+    pad0.RedrawAxis();
     pad0.Update();
+    pad0.Modified();
 
     TPaveText *hTitle = (TPaveText*)(pad0.GetPrimitive("title"));
     hTitle->SetTextSize(0.06);
     pad0.Modified();
 
-    TLegend legend(0.57, 0.67, 0.95, 0.9);
+    TLegend legend(0.6, 0.67, 0.95, 0.9);
     // TLegend legend(0.4, 0.25);
     legend.SetNColumns(1);
     legend.SetTextSize(0.046);
@@ -501,11 +501,11 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     };
 
     // Add legend entries
-    int ndecpos1 = GetSigDecPos({nominal_integral, up_integral, down_integral});
+    int ndecpos1 = GetSigDecPos({nominal_integral, up_integral, down_integral}) + 1;
     ndecpos1 = std::min(std::abs(ndecpos1), 2);
     double up_integral_deviation = 100. * (up_integral - nominal_integral) / nominal_integral;
     double down_integral_deviation = 100. * (down_integral - nominal_integral) / nominal_integral;
-    int ndecpos2 = GetSigDecPos({down_integral_deviation, up_integral_deviation});
+    int ndecpos2 = GetSigDecPos({down_integral_deviation, up_integral_deviation}) + 1;
     ndecpos2 = (ndecpos2 > 0) ? std::min(ndecpos2, 2) : 0;
     legend.AddEntry(&nominal, ("Nominal (n= " + FormatDecPos(ndecpos1, nominal_integral) + ")").c_str(), "l");
     legend.AddEntry(&up, ("Up (n= " + FormatDecPos(ndecpos1, up_integral) + ", " + (up_integral_deviation > 0 ? "+" : "") + FormatDecPos(ndecpos2, up_integral_deviation) + "%)").c_str(), "l");
@@ -534,17 +534,17 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
         if (nom_val > 0) {
             rel_diff_up->SetBinContent(bin, 100. * (up.GetBinContent(bin) - nom_val) / nom_val);
             rel_diff_down->SetBinContent(bin, 100. * (down.GetBinContent(bin) - nom_val) / nom_val);
-        } else {
-            rel_diff_up->SetBinContent(bin, 0); // Unfilled behavior
-            rel_diff_down->SetBinContent(bin, 0); // Unfilled behavior
         }
+        // else {
+        //     rel_diff_up->SetBinContent(bin, 0); // Unfilled behavior
+        //     rel_diff_down->SetBinContent(bin, 0); // Unfilled behavior
+        // }
     }
 
     rel_diff_up->SetLineColor(kRed);
     rel_diff_down->SetLineColor(kBlue);
     rel_diff_up->SetLineWidth(5);
     rel_diff_down->SetLineWidth(5);
-
     rel_diff_up->GetYaxis()->SetTitle("#splitline{Variation}{    (%)}");
     rel_diff_up->GetYaxis()->CenterTitle();
     rel_diff_up->GetXaxis()->CenterTitle();
@@ -568,28 +568,36 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     line.SetLineWidth(6);
     // line.SetLineStyle(7);
 
-    rel_diff_up->Draw("hist same");
+    auto [rMin, rMax] = GetHistMinMax({rel_diff_up, rel_diff_down});
+    double rOffset = std::max(std::abs(rMin), std::abs(rMax)) * 0.2;
+    rMin = std::min(-rOffset, rMin - rOffset);
+    rMin = std::min(rMin, -0.01);
+    rMax = std::max(rOffset, rMax + rOffset);
+    rel_diff_up->SetMinimum(rMin);
+    rel_diff_up->SetMaximum(rMax);
+    rel_diff_up->SetMinimum(rMin);
+    rel_diff_up->SetMaximum(rMax);
+
+    // std::cout << plotName << " rMin=" << rMin << ", rMax=" << rMax << std::endl;
+
+    rel_diff_up->Draw("hist");
     line.Draw();
     rel_diff_down->Draw("hist same");
+    pad1.RedrawAxis();
+    pad1.Update();
+    pad1.Modified();
 
-    auto [rMin, rMax] = GetHistMinMax({rel_diff_up, rel_diff_down});
-    // rel_diff_up->SetMinimum(rMin - 0.2 * std::abs(rMax - rMin));
-    // rel_diff_up->SetMaximum(rMax + 0.2 * std::abs(rMax - rMin));
-    double rOffset = std::max(std::abs(rMin), std::abs(rMax)) * 0.2;
-    rel_diff_up->SetMinimum(std::min(-rOffset, rMin - rOffset));
-    rel_diff_up->SetMaximum(std::max(rOffset, rMax + rOffset));
-
-    gPad->RedrawAxis();
-    gPad->RedrawAxis("G");
-    gPad->Update();
-    gPad->Modified();
-    gPad->Update();
-    canvas.RedrawAxis();
-    canvas.Update();
-    canvas.Modified();
 
     // canvas.SaveAs((systSaveDir + "/" + plotName + ".pdf").c_str());
     canvas.SaveAs((systSaveDir + "/" + plotName + ".png").c_str());
+
+    nominal.Reset();
+    up.Reset();
+    down.Reset();
+    rel_diff_up->Reset();
+    rel_diff_down->Reset();
+    rel_diff_up->Delete();
+    rel_diff_down->Delete();
 }
 
 void writeHistogramsToFile(std::map<std::string, std::map<std::string, TH1F>> &histograms,
