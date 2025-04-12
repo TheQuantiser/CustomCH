@@ -367,9 +367,24 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     const double up_integral = up.Integral();
     const double down_integral = down.Integral();
 
-    const double skip_thres = 1E-7 * std::abs(nominal_integral);
+    const double skip_thres = 1E-15 * std::abs(nominal_integral);
 
-    if (!(nominal_integral > 0.) || (std::abs(nominal_integral - up_integral) < skip_thres && std::abs(down_integral - nominal_integral) < skip_thres && std::abs(up_integral - down_integral) < skip_thres)) return;
+    if (!(nominal_integral > 0.) ||
+            (std::abs(nominal_integral - up_integral) < skip_thres &&
+             std::abs(down_integral - nominal_integral) < skip_thres &&
+             std::abs(up_integral - down_integral) < skip_thres)) return;
+
+    std::string plotName = saveName + "_" + paramName;
+
+    // if (!((plotName.find("jmr") != std::string::npos ||
+    //         plotName.find("jms") != std::string::npos ||
+    //         plotName.find("mcstat_bin") != std::string::npos) &&
+    //         (plotName.find("ZH") != std::string::npos ||
+    //          plotName.find("WH") != std::string::npos ||
+    //          plotName.find("TTbar") != std::string::npos ||
+    //          plotName.find("WJetsLNu") != std::string::npos
+    //         )
+    //      )) return;
 
     // Create canvas
     TCanvas canvas("canvas", "canvas", 2800, 2400);
@@ -386,7 +401,7 @@ void plotShapeSystVariations(ch::CombineHarvester& cmb, const std::string& param
     pad0.Draw();
     pad0.cd();
 
-    std::string plotName = saveName + "_" + paramName;
+
     nominal.SetTitle(plotName.c_str());
     nominal.GetYaxis()->SetMoreLogLabels();
     nominal.GetYaxis()->SetTitle("Events/bin");
@@ -990,26 +1005,26 @@ int main(int argc, char *argv[]) {
     // Lambda to freeze parameters
     auto freeze_parameters = [&]() {
         if (freeze_arg.empty()) return;
-         // {
-            std::vector<std::string> freezeVars;
-            boost::split(freezeVars, freeze_arg, boost::is_any_of(","));
+        // {
+        std::vector<std::string> freezeVars;
+        boost::split(freezeVars, freeze_arg, boost::is_any_of(","));
 
-            for (const auto &item : freezeVars) {
-                std::vector<std::string> parts;
-                boost::split(parts, item, boost::is_any_of("="));
+        for (const auto &item : freezeVars) {
+            std::vector<std::string> parts;
+            boost::split(parts, item, boost::is_any_of("="));
 
-                ch::Parameter *par = cmb.GetParameter(parts[0]);
+            ch::Parameter *par = cmb.GetParameter(parts[0]);
 
-                if (!par) throw std::runtime_error("Parameter not found: " + parts[0]);
+            if (!par) throw std::runtime_error("Parameter not found: " + parts[0]);
 
-                // Set value if specified
-                if (parts.size() == 2) par->set_val(boost::lexical_cast<double>(parts[1]));
+            // Set value if specified
+            if (parts.size() == 2) par->set_val(boost::lexical_cast<double>(parts[1]));
 
-                par->set_frozen(true);
+            par->set_frozen(true);
 
-                std::cout << "\n" << printTimestamp() << " Freezing parameter: " << parts[0]
-                          << (parts.size() == 2 ? " to " + parts[1] : "") << std::endl;
-            }
+            std::cout << "\n" << printTimestamp() << " Freezing parameter: " << parts[0]
+                      << (parts.size() == 2 ? " to " + parts[1] : "") << std::endl;
+        }
         // }
     };
 
