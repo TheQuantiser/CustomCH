@@ -82,6 +82,10 @@ This installs the `CombineHarvester` package together with the compiled
 with the package are accessed via `importlib.resources` so no manual path
 configuration is required.
 
+The Python bindings rely on the [ROOT](https://root.cern) data analysis
+framework. ROOT is not distributed via PyPI and must be installed
+separately before using these tools.
+
 ### Example
 
 ```
