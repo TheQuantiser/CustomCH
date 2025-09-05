@@ -30,7 +30,7 @@ else()
 endif()
 
 find_package(ROOT REQUIRED COMPONENTS RooFit RooStats)
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS program_options filesystem system)
 find_package(LibXml2 REQUIRED)
 find_package(vdt REQUIRED)
 find_package(HistFactory REQUIRED)
@@ -43,7 +43,9 @@ set(CH_EXTERNAL_INCLUDES
 
 set(CH_EXTERNAL_LIBS
   ${ROOT_LIBRARIES}
-  ${Boost_LIBRARIES}
+  Boost::program_options
+  Boost::filesystem
+  Boost::system
   ${LIBXML2_LIBRARIES}
   vdt::vdt
   HistFactory::HistFactory
