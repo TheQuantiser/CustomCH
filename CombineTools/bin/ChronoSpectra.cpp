@@ -67,10 +67,10 @@
     cd CMSSW_14_1_0_pre4/src
     cmsenv
     git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
-    cd $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit
+    cd $CH_BASE/../HiggsAnalysis/CombinedLimit
     git fetch origin
     git checkout v10.0.2
-    cd $CMSSW_BASE/src/
+    cd $CH_BASE
     git clone https://github.com/TheQuantiser/CombineHarvester.git
     scram b -j$(nproc)
     cmsenv
