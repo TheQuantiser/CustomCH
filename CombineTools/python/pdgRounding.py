@@ -12,7 +12,6 @@
 # davide.gerbaudo@gmail.com
 # September 2012
 
-from __future__ import print_function
 import argparse
 
 def pdgRound(value, error) :

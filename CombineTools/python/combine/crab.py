@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """CRAB configuration used by CombineTool.
 
 This module builds and returns a :class:`WMCore.Configuration.Configuration`
@@ -11,7 +12,6 @@ If the executable cannot be located it will not be added to the list of files
 sent with the job and a warning will be emitted.
 """
 
-from __future__ import absolute_import
 
 import os
 import warnings

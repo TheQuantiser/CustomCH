@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+#!/usr/bin/env python3
 
 try:
     import FWCore.ParameterSet.Config as cms

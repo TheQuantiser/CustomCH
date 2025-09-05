@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-from __future__ import print_function
+#!/usr/bin/env python3
 import os
 import stat
 import shutil
@@ -12,15 +11,14 @@ import CombineHarvester.CombineTools.ch as ch
 DRY_RUN = False
 
 
-def _build_job_prefix(cmssw_base, scram_arch, standalone):
-    cmssw_cmds = ''
-    if not standalone and cmssw_base and scram_arch:
-        cmssw_cmds = (
-            'cd {base}/src\n'
+def _build_job_prefix(cmssw_base, scram_arch, standalone, ch_base):
+    cmssw_cmds = 'cd {base}\n'.format(base=ch_base)
+    if not standalone and scram_arch:
+        cmssw_cmds += (
             'export SCRAM_ARCH={arch}\n'
             'source /cvmfs/cms.cern.ch/cmsset_default.sh\n'
             'eval `scramv1 runtime -sh`\n'
-        ).format(base=cmssw_base, arch=scram_arch)
+        ).format(arch=scram_arch)
     return """#!/bin/sh
 ulimit -s unlimited
 set -e
@@ -207,7 +205,7 @@ class CombineToolBase:
             self.combine_exec = 'combine'
             self.combine = found
             self.standalone = True
-        self.job_prefix = _build_job_prefix(self.cmssw_base, self.scram_arch, self.standalone)
+        self.job_prefix = _build_job_prefix(self.cmssw_base, self.scram_arch, self.standalone, self.ch_base)
 
     def put_back_arg(self, arg_name, target_name):
         if hasattr(self.args, arg_name):

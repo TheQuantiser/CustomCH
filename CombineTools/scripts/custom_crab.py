@@ -1,4 +1,4 @@
-from __future__ import print_function
+#!/usr/bin/env python3
 def custom_crab(config):
     print('>> Customising the crab config')
     config.User.voGroup = 'dcms'

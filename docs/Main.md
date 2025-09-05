@@ -75,7 +75,8 @@ For backward support the framework remains compatible with the CMSSW 14_1_X
 and 11_3_X series releases. The repository may still be placed inside a
 CMSSW release area under `src/CombineHarvester` alongside
 `HiggsAnalysis/CombinedLimit` and compiled with `scram b` following the
-recommendations of the combine developers.
+recommendations of the combine developers. Job scripts will attempt to set up
+this environment unless the `--standalone` option is given.
 
 If you are using this framework for the first time we recommend taking a look through some of the examples below which demonstrate the main features:
 
