@@ -1,4 +1,4 @@
-file(GLOB COMBINE_TOOLS_SRC src/*.cc)
+file(GLOB COMBINE_TOOLS_SRC src/*.cc src/*.cpp)
 
 get_target_property(_CL_INC HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit INTERFACE_INCLUDE_DIRECTORIES)
 
