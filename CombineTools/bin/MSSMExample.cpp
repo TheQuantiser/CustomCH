@@ -12,6 +12,7 @@
 #include "CombineHarvester/CombineTools/interface/CardWriter.h"
 #include "CombineHarvester/CombineTools/interface/CopyTools.h"
 #include "CombineHarvester/CombineTools/interface/BinByBin.h"
+#include "CombineHarvester/CombineTools/interface/PathTools.h"
 
 using namespace std;
 
@@ -21,11 +22,10 @@ int main() {
   typedef vector<pair<int, string>> Categories;
   typedef vector<string> VString;
 
-  string auxiliaries  = string(getenv("CMSSW_BASE")) + "/src/auxiliaries/";
-  string aux_shapes   = auxiliaries +"shapes/";
-  string aux_pruning  = auxiliaries +"pruning/";
-  string input_dir =
-      string(getenv("CMSSW_BASE")) + "/src/CombineHarvester/CombineTools/input";
+  string auxiliaries  = ch::paths::auxiliaries();
+  string aux_shapes   = auxiliaries + "shapes/";
+  string aux_pruning  = auxiliaries + "pruning/";
+  string input_dir    = ch::paths::input();
 
 //So far only mutau added for MSSM, need to copy over all the systematics for other channels 
 

@@ -5,6 +5,11 @@ from importlib import resources
 from WMCore.Configuration import Configuration
 
 
+cmssw_base = os.environ.get('CMSSW_BASE')
+scram_arch = os.environ.get('SCRAM_ARCH')
+combine_path = os.environ.get('COMBINE_PATH')
+scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'scripts'))
+
 config = Configuration()
 
 config.section_('General')
