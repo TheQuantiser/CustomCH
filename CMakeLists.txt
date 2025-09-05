@@ -29,7 +29,7 @@ else()
   add_library(HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit ALIAS HiggsAnalysisCombinedLimit)
 endif()
 
-find_package(ROOT REQUIRED COMPONENTS RooFit RooStats)
+find_package(ROOT REQUIRED COMPONENTS RooFitCore RooFit RooStats)
 find_package(Boost REQUIRED COMPONENTS program_options filesystem system)
 find_package(LibXml2 REQUIRED)
 find_package(vdt REQUIRED)
@@ -42,7 +42,9 @@ set(CH_EXTERNAL_INCLUDES
 )
 
 set(CH_EXTERNAL_LIBS
-  ${ROOT_LIBRARIES}
+  ROOT::RooFitCore
+  ROOT::RooFit
+  ROOT::RooStats
   Boost::program_options
   Boost::filesystem
   Boost::system

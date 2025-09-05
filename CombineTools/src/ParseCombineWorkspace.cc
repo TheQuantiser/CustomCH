@@ -90,14 +90,13 @@ void ParseCombineWorkspace(CombineHarvester& cb, RooWorkspace& ws,
           throw std::runtime_error(FNERROR("This RooRealSumPdf is not extended!"));
         }
         if (pdfs->getSize() == 1) {
-#if CH_HAS_CMSHISTERRORPROPAGATOR
-           CMSHistErrorPropagator *err = dynamic_cast<CMSHistErrorPropagator*>(pdfs->at(0));
-           if (err) {
-             coeffs = &(err->coefList());
-             pdfs = new RooArgList(err->wrapperList());
-             delete_pdfs = true;
-           }
-#endif
+          CMSHistErrorPropagator *err =
+              dynamic_cast<CMSHistErrorPropagator *>(pdfs->at(0));
+          if (err) {
+            coeffs = &(err->coefList());
+            pdfs = new RooArgList(err->wrapperList());
+            delete_pdfs = true;
+          }
         }
       }
       for (int j = 0; j < coeffs->getSize(); ++j) {
