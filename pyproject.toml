@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=61", "wheel", "cmake", "ninja"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -29,6 +29,7 @@ packages = [
     "CombineHarvester.CombineTools.input.examples",
     "CombineHarvester.CombineTools.input.job_prefixes",
     "CombineHarvester.CombineTools.input.xsecs_brs",
+    "CombineHarvester.CombinePdfs",
 ]
 
 [tool.setuptools.package-dir]
@@ -41,6 +42,7 @@ packages = [
 "CombineHarvester.CombineTools.input.examples" = "CombineTools/input/examples"
 "CombineHarvester.CombineTools.input.job_prefixes" = "CombineTools/input/job_prefixes"
 "CombineHarvester.CombineTools.input.xsecs_brs" = "CombineTools/input/xsecs_brs"
+"CombineHarvester.CombinePdfs" = "CombinePdfs/python"
 
 [tool.setuptools.package-data]
 "CombineHarvester.CombineTools" = ["*.so"]
@@ -49,3 +51,4 @@ packages = [
 "CombineHarvester.CombineTools.input.examples" = ["*"]
 "CombineHarvester.CombineTools.input.job_prefixes" = ["*"]
 "CombineHarvester.CombineTools.input.xsecs_brs" = ["*"]
+"CombineHarvester.CombinePdfs" = ["*.so"]
