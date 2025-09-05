@@ -1,15 +1,4 @@
 #!/bin/sh
 ulimit -s unlimited
 cd %(CH_BASE)s
-linux_ver=`lsb_release -s -r`
-echo $linux_ver
-if [ -n "%(SCRAM_ARCH)s" ]; then
-  if [[ $linux_ver < 6.0 ]]; then
-    eval "`/afs/desy.de/common/etc/local/ini/ini.pl cmssw_cvmfs`"
-  else
-    source /cvmfs/cms.cern.ch/cmsset_default.sh
-  fi
-  export SCRAM_ARCH=%(SCRAM_ARCH)s
-  eval `scramv1 runtime -sh`
-fi
 cd %(PWD)s

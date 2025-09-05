@@ -62,18 +62,13 @@
  ==========================
  Installation instructions:
  ==========================
-    cmssw-el9
-    cmsrel CMSSW_14_1_0_pre4
-    cd CMSSW_14_1_0_pre4/src
-    cmsenv
-    git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
-    cd $CH_BASE/../HiggsAnalysis/CombinedLimit
-    git fetch origin
-    git checkout v10.0.2
-    cd $CH_BASE
-    git clone https://github.com/TheQuantiser/CombineHarvester.git
-    scram b -j$(nproc)
-    cmsenv
+    git clone https://github.com/TheQuantiser/CustomCH.git
+    cd CustomCH
+    git submodule update --init
+    cmake -S . -B build
+    cmake --build build --target install
+    export CH_BASE=$(pwd)
+    source build/setup.sh
 
  ---------
  Features:

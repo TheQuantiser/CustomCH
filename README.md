@@ -78,7 +78,6 @@ Set the `CH_BASE` environment variable to the location of the repository (or ins
 ```
 export CH_BASE=$(pwd)
 ```
-
 Some examples require auxiliary ROOT files. These can be obtained from the
 [HiggsAnalysis-HiggsToTauTau-auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries)
 repository. By default these files are expected in `$CH_BASE/auxiliaries/`.
@@ -89,24 +88,6 @@ variable:
 git clone https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries.git "$CH_BASE/auxiliaries"
 ```
 
-### Examples without CMSSW
-
-After building, binaries are available in `build/bin` and can be executed directly:
-
-```
-./build/bin/Example1
-python3 CombineTools/scripts/Example3.py
-```
-
-No CMSSW environment is required for these commands.
-
-### Compatibility with CMSSW
-
-For backward support the previous CMSSW-based workflow remains available. The framework is compatible with the CMSSW 14_1_X and 11_3_X series releases and can still be placed in a CMSSW release area together with `HiggsAnalysis/CombinedLimit` and compiled with `scram b` following the recommendations of the combine developers.
-
-When running the python utilities such as `combineTool.py` outside of a
-CMSSW release, the `--standalone` option can be used to bypass the CMSSW
-environment setup in generated job scripts.
 
 Previously this package contained some analysis-specific subpackages. These packages can now be found [here](https://gitlab.cern.ch/cms-hcg/ch-areas). If you would like a repository for your analysis package to be created in that group, please create an issue in the CombineHarvester repository stating the desired package name and your NICE username. Note: you are not obliged to store your analysis package in this central group.
 
