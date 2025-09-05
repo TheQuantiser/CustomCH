@@ -1,7 +1,14 @@
 from __future__ import absolute_import
 import os
+from pathlib import Path
+from importlib import resources
 from WMCore.Configuration import Configuration
 
+
+cmssw_base = os.environ.get('CMSSW_BASE')
+scram_arch = os.environ.get('SCRAM_ARCH')
+combine_path = os.environ.get('COMBINE_PATH')
+scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'scripts'))
 
 config = Configuration()
 
@@ -12,9 +19,14 @@ config.General.requestName = ''
 
 config.section_('JobType')
 config.JobType.pluginName = 'PrivateMC'
-config.JobType.psetName = os.environ['CMSSW_BASE']+'/src/CombineHarvester/CombineTools/scripts/do_nothing_cfg.py'
+config.JobType.psetName = str(Path('do_nothing_cfg.py'))
+scripts = resources.files('CombineHarvester.CombineTools.scripts')
 config.JobType.scriptExe = ''
-config.JobType.inputFiles = [os.environ['CMSSW_BASE']+'/src/CombineHarvester/CombineTools/scripts/FrameworkJobReport.xml', os.environ['CMSSW_BASE']+'/src/CombineHarvester/CombineTools/scripts/copyRemoteWorkspace.sh', os.environ['CMSSW_BASE']+'/bin/'+os.environ['SCRAM_ARCH']+'/combine']
+config.JobType.inputFiles = [
+    str(scripts / 'FrameworkJobReport.xml'),
+    str(scripts / 'copyRemoteWorkspace.sh'),
+    os.environ['CMSSW_BASE']+'/bin/'+os.environ['SCRAM_ARCH']+'/combine'
+]
 config.JobType.outputFiles = ['combine_output.tar']
 # config.JobType.maxMemoryMB = args.maxMemory
 

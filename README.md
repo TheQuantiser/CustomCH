@@ -47,3 +47,24 @@ No CMSSW environment is required for these commands.
 For backward support the previous CMSSW-based workflow remains available. The framework is compatible with the CMSSW 14_1_X and 11_3_X series releases and can still be placed in a CMSSW release area together with `HiggsAnalysis/CombinedLimit` and compiled with `scram b` following the recommendations of the combine developers.
 
 Previously this package contained some analysis-specific subpackages. These packages can now be found [here](https://gitlab.cern.ch/cms-hcg/ch-areas). If you would like a repository for your analysis package to be created in that group, please create an issue in the CombineHarvester repository stating the desired package name and your NICE username. Note: you are not obliged to store your analysis package in this central group.
+
+## Python package
+
+The CombineHarvester Python utilities can be installed with
+
+```
+pip install .
+```
+
+This installs the `CombineHarvester` package together with the compiled
+`libCombineHarvesterCombineTools` bindings and the `pdg-round` and
+`ch-maketable` command line tools.  After installing, resources shipped
+with the package are accessed via `importlib.resources` so no manual path
+configuration is required.
+
+### Example
+
+```
+pdg-round 26710 177
+ch-maketable limits.json table.txt
+```

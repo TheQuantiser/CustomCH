@@ -2,25 +2,30 @@ from __future__ import absolute_import
 from __future__ import print_function
 import os
 import stat
+import shutil
 from functools import partial
 from multiprocessing import Pool
 from six.moves import range
+from importlib import resources
 
 DRY_RUN = False
 
-JOB_PREFIX = """#!/bin/sh
+
+def _build_job_prefix(cmssw_base, scram_arch, standalone):
+    cmssw_cmds = ''
+    if not standalone and cmssw_base and scram_arch:
+        cmssw_cmds = (
+            'cd {base}/src\n'
+            'export SCRAM_ARCH={arch}\n'
+            'source /cvmfs/cms.cern.ch/cmsset_default.sh\n'
+            'eval `scramv1 runtime -sh`\n'
+        ).format(base=cmssw_base, arch=scram_arch)
+    return """#!/bin/sh
 ulimit -s unlimited
 set -e
-cd %(CMSSW_BASE)s/src
-export SCRAM_ARCH=%(SCRAM_ARCH)s
-source /cvmfs/cms.cern.ch/cmsset_default.sh
-eval `scramv1 runtime -sh`
-cd %(PWD)s
-""" % ({
-    'CMSSW_BASE': os.environ['CMSSW_BASE'],
-    'SCRAM_ARCH': os.environ['SCRAM_ARCH'],
-    'PWD': os.environ['PWD']
-})
+{cmssw}
+cd {pwd}
+""".format(cmssw=cmssw_cmds, pwd=os.environ['PWD'])
 
 CONDOR_TEMPLATE = """executable = %(EXE)s
 arguments = $(ProcId)
@@ -89,8 +94,9 @@ process.options = cms.untracked.PSet()
 """
 
 
-def run_command(dry_run, command, pre_cmd=''):
+def run_command(dry_run, command, pre_cmd='', combine_exec='combine'):
     if command.startswith('combine'):
+        command = command.replace('combine', combine_exec, 1)
         command = pre_cmd + command
     if not dry_run:
         print('>> ' + command)
@@ -119,6 +125,12 @@ class CombineToolBase:
         self.custom_crab_post = None
         self.pre_cmd = ''
         self.crab_files = []
+        self.combine = None
+        self.combine_exec = 'combine'
+        self.cmssw_base = os.environ.get('CMSSW_BASE')
+        self.scram_arch = os.environ.get('SCRAM_ARCH')
+        self.standalone = False
+        self.job_prefix = _build_job_prefix(self.cmssw_base, self.scram_arch, self.standalone)
 
     def attach_job_args(self, group):
         group.add_argument('--job-mode', default=self.job_mode, choices=[
@@ -153,6 +165,8 @@ class CombineToolBase:
                            help='Postfix cmd for combine jobs [condor]')
         group.add_argument('--custom-crab-post', default=self.custom_crab_post,
                            help='txt file containing command lines that can be used in the crab job script instead of the defaults.')
+        group.add_argument('--combine', dest='combine',
+                           help='Path to the combine executable to use')
 
     def attach_intercept_args(self, group):
         pass
@@ -179,6 +193,16 @@ class CombineToolBase:
         self.pre_cmd = self.args.pre_cmd
         self.custom_crab_post = self.args.custom_crab_post
         self.post_job_cmd= self.args.post_job_cmd
+        self.combine = self.args.combine
+        found = shutil.which('combine')
+        if self.combine:
+            self.combine_exec = self.combine
+            self.standalone = True
+        elif found:
+            self.combine_exec = 'combine'
+            self.combine = found
+            self.standalone = True
+        self.job_prefix = _build_job_prefix(self.cmssw_base, self.scram_arch, self.standalone)
 
     def put_back_arg(self, arg_name, target_name):
         if hasattr(self.args, arg_name):
@@ -201,14 +225,16 @@ class CombineToolBase:
         fname = script_filename
         logname = script_filename.replace('.sh', '.log')
         with open(fname, "w") as text_file:
-            text_file.write(JOB_PREFIX)
+            text_file.write(self.job_prefix)
             for i, command in enumerate(commands):
                 tee = 'tee' if i == 0 else 'tee -a'
                 log_part = '\n'
                 if do_log: log_part = ' 2>&1 | %s ' % tee + logname + log_part
                 if command.startswith('combine') or command.startswith('pushd'):
-                    text_file.write(
-                        self.pre_cmd + 'eval ' + command + log_part)
+                    new_cmd = command
+                    if command.startswith('combine'):
+                        new_cmd = command.replace('combine', self.combine_exec, 1)
+                    text_file.write(self.pre_cmd + 'eval ' + new_cmd + log_part)
                 else:
                     text_file.write(command)
             text_file.write('\n'+self.post_job_cmd+'\n')
@@ -244,14 +270,16 @@ class CombineToolBase:
         if self.job_mode == 'interactive':
             pool = Pool(processes=self.parallel)
             result = pool.map(
-                partial(run_command, self.dry_run, pre_cmd=self.pre_cmd), self.job_queue)
+                partial(run_command, self.dry_run, pre_cmd=self.pre_cmd, combine_exec=self.combine_exec), self.job_queue)
         script_list = []
         if self.job_mode in ['script', 'lxbatch', 'SGE', 'slurm']:
             if self.prefix_file != '':
                 if self.prefix_file.endswith('.txt'):
                     job_prefix_file = open(self.prefix_file,'r')
-                else :
-                    job_prefix_file = open(os.environ['CMSSW_BASE']+"/src/CombineHarvester/CombineTools/input/job_prefixes/job_prefix_"+self.prefix_file+".txt",'r')
+                else:
+                    job_pkg = 'CombineHarvester.CombineTools.input.job_prefixes'
+                    path = resources.files(job_pkg).joinpath(f"job_prefix_{self.prefix_file}.txt")
+                    job_prefix_file = path.open('r')
                 global JOB_PREFIX
                 JOB_PREFIX=job_prefix_file.read() %({
                   'CMSSW_BASE': os.environ['CMSSW_BASE'],
@@ -304,14 +332,14 @@ class CombineToolBase:
             subfilename = 'condor_%s.sub' % self.task_name
             print('>> condor job script will be %s' % outscriptname)
             outscript = open(outscriptname, "w")
-            outscript.write(JOB_PREFIX)
+            outscript.write(self.job_prefix)
             jobs = 0
             wsp_files = set()
             for i, j in enumerate(range(0, len(self.job_queue), self.merge)):
                 outscript.write('\nif [ $1 -eq %i ]; then\n' % jobs)
                 jobs += 1
                 for line in self.job_queue[j:j + self.merge]:
-                    newline = self.pre_cmd + line
+                    newline = self.pre_cmd + line.replace('combine', self.combine_exec, 1)
                     outscript.write('  ' + newline + '\n')
                 outscript.write('fi')
             outscript.write('\n' + self.post_job_cmd+'\n')
@@ -347,7 +375,9 @@ class CombineToolBase:
                 outscript.write('\nif [ $1 -eq %i ]; then\n' % jobs)
                 for line in self.job_queue[j:j + self.merge]:
                     newline = line
-                    if line.startswith('combine'): newline = self.pre_cmd + line.replace('combine', './combine', 1)
+                    if line.startswith('combine'):
+                        repl = './combine' if not self.standalone else self.combine_exec
+                        newline = self.pre_cmd + line.replace('combine', repl, 1)
                     wsp = str(self.extract_workspace_arg(newline.split()))
 
                     newline = newline.replace(wsp, os.path.basename(wsp))
@@ -370,6 +400,8 @@ class CombineToolBase:
             else:
                 outscript.write(CRAB_POSTFIX)
             outscript.close()
+            if self.combine:
+                os.environ['COMBINE_PATH'] = self.combine
             from CombineHarvester.CombineTools.combine.crab import config
             config.General.requestName = self.task_name
             config.JobType.scriptExe = outscriptname
@@ -378,12 +410,15 @@ class CombineToolBase:
             config.Data.outputDatasetTag = config.General.requestName
             if self.memory is not None:
                 config.JobType.maxMemoryMB = self.memory
-            do_nothing_script = open(os.environ["CMSSW_BASE"]+"/src/CombineHarvester/CombineTools/scripts/do_nothing_cfg.py","w")
-            do_nothing_script.write(CRAB_DO_NOTHING)
-            if self.cores is not None:
-                config.JobType.numCores = self.cores
-                do_nothing_script.write('\nprocess.options.numberOfThreads=cms.untracked.uint32(%i)'%self.cores)
-            do_nothing_script.close()
+            template_pkg = 'CombineHarvester.CombineTools.scripts'
+            template = resources.files(template_pkg).joinpath('do_nothing_cfg.py')
+            with template.open('r') as src:
+                do_nothing_script = open('do_nothing_cfg.py', 'w')
+                do_nothing_script.write(src.read())
+                if self.cores is not None:
+                    config.JobType.numCores = self.cores
+                    do_nothing_script.write('\nprocess.options.numberOfThreads=cms.untracked.uint32(%i)' % self.cores)
+                do_nothing_script.close()
             if self.crab_area is not None:
                 config.General.workArea = self.crab_area
             if self.custom_crab is not None:

@@ -11,14 +11,16 @@
 #include "CombineHarvester/CombineTools/interface/Utilities.h"
 #include "CombineHarvester/CombineTools/interface/Systematics.h"
 #include "CombineHarvester/CombineTools/interface/BinByBin.h"
+#include "CombineHarvester/CombineTools/interface/PathTools.h"
 
 using namespace std;
 
 int main() {
   //! [part1]
   // First define the location of the "auxiliaries" directory where we can
-  // source the input files containing the datacard shapes
-  string aux_shapes = string(getenv("CMSSW_BASE")) + "/src/auxiliaries/shapes/";
+  // source the input files containing the datacard shapes. The base location
+  // is given by the CH_BASE environment variable.
+  string aux_shapes = ch::paths::auxiliaries() + "shapes/";
 
   // Create an empty CombineHarvester instance that will hold all of the
   // datacard configuration and histograms etc.
