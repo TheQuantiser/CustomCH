@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 # Settings
-REPO_PATH=https://github.com/cms-analysis/CombineHarvester
+REPO_PATH=https://github.com/TheQuantiser/CustomCH
 HTML_PATH=docs/html
 COMMIT_USER="Documentation Builder"
 COMMIT_EMAIL="andrew.gilbert@cern.ch"
@@ -29,5 +29,5 @@ git add .
 git config user.name "${COMMIT_USER}"
 git config user.email "${COMMIT_EMAIL}"
 git commit -m "Automated documentation build for changeset ${CHANGESET}." || true
-git push https://${GITHUB_TOKEN}@github.com/cms-analysis/CombineHarvester gh-pages
+git push https://${GITHUB_TOKEN}@github.com/TheQuantiser/CustomCH gh-pages
 cd -
