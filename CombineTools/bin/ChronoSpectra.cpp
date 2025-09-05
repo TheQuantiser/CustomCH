@@ -1163,8 +1163,8 @@ int main(int argc, char *argv[]) {
       boost::program_options::value<std::string>(&plotSystArg)
           ->default_value(""),
       "Plot stored shape variations. Accepts 'all' or a comma-separated list "
-      "of 'bin/process/systematic' patterns with '*' wildcards. Missing "
-      "combinations are skipped silently.")(
+      "of 'bin/process/systematic' patterns with '*' wildcards (regex-style "
+      "'.*' also supported). Missing combinations are skipped silently.")(
       "systSaveDir",
       boost::program_options::value<std::string>(&systSaveDir)
           ->default_value(systSaveDir),
@@ -1199,7 +1199,8 @@ int main(int argc, char *argv[]) {
   // Validate other options
   boost::program_options::notify(vm);
 
-  // Parse bin/process/systematic plotting patterns
+  // Parse bin/process/systematic plotting patterns; allow '*' or '.*'
+  // wildcards and silently ignore malformed entries
   if (!plotSystArg.empty()) {
     if (plotSystArg == "all" || plotSystArg == "*/*/*") {
       plotSystAll = true;
@@ -1218,8 +1219,10 @@ int main(int argc, char *argv[]) {
         boost::split(parts, p, boost::is_any_of("/"));
         if (parts.size() != 3)
           continue;
-        for (auto &part : parts)
+        for (auto &part : parts) {
           boost::trim(part);
+          boost::replace_all(part, ".*", "*");
+        }
         plotSystPatterns.insert(parts[0] + "/" + parts[1] + "/" + parts[2]);
       }
     }
