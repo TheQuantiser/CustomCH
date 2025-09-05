@@ -36,7 +36,7 @@ def list_from_workspace(file, workspace, set):
     wsFile = ROOT.TFile(file)
     ws = wsFile.Get(workspace)
     argSet = ws.set(set)
-    it = argSet.createIterator()
+    it = argSet.fwdIterator()
     var = it.Next()
     while var:
         res.append(var.GetName())
