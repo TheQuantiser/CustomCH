@@ -5,6 +5,7 @@ import stat
 from functools import partial
 from multiprocessing import Pool
 from six.moves import range
+from importlib import resources
 
 DRY_RUN = False
 
@@ -250,8 +251,10 @@ class CombineToolBase:
             if self.prefix_file != '':
                 if self.prefix_file.endswith('.txt'):
                     job_prefix_file = open(self.prefix_file,'r')
-                else :
-                    job_prefix_file = open(os.environ['CMSSW_BASE']+"/src/CombineHarvester/CombineTools/input/job_prefixes/job_prefix_"+self.prefix_file+".txt",'r')
+                else:
+                    job_pkg = 'CombineHarvester.CombineTools.input.job_prefixes'
+                    path = resources.files(job_pkg).joinpath(f"job_prefix_{self.prefix_file}.txt")
+                    job_prefix_file = path.open('r')
                 global JOB_PREFIX
                 JOB_PREFIX=job_prefix_file.read() %({
                   'CMSSW_BASE': os.environ['CMSSW_BASE'],
@@ -378,12 +381,15 @@ class CombineToolBase:
             config.Data.outputDatasetTag = config.General.requestName
             if self.memory is not None:
                 config.JobType.maxMemoryMB = self.memory
-            do_nothing_script = open(os.environ["CMSSW_BASE"]+"/src/CombineHarvester/CombineTools/scripts/do_nothing_cfg.py","w")
-            do_nothing_script.write(CRAB_DO_NOTHING)
-            if self.cores is not None:
-                config.JobType.numCores = self.cores
-                do_nothing_script.write('\nprocess.options.numberOfThreads=cms.untracked.uint32(%i)'%self.cores)
-            do_nothing_script.close()
+            template_pkg = 'CombineHarvester.CombineTools.scripts'
+            template = resources.files(template_pkg).joinpath('do_nothing_cfg.py')
+            with template.open('r') as src:
+                do_nothing_script = open('do_nothing_cfg.py', 'w')
+                do_nothing_script.write(src.read())
+                if self.cores is not None:
+                    config.JobType.numCores = self.cores
+                    do_nothing_script.write('\nprocess.options.numberOfThreads=cms.untracked.uint32(%i)' % self.cores)
+                do_nothing_script.close()
             if self.crab_area is not None:
                 config.General.workArea = self.crab_area
             if self.custom_crab is not None:
