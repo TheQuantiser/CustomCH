@@ -21,3 +21,4 @@ output/
 *.pdf
 
 docs/html
+build/
