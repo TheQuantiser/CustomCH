@@ -187,6 +187,7 @@ ChronoSpectra --help \
 #include "CombineHarvester/CombineTools/interface/CombineHarvester.h"
 #include "CombineHarvester/CombineTools/interface/ParseCombineWorkspace.h"
 #include "CombineHarvester/CombineTools/interface/TFileIO.h"
+#include "CombineTools/interface/cli.hpp"
 #include "TROOT.h"
 #include <TCanvas.h>
 #include <TGaxis.h>
@@ -201,7 +202,6 @@ ChronoSpectra --help \
 #include <TSystem.h>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-#include <boost/program_options.hpp>
 #include <cctype>
 #include <chrono>
 #include <cmath>
@@ -214,28 +214,6 @@ ChronoSpectra --help \
 #include <sstream>
 #include <string>
 #include <vector>
-
-// User input parser
-boost::program_options::options_description config("Configuration");
-
-// Command-line arguments
-std::string datacard, workspace, fitresult, output, groupBinsArg, groupProcsArg,
-    freeze_arg, dataset = "data_obs", systSaveDir = "shapeSystPlots";
-
-// User input parameter storage
-unsigned samples = 2000;
-bool postfit = false, skipprefit = false;
-bool skipObs = false;
-bool getRateCorr = false, getHistBinCorr = false;
-bool sepProcHists = false, sepBinHists = false;
-bool sepProcHistBinCorr = false, sepBinHistBinCorr = false;
-bool sepBinRateCorr = false;
-bool storeSyst = false;
-std::string plotSystArg;
-std::set<std::string> plotSystPatterns;
-bool plotSystAll = false;
-bool logy = false;
-ch::CombineHarvester *cmb_restore_ptr = nullptr;
 
 std::string printTimestamp() {
   auto now = std::chrono::system_clock::now();
@@ -406,12 +384,13 @@ bool WildcardMatch(const std::string &pattern, const std::string &value) {
 
 // Check if a given bin/process/systematic combination should be plotted
 bool ShouldPlot(const std::string &bin, const std::string &proc,
-                const std::string &syst) {
-  if (plotSystAll)
+                const std::string &syst,
+                const ChronoSpectraConfig &cfg) {
+  if (cfg.plotSystAll)
     return true;
-  if (plotSystPatterns.empty())
+  if (cfg.plotSystPatterns.empty())
     return false;
-  for (const auto &pat : plotSystPatterns) {
+  for (const auto &pat : cfg.plotSystPatterns) {
     auto first = pat.find('/');
     auto second = pat.find('/', first + 1);
     if (first == std::string::npos || second == std::string::npos)
@@ -428,7 +407,8 @@ bool ShouldPlot(const std::string &bin, const std::string &proc,
 
 void plotShapeSystVariations(const SystHists &hists,
                              const std::string &paramName,
-                             const std::string &saveName) {
+                             const std::string &saveName,
+                             const ChronoSpectraConfig &cfg) {
   TH1F nominal = hists.nominal;
   TH1F up = hists.up;
   TH1F down = hists.down;
@@ -505,7 +485,7 @@ void plotShapeSystVariations(const SystHists &hists,
 
   auto [yMin, yMax] = GetHistMinMax({&nominal, &up, &down});
 
-  if (logy) {
+  if (cfg.logy) {
     pad0.SetLogy();
     yMin = std::max(yMin * 0.8, 0.01); // Apply padding and avoid zero
     yMax *= 1.2;                       // Apply upper padding
@@ -695,12 +675,13 @@ void plotShapeSystVariations(const SystHists &hists,
   pad1.Update();
   pad1.Modified();
 
-  canvas.SaveAs((systSaveDir + "/" + plotName + ".png").c_str());
+  canvas.SaveAs((cfg.systSaveDir + "/" + plotName + ".png").c_str());
 }
 
 void StoreSystematics(ch::CombineHarvester &cmb, const std::string &bin,
                       const std::string &proc, TFile &outfile,
-                      std::set<std::string> &writtenNominals) {
+                      std::set<std::string> &writtenNominals,
+                      const ChronoSpectraConfig &cfg) {
   std::string key = bin + "/" + proc;
   if (writtenNominals.insert(key).second) {
     TH1F nominal = cmb.GetShape();
@@ -724,8 +705,8 @@ void StoreSystematics(ch::CombineHarvester &cmb, const std::string &bin,
     ch::WriteToTFile(&hists.up, &outfile, base + "_Up");
     ch::WriteToTFile(&hists.down, &outfile, base + "_Down");
     // Plot variations only for selected bin/process/systematic combinations
-    if (ShouldPlot(bin, proc, p->name())) {
-      plotShapeSystVariations(hists, p->name(), bin + "_" + proc);
+    if (ShouldPlot(bin, proc, p->name(), cfg)) {
+      plotShapeSystVariations(hists, p->name(), bin + "_" + proc, cfg);
     }
   }
 }
@@ -790,6 +771,7 @@ void processAll(
     std::map<std::string, std::map<std::string, TH1F>> &histograms,
     const std::map<std::string, std::vector<std::string>> &binGroups,
     const std::map<std::string, std::vector<std::string>> &processGroups,
+    const ChronoSpectraConfig &cfg,
     unsigned samples = 0, RooFitResult *fitRes = nullptr,
     std::map<std::string, std::map<std::string, TH2F>> *RateCorrMap = nullptr,
     std::map<std::string, std::map<std::string, TH2F>> *HistBinCorrMap =
@@ -905,21 +887,21 @@ void processAll(
 
     // Handle observed or pseudo-data
     if (doBinHists) {
-      if (skipObs) {
-        histograms[binName][dataset] = TH1F(histograms[binName]["total"]);
-        histograms[binName][dataset].SetName(dataset.c_str());
+      if (cfg.skipObs) {
+        histograms[binName][cfg.dataset] = TH1F(histograms[binName]["total"]);
+        histograms[binName][cfg.dataset].SetName(cfg.dataset.c_str());
       } else {
-        histograms[binName][dataset] = binCmb.cp().GetObservedShape();
+        histograms[binName][cfg.dataset] = binCmb.cp().GetObservedShape();
       }
 
       // Update dataset histogram properties
-      auto &obsHist = histograms[binName][dataset];
+      auto &obsHist = histograms[binName][cfg.dataset];
       obsHist.SetBinContent(0, std::sqrt(obsHist.Integral()));
       obsHist.SetBinErrorOption(TH1::kPoisson);
 
       std::cout << printTimestamp() << std::setw(50) << std::left
-                << "\t" + binName + "/" + dataset +
-                       (skipObs ? " (pseudo-data)" : "")
+                << "\t" + binName + "/" + cfg.dataset +
+                       (cfg.skipObs ? " (pseudo-data)" : "")
                 << " -> " << obsHist.Integral() << " ± "
                 << obsHist.GetBinContent(0) << std::endl;
     }
@@ -958,13 +940,14 @@ void processAll(
       ch::CombineHarvester singleProcCmb = binCmb.cp().process({proc});
 
       // Plot prefit systematic shape variations for each parameter
-      if (storeSyst && systFile && !isPostfit &&
+      if (cfg.storeSyst && systFile && !isPostfit &&
           (singleProcCmb.bin_set().size() == 1)) {
-        StoreSystematics(singleProcCmb, binName, proc, *systFile, systNominals);
+        StoreSystematics(singleProcCmb, binName, proc, *systFile, systNominals,
+                         cfg);
       }
 
       // Skip grouped processes unless explicitly required
-      if (isProcGrouped && !sepProcHists && !sepProcHistBinCorr)
+      if (isProcGrouped && !cfg.sepProcHists && !cfg.sepProcHistBinCorr)
         continue;
 
       if (singleProcCmb.cp().process_set().empty()) {
@@ -975,9 +958,9 @@ void processAll(
 
       // Compute ungrouped processes
       computeProcess(singleProcCmb, binName, proc,
-                     doBinHists && (!isProcGrouped || sepProcHists), false,
+                     doBinHists && (!isProcGrouped || cfg.sepProcHists), false,
                      doBinHistBinCorr &&
-                         (!isProcGrouped || sepProcHistBinCorr));
+                         (!isProcGrouped || cfg.sepProcHistBinCorr));
     }
   };
 
@@ -998,7 +981,7 @@ void processAll(
     }
 
     // Compute bin statistics
-    computeBin(binCmb, binGroupName, true, getRateCorr, getHistBinCorr);
+    computeBin(binCmb, binGroupName, true, cfg.getRateCorr, cfg.getHistBinCorr);
 
     // Log and mark bins as processed
     std::cout << printTimestamp() << " -- Bin group " << binGroupName
@@ -1026,9 +1009,9 @@ void processAll(
     }
 
     // Compute bin statistics
-    computeBin(binCmb, bin, !isBinGrouped || sepBinHists,
-               isBinGrouped ? sepBinRateCorr : getRateCorr,
-               isBinGrouped ? sepBinHistBinCorr : getHistBinCorr);
+    computeBin(binCmb, bin, !isBinGrouped || cfg.sepBinHists,
+               isBinGrouped ? cfg.sepBinRateCorr : cfg.getRateCorr,
+               isBinGrouped ? cfg.sepBinHistBinCorr : cfg.getHistBinCorr);
   }
 
   std::cout << printTimestamp() << " Completed computing "
@@ -1046,232 +1029,24 @@ int main(int argc, char *argv[]) {
   gStyle->SetCanvasPreferGL(1);
 
   gSystem->Load("libHiggsAnalysisCombinedLimit");
-  // Define command-line options
-  bool show_help = false;
-  boost::program_options::options_description config("Allowed Options");
-  config.add_options()("help,h",
-                       boost::program_options::bool_switch(&show_help),
-                       "Display help information (implicit: true; default: "
-                       "false). No input required for `true`.")(
-      "workspace",
-      boost::program_options::value<std::string>(&workspace)->required(),
-      "Input ROOT workspace file (REQUIRED).")(
-      "datacard",
-      boost::program_options::value<std::string>(&datacard)->required(),
-      "Input datacard file for rebinning (REQUIRED).")(
-      "output", boost::program_options::value<std::string>(&output)->required(),
-      "Output ROOT file for storing results (REQUIRED).")(
-      "dataset",
-      boost::program_options::value<std::string>(&dataset)->default_value(
-          "data_obs"),
-      "Dataset name in the workspace (default: `data_obs`).")(
-      "fitresult",
-      boost::program_options::value<std::string>(&fitresult)->default_value(""),
-      "Path to RooFitResult file (default: none). Format: "
-      "`filename:fit_name`.")(
-      "postfit",
-      boost::program_options::value<bool>(&postfit)
-          ->default_value(false)
-          ->implicit_value(true),
-      "Enable generation of post-fit histograms (implicit: true; default: "
-      "false). No input required for `true`. Requires a fit result file.")(
-      "skipprefit",
-      boost::program_options::value<bool>(&skipprefit)
-          ->default_value(false)
-          ->implicit_value(true),
-      "Skip generation of pre-fit histograms (implicit: true; default: false). "
-      "No input required for `true`. At least one of `--postfit` or "
-      "`!skipprefit` must be enabled.")(
-      "samples",
-      boost::program_options::value<unsigned>(&samples)->default_value(2000),
-      "Number of samples for uncertainty estimation (default: 2000).")(
-      "freeze",
-      boost::program_options::value<std::string>(&freeze_arg)
-          ->default_value(""),
-      "Freeze parameters during the fit (default: none). Example format: "
-      "`PARAM1,PARAM2=X`.")(
-      "groupBins",
-      boost::program_options::value<std::string>(&groupBinsArg)
-          ->default_value(""),
-      "Group bins under named groups (default: none). Format: "
-      "`group1:bin1,bin2;group2:bin3`.")(
-      "groupProcs",
-      boost::program_options::value<std::string>(&groupProcsArg)
-          ->default_value(""),
-      "Group processes under named groups (default: none). Format: "
-      "`group1:proc1,proc2;group2:proc3`.")(
-      "skipObs",
-      boost::program_options::value<bool>(&skipObs)
-          ->default_value(false)
-          ->implicit_value(true),
-      "Do not generate data (observed) histograms (implicit: true; default: "
-      "false). No input required for `true`.")(
-      "getRateCorr",
-      boost::program_options::value<bool>(&getRateCorr)
-          ->default_value(true)
-          ->implicit_value(true),
-      "Compute rate correlation matrices for all grouped and ungrouped bins "
-      "(implicit: true; default: true). No input required for `true`.")(
-      "getHistBinCorr",
-      boost::program_options::value<bool>(&getHistBinCorr)
-          ->default_value(true)
-          ->implicit_value(true),
-      "Compute histogram bin correlation matrices for all grouped and "
-      "ungrouped processes and bins (implicit: true; default: true). No input "
-      "required for `true`.")(
-      "sepProcHists",
-      boost::program_options::value<bool>(&sepProcHists)
-          ->default_value(false)
-          ->implicit_value(true),
-      "Generate separate histograms for processes within process groups "
-      "(skipped if false) (implicit: true; default: false). No input required "
-      "for `true`.")(
-      "sepBinHists",
-      boost::program_options::value<bool>(&sepBinHists)
-          ->default_value(false)
-          ->implicit_value(true),
-      "Generate separate histograms for bins within bin groups (skipped if "
-      "false) (implicit: true; default: false). No input required for `true`.")(
-      "sepProcHistBinCorr",
-      boost::program_options::value<bool>(&sepProcHistBinCorr)
-          ->default_value(false)
-          ->implicit_value(true),
-      "Compute separate histogram bin correlations for processes within "
-      "process groups (skipped if false) (implicit: true; default: false). No "
-      "input required for `true`.")(
-      "sepBinHistBinCorr",
-      boost::program_options::value<bool>(&sepBinHistBinCorr)
-          ->default_value(false)
-          ->implicit_value(true),
-      "Compute separate histogram bin correlations for bins within bin groups "
-      "(skipped if false) (implicit: true; default: false). No input required "
-      "for `true`.")("sepBinRateCorr",
-                     boost::program_options::value<bool>(&sepBinRateCorr)
-                         ->default_value(false)
-                         ->implicit_value(true),
-                     "Compute separate rate correlations for bins within bin "
-                     "groups (skipped if false) (implicit: true; default: "
-                     "false). No input required for `true`.")(
-      "storeSyst",
-      boost::program_options::value<bool>(&storeSyst)
-          ->default_value(false)
-          ->implicit_value(true),
-      "Store up/dn shape variations for each parameter in the output ROOT "
-      "file. Skipped for grouped bins or grouped processes. (implicit: true; "
-      "default: false). No input required for `true`.")(
-      "plotSyst",
-      boost::program_options::value<std::string>(&plotSystArg)
-          ->default_value(""),
-      "Plot stored shape variations. Accepts 'all' or a comma-separated list "
-      "of 'bin/process/systematic' patterns with '*' wildcards (regex-style "
-      "'.*' also supported). Missing combinations are skipped silently.")(
-      "systSaveDir",
-      boost::program_options::value<std::string>(&systSaveDir)
-          ->default_value(systSaveDir),
-      "Directory for saving pdf and png plots of systematic shape variations "
-      "for each parameter.")("logy",
-                             boost::program_options::value<bool>(&logy)
-                                 ->default_value(false)
-                                 ->implicit_value(true),
-                             "Set y-axis to log scale in systematic plots.");
-
-  boost::program_options::variables_map vm;
-  boost::program_options::store(
-      boost::program_options::parse_command_line(argc, argv, config), vm);
-
-  // Check for help flag before validating required options
-  if (vm.count("help") && vm["help"].as<bool>()) {
-    std::cout
-        << "\n"
-        << config << std::endl
-        << "\nExample Usage:\n"
-        << "ChronoSpectra --workspace workspace.root --datacard datacard.txt "
-           "--output output.root --dataset data_obs --postfit "
-        << "--fitResult=fit.root:fit_mdf --samples 2000 --freeze Wrate=1.5,pdf "
-        << "--groupBins 'region1: bin1, bin2; region2: bin3, bin4' "
-        << "-groupProcs 'type1:procA,procB;type2:procC,procD' "
-        << "--skipObs --getRateCorr=false --getHistBinCorr --skipprefit "
-        << "--sepProcHists --sepBinHists --sepProcHistBinCorr "
-           "--sepBinHistBinCorr --sepBinRateCorr --plotSyst=binA/proc*/syst1\n";
-    return 0;
-  }
-
-  // Validate other options
-  boost::program_options::notify(vm);
-
-  // Parse bin/process/systematic plotting patterns; allow '*' or '.*'
-  // wildcards and silently ignore malformed entries
-  if (!plotSystArg.empty()) {
-    if (plotSystArg == "all" || plotSystArg == "*/*/*") {
-      plotSystAll = true;
-    } else {
-      std::vector<std::string> pats;
-      boost::split(pats, plotSystArg, boost::is_any_of(","));
-      for (auto &p : pats) {
-        boost::trim(p);
-        if (p.empty())
-          continue;
-        if (p == "*/*/*") {
-          plotSystAll = true;
-          continue;
-        }
-        std::vector<std::string> parts;
-        boost::split(parts, p, boost::is_any_of("/"));
-        if (parts.size() != 3)
-          continue;
-        for (auto &part : parts) {
-          boost::trim(part);
-          boost::replace_all(part, ".*", "*");
-        }
-        plotSystPatterns.insert(parts[0] + "/" + parts[1] + "/" + parts[2]);
-      }
-    }
-  }
-
-  // Print all parameters and their values
-  std::cout << "\n\n>>" << printTimestamp()
-            << " Using option values:" << std::endl;
-  for (const auto &option : config.options()) {
-    const std::string &name = option->long_name();
-    std::cout << "--" << name << ": ";
-    if (vm.count(name)) {
-      try {
-        auto value = vm[name].value();
-        if (value.type() == typeid(std::string)) {
-          std::cout << boost::any_cast<std::string>(value);
-        } else if (value.type() == typeid(bool)) {
-          std::cout << (boost::any_cast<bool>(value) ? "true" : "false");
-        } else if (value.type() == typeid(unsigned)) {
-          std::cout << boost::any_cast<unsigned>(value);
-        } else {
-          std::cout << "unknown value type";
-        }
-      } catch (const boost::bad_any_cast &) {
-        std::cout << "Error casting value";
-      }
-    } else {
-      std::cout << "not set";
-    }
-    std::cout << std::endl;
-  }
-  std::cout << "\n\n\n";
+  ChronoSpectraConfig cfg = parseCommandLine(argc, argv);
 
   // Ensure either pre-fit or post-fit histograms are requested
-  if (skipprefit && !postfit)
+  if (cfg.skipprefit && !cfg.postfit)
     throw std::runtime_error(
         "At least one of skipprefit=false or postfit=true must be set.");
 
   // Parse group arguments
-  auto binGroups = parseNamedGroups(groupBinsArg);
-  auto processGroups = parseNamedGroups(groupProcsArg);
+  auto binGroups = parseNamedGroups(cfg.groupBinsArg);
+  auto processGroups = parseNamedGroups(cfg.groupProcsArg);
 
   std::unique_ptr<RooFitResult> fitResPtr;
   RooFitResult *fitRes = nullptr;
-  if (postfit) {
+  if (cfg.postfit) {
     // Load RooFitResult safely
     try {
       fitResPtr = std::make_unique<RooFitResult>(
-          ch::OpenFromTFile<RooFitResult>(fitresult));
+          ch::OpenFromTFile<RooFitResult>(cfg.fitresult));
     } catch (const std::exception &e) {
       throw std::runtime_error("Failed to load RooFitResult: " +
                                std::string(e.what()));
@@ -1282,7 +1057,7 @@ int main(int argc, char *argv[]) {
                  : nullptr;
 
     if (fitRes) {
-      std::cout << printTimestamp() << " Valid fit result found (" << fitresult
+      std::cout << printTimestamp() << " Valid fit result found (" << cfg.fitresult
                 << "), with " << fitRes->floatParsFinal().getSize()
                 << " parameters." << std::endl;
     } else {
@@ -1293,40 +1068,39 @@ int main(int argc, char *argv[]) {
   std::cout << std::endl;
 
   // Load datacard for later histogram rebinning
-  if (!std::filesystem::exists(datacard))
-    throw std::runtime_error("Error: Datacard file '" + datacard +
+  if (!std::filesystem::exists(cfg.datacard))
+    throw std::runtime_error("Error: Datacard file '" + cfg.datacard +
                              "' does not exist.");
   ch::CombineHarvester cmb_restore;
   cmb_restore.SetFlag("workspaces-use-clone", true);
-  cmb_restore.ParseDatacard(datacard, "", "", "", 0, "125.");
+  cmb_restore.ParseDatacard(cfg.datacard, "", "", "", 0, "125.");
   if (cmb_restore.cp().bin_set().empty() ||
       cmb_restore.cp().process_set().empty()) {
     throw std::runtime_error(
-        "Failed to load datacard '" + datacard +
+        "Failed to load datacard '" + cfg.datacard +
         "' into cmb_restore: No bins or processes were found.");
   }
   std::cout << "\n\n"
             << printTimestamp()
-            << " Successfully loaded text datacard: " << datacard << "\n"
+            << " Successfully loaded text datacard: " << cfg.datacard << "\n"
             << std::endl;
-  cmb_restore_ptr = &cmb_restore;
 
   // Load workspace
-  TFile infile(workspace.c_str());
+  TFile infile(cfg.workspace.c_str());
   if (!infile.IsOpen())
-    throw std::runtime_error("Failed to open workspace file: " + workspace);
+    throw std::runtime_error("Failed to open workspace file: " + cfg.workspace);
   RooWorkspace *ws = dynamic_cast<RooWorkspace *>(infile.Get("w"));
   if (!ws)
-    throw std::runtime_error("Workspace 'w' not found in file: " + workspace);
+    throw std::runtime_error("Workspace 'w' not found in file: " + cfg.workspace);
   else
-    std::cout << printTimestamp() << " Loaded workspace from " << workspace
+    std::cout << printTimestamp() << " Loaded workspace from " << cfg.workspace
               << "\n"
               << std::endl;
 
   // Initialize CombineHarvester from Workspace
   ch::CombineHarvester cmb;
   cmb.SetFlag("workspaces-use-clone", true);
-  ch::ParseCombineWorkspace(cmb, *ws, "ModelConfig", dataset, false);
+  ch::ParseCombineWorkspace(cmb, *ws, "ModelConfig", cfg.dataset, false);
   std::cout << "\n\n"
             << printTimestamp()
             << " Initialized CombineHarvester instance from workspace " << "\n"
@@ -1334,11 +1108,10 @@ int main(int argc, char *argv[]) {
 
   // Lambda to freeze parameters
   auto freeze_parameters = [&]() {
-    if (freeze_arg.empty())
+    if (cfg.freeze_arg.empty())
       return;
-    // {
     std::vector<std::string> freezeVars;
-    boost::split(freezeVars, freeze_arg, boost::is_any_of(","));
+    boost::split(freezeVars, cfg.freeze_arg, boost::is_any_of(","));
 
     for (const auto &item : freezeVars) {
       std::vector<std::string> parts;
@@ -1366,39 +1139,40 @@ int main(int argc, char *argv[]) {
   freeze_parameters();
 
   // Create output ROOT file
-  TFile outfile(output.c_str(), "RECREATE");
+  TFile outfile(cfg.output.c_str(), "RECREATE");
   if (!outfile.IsOpen())
-    throw std::runtime_error("Failed to create output file: " + output);
+    throw std::runtime_error("Failed to create output file: " + cfg.output);
   TH1::AddDirectory(false);
 
-  if (storeSyst && (plotSystAll || !plotSystPatterns.empty()) &&
-      !systSaveDir.empty()) {
-    gSystem->MakeDirectory(systSaveDir.c_str());
+  if (cfg.storeSyst && (cfg.plotSystAll || !cfg.plotSystPatterns.empty()) &&
+      !cfg.systSaveDir.empty()) {
+    gSystem->MakeDirectory(cfg.systSaveDir.c_str());
 
     // Verify the directory exists after creation
-    if (gSystem->AccessPathName(systSaveDir.c_str())) {
+    if (gSystem->AccessPathName(cfg.systSaveDir.c_str())) {
       throw std::runtime_error(
-          "Failed to create systematics plotting directory: " + systSaveDir);
+          "Failed to create systematics plotting directory: " +
+          cfg.systSaveDir);
     }
 
     std::cout << "\n"
               << printTimestamp()
-              << " Created systematics plotting directory: " << systSaveDir
+              << " Created systematics plotting directory: " << cfg.systSaveDir
               << std::endl;
   }
 
   // Generate pre-fit histograms if requested
-  if (!skipprefit) {
+  if (!cfg.skipprefit) {
     std::map<std::string, std::map<std::string, TH1F>> prefitHists;
-    processAll(cmb, prefitHists, binGroups, processGroups, 0, nullptr, nullptr,
-               nullptr, storeSyst ? &outfile : nullptr);
+    processAll(cmb, prefitHists, binGroups, processGroups, cfg, 0, nullptr,
+               nullptr, nullptr, cfg.storeSyst ? &outfile : nullptr);
     writeHistogramsToFile(prefitHists, outfile, "prefit");
   }
 
   std::cout << "\n\n";
 
   // Generate post-fit histograms if requested
-  if (postfit) {
+  if (cfg.postfit) {
 
     // Update model parameters to post-fit values
     cmb.UpdateParameters(*fitRes);
@@ -1412,8 +1186,8 @@ int main(int argc, char *argv[]) {
         HistBinCorrMap;
 
     // Process all post-fit histograms and correlations
-    processAll(cmb, postfitHists, binGroups, processGroups, samples, fitRes,
-               &RateCorrMap, &HistBinCorrMap, nullptr);
+    processAll(cmb, postfitHists, binGroups, processGroups, cfg, cfg.samples,
+               fitRes, &RateCorrMap, &HistBinCorrMap, nullptr);
 
     // Write histograms and correlation matrices to file
     writeHistogramsToFile(postfitHists, outfile, "postfit");
@@ -1447,8 +1221,9 @@ int main(int argc, char *argv[]) {
               << std::endl;
 
     // Compute and write global rate correlation matrix
-    if (samples > 0) {
-      TH2F globalRateCorrMatrix = cmb.cp().GetRateCorrelation(*fitRes, samples);
+    if (cfg.samples > 0) {
+      TH2F globalRateCorrMatrix =
+          cmb.cp().GetRateCorrelation(*fitRes, cfg.samples);
       ApplyTH2FStyle(globalRateCorrMatrix);
       ch::WriteToTFile(&globalRateCorrMatrix, &outfile,
                        "postfit/globalRateCorr");
@@ -1464,7 +1239,6 @@ int main(int argc, char *argv[]) {
     delete ws;
   infile.Close();
   outfile.Close();
-  cmb_restore_ptr = nullptr;
   std::cout << "\n\n"
             << printTimestamp() << " Output file: " << outfile.GetName()
             << std::endl;
