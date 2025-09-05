@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python3
 
 # This class implements the pdg rounding rules indicated in
 # section 5.3 of doi:10.1088/0954-3899/33/1/001
