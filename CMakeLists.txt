@@ -3,7 +3,6 @@ project(CombineHarvester)
 
 # Ensure we build against the same C++ standard as ROOT to avoid
 # the "C++ standard ... does not match ROOT configuration" warning.
-set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Default installation prefix: prefer an active Conda environment or the first
@@ -42,6 +41,33 @@ else()
 endif()
 
 find_package(ROOT REQUIRED COMPONENTS RooFitCore RooFit RooStats)
+
+# Query ROOT for the C++ standard to use
+set(_root_std "")
+if(DEFINED ROOT_CXX_STANDARD)
+  set(_root_std "${ROOT_CXX_STANDARD}")
+elseif(DEFINED ROOT_cxx_STANDARD)
+  set(_root_std "${ROOT_cxx_STANDARD}")
+else()
+  execute_process(COMMAND root-config --cflags
+                  OUTPUT_VARIABLE _root_cflags
+                  RESULT_VARIABLE _root_result
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(_root_result EQUAL 0)
+    string(REGEX MATCH "-std=c\+\+([0-9]+)" _match "${_root_cflags}")
+    if(_match)
+      set(_root_std "${CMAKE_MATCH_1}")
+    endif()
+  endif()
+endif()
+if(_root_std)
+  math(EXPR _root_std_int "${_root_std}")
+  set(CMAKE_CXX_STANDARD ${_root_std_int})
+else()
+  set(CMAKE_CXX_STANDARD 17)
+  message(WARNING "Could not detect C++ standard from ROOT. Falling back to C++17.")
+endif()
+
 find_package(Boost REQUIRED COMPONENTS program_options filesystem system)
 find_package(LibXml2 REQUIRED)
 find_package(vdt REQUIRED)
