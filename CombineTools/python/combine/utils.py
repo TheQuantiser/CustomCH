@@ -30,17 +30,28 @@ def split_vals(vals, fmt_spec=None):
     return sorted([x for x in res] + res_extra, key=lambda x: float(x))
 
 
+def iter_collection(coll):
+    """Yield members of a RooFit collection for modern and legacy ROOT."""
+    try:
+        for var in coll:
+            yield var
+    except TypeError:
+        it = coll.createIterator()
+        while True:
+            var = it.Next()
+            if not var:
+                break
+            yield var
+
+
 def list_from_workspace(file, workspace, set):
     """Create a list of strings from a RooWorkspace set"""
     res = []
     wsFile = ROOT.TFile(file)
     ws = wsFile.Get(workspace)
     argSet = ws.set(set)
-    it = argSet.createIterator()
-    var = it.Next()
-    while var:
+    for var in iter_collection(argSet):
         res.append(var.GetName())
-        var = it.Next()
     return res
 
 
