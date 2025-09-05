@@ -57,13 +57,21 @@ find_package_handle_standard_args(
 
 if(HiggsAnalysisCombinedLimit_FOUND)
   set(HiggsAnalysisCombinedLimit_LIBRARIES ${HiggsAnalysisCombinedLimit_LIBRARY})
-  # Some headers are included as "HiggsAnalysis/CombinedLimit/..." meaning the
-  # include path must also expose the parent directory that contains the
-  # top-level HiggsAnalysis/ folder.  Record both locations so consumers can
-  # resolve either style.
+  # Headers may be included with the prefix "HiggsAnalysis/CombinedLimit/".
+  # When the project is checked out as HiggsAnalysis/CombinedLimit, the
+  # include directory returned above is that repository root.  Expose the
+  # directory *above* "HiggsAnalysis" so the prefixed form resolves.  In the
+  # installed layout the include directory already points to the prefix root
+  # (e.g. /usr/include), so adding the parent is harmless.
   get_filename_component(_HACL_PARENT "${HiggsAnalysisCombinedLimit_INCLUDE_DIR}/.." ABSOLUTE)
+  get_filename_component(_HACL_PARENT_NAME "${_HACL_PARENT}" NAME)
+  if(_HACL_PARENT_NAME STREQUAL "HiggsAnalysis")
+    get_filename_component(_HACL_PREFIX "${_HACL_PARENT}/.." ABSOLUTE)
+  else()
+    set(_HACL_PREFIX "${_HACL_PARENT}")
+  endif()
   set(HiggsAnalysisCombinedLimit_INCLUDE_DIRS
-      "${_HACL_PARENT};${HiggsAnalysisCombinedLimit_INCLUDE_DIR}")
+      "${_HACL_PREFIX};${HiggsAnalysisCombinedLimit_INCLUDE_DIR}")
   if(NOT TARGET HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
     add_library(HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit UNKNOWN IMPORTED)
     set_target_properties(HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit PROPERTIES
