@@ -7,7 +7,11 @@ ROOT_GENERATE_DICTIONARY(G__CombinePdfs src/classes.h LINKDEF src/classes_def.xm
 
 add_library(CombinePdfs ${COMBINE_PDFS_SRC} ${CMAKE_CURRENT_BINARY_DIR}/G__CombinePdfs.cxx)
 
-target_include_directories(CombinePdfs PUBLIC interface ${CH_EXTERNAL_INCLUDES})
+target_include_directories(CombinePdfs PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/interface>
+  $<INSTALL_INTERFACE:include>
+  ${CH_EXTERNAL_INCLUDES}
+)
 target_link_libraries(CombinePdfs PUBLIC CombineTools ${CH_EXTERNAL_LIBS} HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
 set_target_properties(CombinePdfs PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

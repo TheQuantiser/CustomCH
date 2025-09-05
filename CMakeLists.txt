@@ -49,8 +49,9 @@ add_subdirectory(CombinePdfs)
 
 add_library(CombineHarvester INTERFACE)
 target_include_directories(CombineHarvester INTERFACE
-  ${CMAKE_CURRENT_SOURCE_DIR}/CombineTools/interface
-  ${CMAKE_CURRENT_SOURCE_DIR}/CombinePdfs/interface
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CombineTools/interface>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CombinePdfs/interface>
+  $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(CombineHarvester INTERFACE

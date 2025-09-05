@@ -7,7 +7,11 @@ ROOT_GENERATE_DICTIONARY(G__CombineTools src/classes.h LINKDEF src/classes_def.x
 
 add_library(CombineTools ${COMBINE_TOOLS_SRC} ${CMAKE_CURRENT_BINARY_DIR}/G__CombineTools.cxx)
 
-target_include_directories(CombineTools PUBLIC interface ${CH_EXTERNAL_INCLUDES})
+target_include_directories(CombineTools PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/interface>
+  $<INSTALL_INTERFACE:include>
+  ${CH_EXTERNAL_INCLUDES}
+)
 target_link_libraries(CombineTools PUBLIC ${CH_EXTERNAL_LIBS} HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
 set_target_properties(CombineTools PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
