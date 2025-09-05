@@ -1,17 +1,16 @@
 Build System {#build}
 ====================
 
-CombineHarvester is built with [CMake](https://cmake.org/) and no CMSSW
-environment is required.  The repository contains two main packages,
-`CombineTools` and `CombinePdfs`, which are configured and compiled in a
-single CMake project.
+CombineHarvester is built with [CMake](https://cmake.org/).  The repository
+contains two main packages, `CombineTools` and `CombinePdfs`, which are
+configured and compiled in a single CMake project.
 
-See the [standalone installation instructions](../README.md#installation)
-for the initial checkout of the repository.  A typical build workflow is:
+See the [standalone installation guide](StandaloneInstallation.md) for the
+repository setup.  A typical build workflow is:
 
 ```
 cmake -S . -B build
-cmake --build build -j4
+cmake --build build --target install
 ```
 
 Libraries and executables are placed in `build/lib` and `build/bin`.  The
