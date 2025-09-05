@@ -7,8 +7,6 @@ import math
 import itertools
 import pprint
 import sys
-import six
-from six.moves import range
 
 class THDMHiggsModel(PhysicsModel):
     def __init__(self):
@@ -111,7 +109,7 @@ class THDMHiggsModel(PhysicsModel):
         pars = [mH, tanb]
         doneMasses = False
 
-        for era, (file, version) in six.iteritems(self.modelFiles):
+        for era, (file, version) in self.modelFiles.items():
             hd = self.h_dict[version]
             f = ROOT.TFile(self.filePrefix + file)
 
