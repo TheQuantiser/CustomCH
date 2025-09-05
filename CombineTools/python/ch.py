@@ -8,13 +8,38 @@
 from __future__ import absolute_import
 from __future__ import print_function
 import itertools
-from os import environ
+import os
+from pathlib import Path
+from importlib.resources import files
 
 # Prevent cppyy's check for the PCH
-environ['CLING_STANDARD_PCH'] = 'none'
+os.environ['CLING_STANDARD_PCH'] = 'none'
 import cppyy
 
-cppyy.load_reflection_info("libCombineHarvesterCombineTools")
+
+def _load_library() -> None:
+    libname = "libCombineHarvesterCombineTools"
+    search_dir = os.environ.get("CH_LIBRARY_PATH")
+    if search_dir:
+        base = Path(search_dir)
+    else:
+        base = Path(files(__package__))
+    for ext in (".so", ".dylib"):
+        candidate = base / f"{libname}{ext}"
+        if candidate.exists():
+            try:
+                cppyy.load_reflection_info(str(candidate.resolve()))
+            except OSError as err:
+                raise OSError(
+                    f"Failed to load {candidate}. Rebuild the project or set CH_LIBRARY_PATH"
+                ) from err
+            return
+    raise OSError(
+        f"Could not find {libname}. Rebuild the project or set CH_LIBRARY_PATH to its location."
+    )
+
+
+_load_library()
 AutoRebin = cppyy.gbl.ch.AutoRebin
 BinByBinFactory = cppyy.gbl.ch.BinByBinFactory
 CardWriter = cppyy.gbl.ch.CardWriter
