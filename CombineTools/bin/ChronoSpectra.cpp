@@ -208,6 +208,7 @@ ChronoSpectra --help \
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <map>
 #include <regex>
 #include <set>
@@ -1086,10 +1087,11 @@ int main(int argc, char *argv[]) {
             << std::endl;
 
   // Load workspace
-  TFile infile(cfg.workspace.c_str());
-  if (!infile.IsOpen())
+  auto infile = std::unique_ptr<TFile>(TFile::Open(cfg.workspace.c_str()));
+  if (!infile || infile->IsZombie())
     throw std::runtime_error("Failed to open workspace file: " + cfg.workspace);
-  RooWorkspace *ws = dynamic_cast<RooWorkspace *>(infile.Get("w"));
+  auto ws = std::unique_ptr<RooWorkspace>(
+      dynamic_cast<RooWorkspace *>(infile->Get("w")));
   if (!ws)
     throw std::runtime_error("Workspace 'w' not found in file: " + cfg.workspace);
   else
@@ -1139,8 +1141,9 @@ int main(int argc, char *argv[]) {
   freeze_parameters();
 
   // Create output ROOT file
-  TFile outfile(cfg.output.c_str(), "RECREATE");
-  if (!outfile.IsOpen())
+  auto outfile = std::unique_ptr<TFile>(
+      TFile::Open(cfg.output.c_str(), "RECREATE"));
+  if (!outfile || outfile->IsZombie())
     throw std::runtime_error("Failed to create output file: " + cfg.output);
   TH1::AddDirectory(false);
 
@@ -1165,8 +1168,8 @@ int main(int argc, char *argv[]) {
   if (!cfg.skipprefit) {
     std::map<std::string, std::map<std::string, TH1F>> prefitHists;
     processAll(cmb, prefitHists, binGroups, processGroups, cfg, 0, nullptr,
-               nullptr, nullptr, cfg.storeSyst ? &outfile : nullptr);
-    writeHistogramsToFile(prefitHists, outfile, "prefit");
+               nullptr, nullptr, cfg.storeSyst ? outfile.get() : nullptr);
+    writeHistogramsToFile(prefitHists, *outfile, "prefit");
   }
 
   std::cout << "\n\n";
@@ -1190,9 +1193,9 @@ int main(int argc, char *argv[]) {
                fitRes, &RateCorrMap, &HistBinCorrMap, nullptr);
 
     // Write histograms and correlation matrices to file
-    writeHistogramsToFile(postfitHists, outfile, "postfit");
-    writeCorrToFile(RateCorrMap, outfile, "postfit", "_RateCorr");
-    writeCorrToFile(HistBinCorrMap, outfile, "postfit", "_HistBinCorr");
+    writeHistogramsToFile(postfitHists, *outfile, "postfit");
+    writeCorrToFile(RateCorrMap, *outfile, "postfit", "_RateCorr");
+    writeCorrToFile(HistBinCorrMap, *outfile, "postfit", "_HistBinCorr");
 
     // Generate and populate parameter correlation matrix
     const RooArgList *paramList = &fitRes->floatParsFinal();
@@ -1214,7 +1217,7 @@ int main(int argc, char *argv[]) {
     }
 
     ApplyTH2FStyle(parCorrMatrix);
-    ch::WriteToTFile(&parCorrMatrix, &outfile, "postfit/parCorrMat");
+    ch::WriteToTFile(&parCorrMatrix, outfile.get(), "postfit/parCorrMat");
     std::cout << "\n"
               << printTimestamp()
               << " Parameter correlations extracted -> postfit/parCorrMat"
@@ -1225,7 +1228,7 @@ int main(int argc, char *argv[]) {
       TH2F globalRateCorrMatrix =
           cmb.cp().GetRateCorrelation(*fitRes, cfg.samples);
       ApplyTH2FStyle(globalRateCorrMatrix);
-      ch::WriteToTFile(&globalRateCorrMatrix, &outfile,
+      ch::WriteToTFile(&globalRateCorrMatrix, outfile.get(),
                        "postfit/globalRateCorr");
       std::cout
           << printTimestamp() << std::setw(50) << std::left
@@ -1234,13 +1237,9 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // Cleanup
-  if (ws)
-    delete ws;
-  infile.Close();
-  outfile.Close();
+  // Cleanup handled by smart pointers
   std::cout << "\n\n"
-            << printTimestamp() << " Output file: " << outfile.GetName()
+            << printTimestamp() << " Output file: " << outfile->GetName()
             << std::endl;
   std::cout << "\n\n\n\n"
             << printTimestamp() << " Task complete!\n\n\n\n"
