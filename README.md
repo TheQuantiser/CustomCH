@@ -21,4 +21,20 @@ A new full release area can be set up and compiled in the following steps:
 
 This project now uses CMake and no longer relies on `BuildFile.xml`.
 
+### Standalone dependency
+
+When building CombineHarvester outside of a CMSSW release, the
+`HiggsAnalysis/CombinedLimit` package is still required.  The sources can be
+retrieved either as a git submodule
+
+    git submodule add https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
+
+or by downloading a release tarball from the
+[CombinedLimit GitHub releases](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit/releases)
+and unpacking it into `HiggsAnalysis/CombinedLimit`.
+
+The CMake build exports an option `USE_SYSTEM_COMBINEDLIMIT` which, when set to
+`ON`, will search for an existing system installation instead of building from
+the sources bundled with this repository.
+
 Previously this package contained some analysis-specific subpackages. These packages can now be found [here](https://gitlab.cern.ch/cms-hcg/ch-areas). If you would like a repository for your analysis package to be created in that group, please create an issue in the CombineHarvester repository stating the desired package name and your NICE username. Note: you are not obliged to store your analysis package in this central group.
