@@ -67,7 +67,11 @@ python3 CombineTools/scripts/Example3.py
 
 ### Compatibility with CMSSW
 
-For backward support the framework remains compatible with the CMSSW 14_1_X and 11_3_X series releases. The repository may still be placed at `$CMSSW_BASE/src/CombineHarvester` alongside `HiggsAnalysis/CombinedLimit` and compiled with `scram b` following the recommendations of the combine developers.
+For backward support the framework remains compatible with the CMSSW 14_1_X
+and 11_3_X series releases. The repository may still be placed inside a
+CMSSW release area under `src/CombineHarvester` alongside
+`HiggsAnalysis/CombinedLimit` and compiled with `scram b` following the
+recommendations of the combine developers.
 
 If you are using this framework for the first time we recommend taking a look through some of the examples below which demonstrate the main features:
 
@@ -108,9 +112,9 @@ Other comments {#note}
     terminate called after throwing an instance of 'std::runtime_error'
       what():
     *******************************************************************************
-    Context: Function ch::GetClonedTH1 at
-      CombineHarvester/CombineTools/src/TFileIO.cc:21
-    Problem: TH1 eleTau_0jet_medium/ggH not found in CMSSW_7_1_5/src/auxiliaries/shapes/htt_et.inputs-sm-7TeV-hcg.root
+      Context: Function ch::GetClonedTH1 at
+        CombineHarvester/CombineTools/src/TFileIO.cc:21
+      Problem: TH1 eleTau_0jet_medium/ggH not found in $CH_BASE/auxiliaries/shapes/htt_et.inputs-sm-7TeV-hcg.root
     *******************************************************************************
 
 If the cause of such an error message is unclear, or if you believe the error message should not have been produced, please raise an issue here with full details on reproducing the problem: https://github.com/cms-analysis/CombineHarvester/issues/new

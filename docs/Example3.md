@@ -6,11 +6,18 @@ Examples Part III {#intro3}
 
 **File**: CombineTools/bin/Example3.cpp
 
-This examples demonstrates how to create a simple four-bin counting experiment datacard. It is based on the example given on the combine twiki [here](https://twiki.cern.ch/twiki/bin/viewauth/CMS/HiggsWG/SWGuideNonStandardCombineUses#Rate_Parameters). Special `rateParam` directives are added to the datacard to allow the normalisations in three of these four bins to float freely and the fourth will be expressed as a function of the these three parameters. Here we follow the C++ interface example, a similar python version can be found in `CombineTools/scripts/Example3.py`. Make sure all the code is compiled and run the example:
+  This examples demonstrates how to create a simple four-bin counting
+  experiment datacard. It is based on the example given on the combine twiki
+  [here](https://twiki.cern.ch/twiki/bin/viewauth/CMS/HiggsWG/SWGuideNonStandardCombineUses#Rate_Parameters).
+  Special `rateParam` directives are added to the datacard to allow the
+  normalisations in three of these four bins to float freely and the fourth
+  will be expressed as a function of the these three parameters. Here we follow
+  the C++ interface example, a similar python version can be found in
+  `CombineTools/scripts/Example3.py`. Build the project with CMake (see the
+  [installation instructions](../README.md#installation)) and run the example:
 
-    cd $CMSSW_BASE/src
-    scram b -j4
-    Example3
+      cmake --build build -j4
+      ./build/bin/Example3
 
 We start by defining four categories: A, B, C and D in the normal way. Contrary to the previous shape-based examples, with a counting experiment we have to specify all of the observed and expected yields directly. To start with we'll define a map containing the observed yields in each category.
 

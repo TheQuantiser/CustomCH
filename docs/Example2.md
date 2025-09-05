@@ -6,11 +6,13 @@ Examples Part II {#intro2}
 
 **File**: CombineTools/bin/Example2.cpp
 
-In this example we will set up a simplified version of the Higgs to tau tau datacards, while exploring the main features of datacard creation with the CombineHarvester tool. To run the example, first make sure the code has been compiled:
+  In this example we will set up a simplified version of the Higgs to tau tau
+  datacards, while exploring the main features of datacard creation with the
+  CombineHarvester tool. Build the project with CMake (see the
+  [installation instructions](../README.md#installation)) and run the example:
 
-    cd $CMSSW_BASE/src
-    scram b -j4
-    Example2
+      cmake --build build -j4
+      ./build/bin/Example2
 
 Defining categories and processes {#ex2-p1}
 ===========================================
