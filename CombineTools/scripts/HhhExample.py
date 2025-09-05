@@ -10,8 +10,9 @@ import os
 
 cb = ch.CombineHarvester()
 
-auxiliaries  = os.environ['CMSSW_BASE'] + '/src/auxiliaries/'
-aux_shapes   = auxiliaries +'shapes/'
+ch_base = os.environ.get('CH_BASE', os.environ.get('CMSSW_BASE', '') + '/src/CombineHarvester')
+auxiliaries  = os.environ.get('CH_AUXILIARIES', ch_base + '/auxiliaries/')
+aux_shapes   = auxiliaries + 'shapes/'
 
 chns = ['et', 'mt', 'tt']
 
