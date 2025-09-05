@@ -4,7 +4,7 @@ project(CombineHarvester)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 option(USE_SYSTEM_COMBINEDLIMIT "Use system-installed HiggsAnalysisCombinedLimit" OFF)
-set(COMBINEDLIMIT_TAG "v10.2.7" CACHE STRING "Git tag or commit of HiggsAnalysis-CombinedLimit to fetch")
+set(COMBINEDLIMIT_TAG "main" CACHE STRING "Git branch or tag of HiggsAnalysis-CombinedLimit to fetch")
 
 if(USE_SYSTEM_COMBINEDLIMIT)
   find_package(HiggsAnalysisCombinedLimit REQUIRED)

@@ -18,13 +18,14 @@ ROOT installation if required.
 ## Repository setup
 
 ```bash
-git clone https://github.com/cms-analysis/CombineHarvester.git
-cd CombineHarvester
+git clone https://github.com/TheQuantiser/CustomCH.git
+cd CustomCH
+git submodule update --init
 ```
 
 The CMake build will automatically download the
 [HiggsAnalysis/CombinedLimit](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit)
-sources if they are not already present.
+`main` branch sources if they are not already present.
 
 If you have `HiggsAnalysis/CombinedLimit` available as a separate installation,
 skip the download by configuring CombineHarvester with

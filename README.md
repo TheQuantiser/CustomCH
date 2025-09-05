@@ -12,8 +12,9 @@ See the [standalone installation guide](docs/StandaloneInstallation.md) for
 full details.  A typical quick-start workflow is:
 
 ```
-git clone https://github.com/cms-analysis/CombineHarvester.git
-cd CombineHarvester
+git clone https://github.com/TheQuantiser/CustomCH.git
+cd CustomCH
+git submodule update --init
 cmake -S . -B build
 cmake --build build --target install
 export CH_BASE=$(pwd)
@@ -21,9 +22,9 @@ source build/setup.sh
 $CH_BASE/build/bin/Example1
 ```
 
- The configure step will automatically download the
- [`HiggsAnalysis/CombinedLimit`](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit)
- source if it is not present.
+The configure step will automatically download the
+[`HiggsAnalysis/CombinedLimit`](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit)
+`main` branch source if it is not present.
 
 If you already have `HiggsAnalysis/CombinedLimit` built and installed on your
 system, configure the build with
