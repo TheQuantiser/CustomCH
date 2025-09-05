@@ -1,13 +1,23 @@
 file(GLOB COMBINE_TOOLS_SRC src/*.cc)
 
-# Generate ROOT dictionary for classes in this package
-include_directories(interface ${CH_EXTERNAL_INCLUDES} ${ROOT_INCLUDE_DIRS})
-ROOT_GENERATE_DICTIONARY(G__CombineTools src/classes.h LINKDEF src/classes_def.xml)
+get_target_property(_CL_INC HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit INTERFACE_INCLUDE_DIRECTORIES)
 
-add_library(CombineTools ${COMBINE_TOOLS_SRC} ${CMAKE_CURRENT_BINARY_DIR}/G__CombineTools.cxx)
+add_library(CombineTools ${COMBINE_TOOLS_SRC})
 
-target_include_directories(CombineTools PUBLIC interface ${CH_EXTERNAL_INCLUDES})
-target_link_libraries(CombineTools PUBLIC ${CH_EXTERNAL_LIBS})
+# Many sources include headers via the historic
+#   "CombineHarvester/CombineTools/interface/..." path.
+# Expose the repository root during the build so this
+# prefix resolves to the symlinked layout created in
+# the source tree.
+target_include_directories(CombineTools PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/interface>
+  $<INSTALL_INTERFACE:include>
+  ${CH_EXTERNAL_INCLUDES}
+  ${ROOT_INCLUDE_DIRS}
+  ${_CL_INC}
+)
+target_link_libraries(CombineTools PUBLIC ${CH_EXTERNAL_LIBS} HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
 set_target_properties(CombineTools PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 file(GLOB COMBINE_TOOLS_BINS bin/*.cpp)

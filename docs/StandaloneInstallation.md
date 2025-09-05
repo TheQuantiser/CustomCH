@@ -20,8 +20,40 @@ ROOT installation if required.
 ```bash
 git clone https://github.com/cms-analysis/CombineHarvester.git
 cd CombineHarvester
-git submodule update --init
 ```
+
+The CMake build will automatically download the
+[HiggsAnalysis/CombinedLimit](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit)
+sources if they are not already present.
+
+If you have `HiggsAnalysis/CombinedLimit` available as a separate installation,
+skip the download by configuring CombineHarvester with
+
+```bash
+cmake -S . -B build -DUSE_SYSTEM_COMBINEDLIMIT=ON \
+      -DCMAKE_PREFIX_PATH=/path/to/combinedlimit
+```
+
+`find_package(HiggsAnalysisCombinedLimit)` searches the locations listed in
+`CMAKE_PREFIX_PATH` for an installation that provides
+`HiggsAnalysisCombinedLimitConfig.cmake`.
+
+When working from a CombinedLimit source tree built with the provided
+`Makefile` (for example after running `make CONDA=1 -j8` in the
+`HiggsAnalysis/CombinedLimit` directory), point CMake to the checkout with
+
+```bash
+cmake -S . -B build -DUSE_SYSTEM_COMBINEDLIMIT=ON \
+      -DHiggsAnalysisCombinedLimit_ROOT=/path/to/HiggsAnalysis/CombinedLimit
+```
+
+so that the headers and library are picked up correctly. In all cases no
+download occurs and the build links against the existing library.
+
+If a build directory for `HiggsAnalysis/CombinedLimit` is present alongside the
+CombineHarvester source tree (for example `../HiggsAnalysis/CombinedLimit/build`),
+it will be detected automatically when configuring with
+`-DUSE_SYSTEM_COMBINEDLIMIT=ON`.
 
 ## Building with CMake
 
