@@ -8,11 +8,36 @@
 # and defines an imported target
 #  HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit
 
+set(_HACL_HINTS "")
+if(DEFINED HiggsAnalysisCombinedLimit_ROOT)
+  list(APPEND _HACL_HINTS ${HiggsAnalysisCombinedLimit_ROOT})
+endif()
+if(DEFINED ENV{HiggsAnalysisCombinedLimit_ROOT})
+  list(APPEND _HACL_HINTS $ENV{HiggsAnalysisCombinedLimit_ROOT})
+endif()
+
+# Common checkout layout places the CombinedLimit repository as a sibling of
+# CombineHarvester:  ../HiggsAnalysis/CombinedLimit.  Fall back to searching
+# these locations (and their build directories) when the user does not provide
+# an explicit hint.
+get_filename_component(_hacl_module_dir "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
+list(APPEND _HACL_HINTS
+  "${_hacl_module_dir}/../HiggsAnalysis/CombinedLimit/build"
+  "${_hacl_module_dir}/../HiggsAnalysis/CombinedLimit"
+  "${_hacl_module_dir}/../../HiggsAnalysis/CombinedLimit/build"
+  "${_hacl_module_dir}/../../HiggsAnalysis/CombinedLimit")
+
+list(REMOVE_DUPLICATES _HACL_HINTS)
+
 find_path(HiggsAnalysisCombinedLimit_INCLUDE_DIR
-          NAMES HiggsAnalysis/CombinedLimit/interface/Combine.h)
+          NAMES HiggsAnalysis/CombinedLimit/interface/Combine.h
+          HINTS ${_HACL_HINTS}
+          PATH_SUFFIXES include .)
 
 find_library(HiggsAnalysisCombinedLimit_LIBRARY
-             NAMES HiggsAnalysisCombinedLimit)
+             NAMES HiggsAnalysisCombinedLimit
+             HINTS ${_HACL_HINTS}
+             PATH_SUFFIXES lib build/lib)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
