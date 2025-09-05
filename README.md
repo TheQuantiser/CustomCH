@@ -12,8 +12,8 @@ See the [standalone installation guide](docs/StandaloneInstallation.md) for
 full details.  A typical quick-start workflow is:
 
 ```
-git clone https://github.com/cms-analysis/CombineHarvester.git
-cd CombineHarvester
+git clone https://github.com/TheQuantiser/CustomCH.git
+cd CustomCH
 git submodule update --init
 cmake -S . -B build
 cmake --build build --target install
@@ -21,6 +21,43 @@ export CH_BASE=$(pwd)
 source build/setup.sh
 $CH_BASE/build/bin/Example1
 ```
+
+If `CMAKE_INSTALL_PREFIX` is not explicitly set, the build installs into the
+active Conda environment (`$CONDA_PREFIX`) when available, or the first entry of
+`CMAKE_PREFIX_PATH`.  Use `-DCMAKE_INSTALL_PREFIX=/desired/path` to override this
+location.
+
+The configure step will automatically download the
+[`HiggsAnalysis/CombinedLimit`](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit)
+`main` branch source if it is not present.
+
+If you already have `HiggsAnalysis/CombinedLimit` built and installed on your
+system, configure the build with
+
+```
+cmake -S . -B build -DUSE_SYSTEM_COMBINEDLIMIT=ON \
+      -DCMAKE_PREFIX_PATH=/path/to/combinedlimit
+```
+
+`find_package(HiggsAnalysisCombinedLimit)` will then locate the installation via
+`CMAKE_PREFIX_PATH`.
+When working from a source tree that was built using the repository `Makefile`
+instructions (for example cloned into `HiggsAnalysis/CombinedLimit` and built
+with `make`), point CMake to the checkout with
+
+```
+cmake -S . -B build -DUSE_SYSTEM_COMBINEDLIMIT=ON \
+      -DHiggsAnalysisCombinedLimit_ROOT=/path/to/HiggsAnalysis/CombinedLimit
+```
+
+You may also use the more explicit
+`-DHiggsAnalysisCombinedLimit_DIR=/path/to/combinedlimit/lib/cmake/HiggsAnalysisCombinedLimit`
+form. In this mode no download occurs and the headers and library from the
+existing build are used.
+
+If a build of `HiggsAnalysis/CombinedLimit` exists in a sibling directory named
+`../HiggsAnalysis/CombinedLimit`, the CMake configuration will automatically
+discover and use it when `-DUSE_SYSTEM_COMBINEDLIMIT=ON` is specified.
 
 The build requires several external C++ libraries: [ROOT](https://root.cern)
 (with the RooFit and RooStats components), Boost, libxml2, vdt and

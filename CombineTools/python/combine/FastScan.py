@@ -31,11 +31,8 @@ class FastScan(CombineToolBase):
         group.add_argument('-p', '--points', default=200, type=int, help="Number of NLL points to sample in each scan")
 
     def RooColIter(self, coll):
-        it = coll.createIterator()
-        var = it.Next()
-        while var:
+        for var in utils.iter_collection(coll):
             yield var
-            var = it.Next()
 
     def run_method(self):
         ROOT.gROOT.SetBatch(ROOT.kTRUE)
