@@ -1,16 +1,15 @@
 file(GLOB COMBINE_PDFS_SRC src/*.cc)
 
-# Generate ROOT dictionary for classes in this package
 get_target_property(_CL_INC HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit INTERFACE_INCLUDE_DIRECTORIES)
-include_directories(interface ${CH_EXTERNAL_INCLUDES} ${ROOT_INCLUDE_DIRS} ${_CL_INC})
-ROOT_GENERATE_DICTIONARY(G__CombinePdfs src/classes.h LINKDEF src/classes_def.xml)
 
-add_library(CombinePdfs ${COMBINE_PDFS_SRC} ${CMAKE_CURRENT_BINARY_DIR}/G__CombinePdfs.cxx)
+add_library(CombinePdfs ${COMBINE_PDFS_SRC})
 
 target_include_directories(CombinePdfs PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/interface>
   $<INSTALL_INTERFACE:include>
   ${CH_EXTERNAL_INCLUDES}
+  ${ROOT_INCLUDE_DIRS}
+  ${_CL_INC}
 )
 target_link_libraries(CombinePdfs PUBLIC CombineTools ${CH_EXTERNAL_LIBS} HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
 set_target_properties(CombinePdfs PROPERTIES POSITION_INDEPENDENT_CODE ON)
