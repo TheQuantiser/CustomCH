@@ -2,6 +2,10 @@
 
 Full documentation: http://cms-analysis.github.io/CombineHarvester
 
+## Continuous Integration
+
+Continuous integration and automated checks now run on GitHub Actions. The previous Travis CI and GitLab CI configurations have been removed.
+
 ## Installation
 
 The project can be built as a standalone package with [CMake](https://cmake.org/). Clone the repository and initialise the submodules:
