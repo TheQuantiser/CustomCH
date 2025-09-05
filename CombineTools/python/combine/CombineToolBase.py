@@ -403,9 +403,8 @@ class CombineToolBase:
             else:
                 outscript.write(CRAB_POSTFIX)
             outscript.close()
-            if self.combine:
-                os.environ['COMBINE_PATH'] = self.combine
-            from CombineHarvester.CombineTools.combine.crab import config
+            from CombineHarvester.CombineTools.combine.crab import create_crab_config
+            config = create_crab_config(self.combine)
             config.General.requestName = self.task_name
             config.JobType.scriptExe = outscriptname
             config.JobType.inputFiles.extend(wsp_files)
