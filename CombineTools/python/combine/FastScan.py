@@ -8,7 +8,6 @@ import CombineHarvester.CombineTools.combine.utils as utils
 
 from CombineHarvester.CombineTools.combine.CombineToolBase import CombineToolBase
 import CombineHarvester.CombineTools.plotting as plot
-from six.moves import range
 
 
 class FastScan(CombineToolBase):

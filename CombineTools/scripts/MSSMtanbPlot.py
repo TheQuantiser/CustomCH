@@ -3,7 +3,6 @@ import CombineHarvester.CombineTools.plotting as plot
 import ROOT
 import math
 import argparse
-from six.moves import range
 
 
 col_store = []

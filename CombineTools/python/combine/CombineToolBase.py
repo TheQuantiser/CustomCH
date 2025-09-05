@@ -4,7 +4,6 @@ import stat
 import shutil
 from functools import partial
 from multiprocessing import Pool
-from six.moves import range
 from importlib import resources
 import CombineHarvester.CombineTools.ch as ch
 
@@ -364,7 +363,7 @@ class CombineToolBase:
         if self.job_mode == 'crab3':
             #import the stuff we need
             from CRABAPI.RawCommand import crabCommand
-            from six.moves.http_client import HTTPException
+            from http.client import HTTPException
             print('>> crab3 requestName will be %s' % self.task_name)
             outscriptname = 'crab_%s.sh' % self.task_name
             print('>> crab3 script will be %s' % outscriptname)

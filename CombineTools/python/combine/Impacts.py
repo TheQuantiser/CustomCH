@@ -7,7 +7,6 @@ import ROOT
 import CombineHarvester.CombineTools.combine.utils as utils
 
 from CombineHarvester.CombineTools.combine.CombineToolBase import CombineToolBase
-from six.moves import map
 
 
 class Impacts(CombineToolBase):
