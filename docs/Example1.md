@@ -16,8 +16,8 @@ Examples Part I {#intro1}
       ./build/bin/Example1
 
 > **Note:** Job-prefix templates for `combineTool.py` understand the
-> `%(CH_BASE)s` placeholder, which refers to the repository root and defaults to
-> `$CMSSW_BASE/src` when `CH_BASE` is unset.
+> `%(CH_BASE)s` placeholder, which points to the repository root and can be
+> overridden with the `CH_BASE` environment variable.
 
 Parsing a single card {#ex1-p1}
 ===============================
