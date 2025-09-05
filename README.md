@@ -19,6 +19,11 @@ cmake -S . -B build
 cmake --build build -j4
 ```
 
+Executables placed in the `CombineTools/bin` and `CombinePdfs/bin` directories
+are discovered automatically by the CMake configuration. New `.cpp` files
+dropped into these folders are picked up via `add_executable` without any
+additional regeneration steps.
+
 Set the `CH_BASE` environment variable to the location of the repository (or installation prefix if you run `cmake --install`):
 
 ```
