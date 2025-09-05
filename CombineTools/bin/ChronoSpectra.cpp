@@ -215,6 +215,16 @@ ChronoSpectra --help \
 #include <string>
 #include <vector>
 
+enum class LogLevel { ERROR = 0, WARN = 1, INFO = 2 };
+static LogLevel CURRENT_LOG_LEVEL = LogLevel::INFO;
+
+#define LOG_STREAM(level, prefix)                                                   \
+  if (static_cast<int>(CURRENT_LOG_LEVEL) >= static_cast<int>(level)) std::clog << prefix
+
+#define LOG_INFO LOG_STREAM(LogLevel::INFO, "[INFO] ")
+#define LOG_WARN LOG_STREAM(LogLevel::WARN, "[WARN] ")
+#define LOG_ERROR LOG_STREAM(LogLevel::ERROR, "[ERROR] ")
+
 std::string printTimestamp() {
   auto now = std::chrono::system_clock::now();
   auto time_t_now = std::chrono::system_clock::to_time_t(now);
@@ -226,11 +236,11 @@ std::string printTimestamp() {
 }
 
 void displayStartupMessage() {
-  std::cout << "\n\n\n\n"
+  LOG_INFO << "\n\n\n\n"
             << printTimestamp() << "\tStarting ChronoSpectra (c) MAW 2024 \n\n";
 
   // ASCII Art for ChronoSpectra
-  std::cout << R"(
+  LOG_INFO << R"(
            _   _   _   _   _   _      
           / \ / \ / \ / \ / \ / \
          ( C | H | R | O | N | O )    
@@ -241,24 +251,24 @@ void displayStartupMessage() {
         )" << "\n";
 
   // License Information
-  std::cout
+  LOG_INFO
       << "==============================================================\n";
-  std::cout << "      ChronoSpectra (c) 2024 Mohammad Abrar Wadud\n";
-  std::cout << "  Efficient Pre-fit & Post-fit Histogram Extraction for CMS\n";
-  std::cout
+  LOG_INFO << "      ChronoSpectra (c) 2024 Mohammad Abrar Wadud\n";
+  LOG_INFO << "  Efficient Pre-fit & Post-fit Histogram Extraction for CMS\n";
+  LOG_INFO
       << "==============================================================\n\n";
 
-  std::cout
+  LOG_INFO
       << "  Licensed under Creative Commons Attribution 4.0 (CC BY 4.0).\n";
-  std::cout << "  You are free to use, modify, and distribute this software,\n";
-  std::cout << "  provided appropriate credit is given.\n\n";
+  LOG_INFO << "  You are free to use, modify, and distribute this software,\n";
+  LOG_INFO << "  provided appropriate credit is given.\n\n";
 
-  std::cout
+  LOG_INFO
       << "  Full License: https://creativecommons.org/licenses/by/4.0/\n\n";
-  std::cout << "  Official repository: "
+  LOG_INFO << "  Official repository: "
                "https://github.com/TheQuantiser/CombineHarvester/blob/main/"
                "CombineTools/bin/ChronoSpectra.cpp\n";
-  std::cout
+  LOG_INFO
       << "==============================================================\n\n";
 };
 
@@ -333,13 +343,13 @@ parseNamedGroups(const std::string &groupsArg) {
 
   // Print out the groups and their elements
   for (const auto &[groupName, items] : namedGroups) {
-    std::cout << "Group: '" << groupName << "' -> [ ";
+    LOG_INFO << "Group: '" << groupName << "' -> [ ";
     for (size_t i = 0; i < items.size(); ++i) {
-      std::cout << "'" << items[i] << "'";
+      LOG_INFO << "'" << items[i] << "'";
       if (i != items.size() - 1)
-        std::cout << ", ";
+        LOG_INFO << ", ";
     }
-    std::cout << " ]\n";
+    LOG_INFO << " ]\n";
   }
 
   return namedGroups;
@@ -714,7 +724,7 @@ void StoreSystematics(ch::CombineHarvester &cmb, const std::string &bin,
 void writeHistogramsToFile(
     std::map<std::string, std::map<std::string, TH1F>> &histograms,
     TFile &outfile, const std::string &prefix) {
-  std::cout << printTimestamp()
+  LOG_INFO << printTimestamp()
             << " Writing histograms to file: " << outfile.GetName()
             << std::endl;
 
@@ -722,7 +732,7 @@ void writeHistogramsToFile(
     for (auto &[procName, histogram] : procMap) {
       std::string path = prefix + "/" + binName + "/" + procName;
       histogram.SetTitle(procName.c_str());
-      std::cout << printTimestamp() << "\t--> " << std::setw(50) << std::left
+      LOG_INFO << printTimestamp() << "\t--> " << std::setw(50) << std::left
                 << path << " = " << histogram.Integral() << " ± "
                 << histogram.GetBinContent(0) << std::endl;
       ch::WriteToTFile(&histogram, &outfile, path);
@@ -732,14 +742,14 @@ void writeHistogramsToFile(
   // Clear histograms map to ensure memory release
   histograms.clear();
 
-  std::cout << printTimestamp() << " ... done." << std::endl;
+  LOG_INFO << printTimestamp() << " ... done." << std::endl;
 }
 
 void writeCorrToFile(
     std::map<std::string, std::map<std::string, TH2F>> &matrixMap,
     TFile &outfile, const std::string &prefix, const std::string &suffix) {
   // Log the start of the process
-  std::cout << "\n"
+  LOG_INFO << "\n"
             << printTimestamp()
             << " Writing correlation matrices to file: " << outfile.GetName()
             << std::endl;
@@ -749,7 +759,7 @@ void writeCorrToFile(
     for (auto &[procName, matrix] : procMap) {
       // Construct the path and log it
       std::string path = prefix + "/" + binName + "/" + procName + suffix;
-      std::cout << printTimestamp() << "\t--> " << path << std::endl;
+      LOG_INFO << printTimestamp() << "\t--> " << path << std::endl;
 
       ApplyTH2FStyle(matrix);
 
@@ -761,7 +771,7 @@ void writeCorrToFile(
   // Clear histograms map to ensure memory release
   matrixMap.clear();
 
-  std::cout << printTimestamp() << " ... done." << std::endl;
+  LOG_INFO << printTimestamp() << " ... done." << std::endl;
 }
 
 // Function to process all histograms, rate correlations, and bin correlations
@@ -781,7 +791,7 @@ void processAll(
   // Check if post-fit parameters are available
   bool isPostfit = (fitRes != nullptr);
 
-  std::cout << "\n\n"
+  LOG_INFO << "\n\n"
             << printTimestamp() << "Generating "
             << (isPostfit ? "post-fit" : "pre-fit") << " results..."
             << std::endl;
@@ -805,7 +815,7 @@ void processAll(
         doSamplingUnc ? subCmb.cp().GetShapeWithUncertainty(*fitRes, samples)
                       : subCmb.cp().GetShapeWithUncertainty();
     const TH1F &tmp = histograms[binName][procName];
-    std::cout << printTimestamp() << std::setw(50) << std::left
+    LOG_INFO << printTimestamp() << std::setw(50) << std::left
               << std::string("\t") + binName + "/" + procName << " -> "
               << tmp.Integral() << " ± " << tmp.GetBinContent(0) << std::endl;
   };
@@ -819,7 +829,7 @@ void processAll(
     if (RateCorrMap && doSamplingUnc) {
       (*RateCorrMap)[binName][procName] =
           subCmb.cp().GetRateCorrelation(*fitRes, samples);
-      std::cout << printTimestamp() << std::setw(50) << std::left
+      LOG_INFO << printTimestamp() << std::setw(50) << std::left
                 << std::string("\t") + binName + "/" + procName +
                        " rate correlation computed"
                 << std::endl;
@@ -835,7 +845,7 @@ void processAll(
     if (HistBinCorrMap && doSamplingUnc) {
       (*HistBinCorrMap)[binName][procName] =
           subCmb.cp().GetHistogramBinCorrelation(*fitRes, samples);
-      std::cout << printTimestamp() << std::setw(50) << std::left
+      LOG_INFO << printTimestamp() << std::setw(50) << std::left
                 << std::string("\t") + binName + "/" + procName +
                        " histogram bin correlation computed"
                 << std::endl;
@@ -866,14 +876,14 @@ void processAll(
       return;
 
     // Log processing start
-    std::cout << "\n\n"
+    LOG_INFO << "\n\n"
               << printTimestamp() << std::setw(50) << std::left
               << " Processing bin/bin group: " << binName << std::endl;
 
     // Check if the bin contains any processes
     if (binCmb.cp().process_set().empty()) {
-      std::cerr << "Warning: Bin/bin group '" << binName
-                << "' has no processes." << std::endl;
+      LOG_WARN << "Bin/bin group '" << binName
+               << "' has no processes." << std::endl;
       return;
     }
 
@@ -899,7 +909,7 @@ void processAll(
       obsHist.SetBinContent(0, std::sqrt(obsHist.Integral()));
       obsHist.SetBinErrorOption(TH1::kPoisson);
 
-      std::cout << printTimestamp() << std::setw(50) << std::left
+      LOG_INFO << printTimestamp() << std::setw(50) << std::left
                 << "\t" + binName + "/" + cfg.dataset +
                        (cfg.skipObs ? " (pseudo-data)" : "")
                 << " -> " << obsHist.Integral() << " ± "
@@ -914,8 +924,8 @@ void processAll(
 
       // Skip empty process groups
       if (procGroupCmb.cp().process_set().empty()) {
-        std::cerr << "Warning: Process group '" << procGroupName
-                  << "' has no matching processes." << std::endl;
+        LOG_WARN << "Process group '" << procGroupName
+                 << "' has no matching processes." << std::endl;
         continue;
       }
 
@@ -924,13 +934,13 @@ void processAll(
                      doBinRateCorr, doBinHistBinCorr);
 
       // Log and track processes within the group
-      std::cout << printTimestamp() << "\t-- Process group " << procGroupName
+      LOG_INFO << printTimestamp() << "\t-- Process group " << procGroupName
                 << " contains ";
       for (const auto &proc : procGroupCmb.cp().process_set()) {
-        std::cout << proc << ", ";
+        LOG_INFO << proc << ", ";
         processedProcesses.insert(proc);
       }
-      std::cout << std::endl;
+      LOG_INFO << std::endl;
     }
 
     // Process ungrouped individual processes
@@ -951,8 +961,8 @@ void processAll(
         continue;
 
       if (singleProcCmb.cp().process_set().empty()) {
-        std::cerr << "Warning: Process '" << proc << "' not found."
-                  << std::endl;
+        LOG_WARN << "Process '" << proc << "' not found."
+                 << std::endl;
         continue;
       }
 
@@ -975,8 +985,8 @@ void processAll(
 
     // Skip if no matching bins
     if (binCmb.cp().bin_set().empty()) {
-      std::cerr << "Warning: Bin group '" << binGroupName
-                << "' has no matching bins!" << std::endl;
+      LOG_WARN << "Bin group '" << binGroupName
+               << "' has no matching bins!" << std::endl;
       continue;
     }
 
@@ -984,13 +994,13 @@ void processAll(
     computeBin(binCmb, binGroupName, true, cfg.getRateCorr, cfg.getHistBinCorr);
 
     // Log and mark bins as processed
-    std::cout << printTimestamp() << " -- Bin group " << binGroupName
+    LOG_INFO << printTimestamp() << " -- Bin group " << binGroupName
               << " contains ";
     for (const auto &bin : binCmb.cp().bin_set()) {
-      std::cout << bin << ", ";
+      LOG_INFO << bin << ", ";
       processedBins.insert(std::move(bin));
     }
-    std::cout << "\n" << std::endl;
+    LOG_INFO << "\n" << std::endl;
   }
 
   // Process ungrouped bins
@@ -1003,8 +1013,8 @@ void processAll(
 
     // Log warning if the bin has no matching processes
     if (binCmb.cp().bin_set().empty()) {
-      std::cerr << "Warning: Bin '" << bin << "' has no matching processes."
-                << std::endl;
+      LOG_WARN << "Bin '" << bin << "' has no matching processes."
+               << std::endl;
       continue;
     }
 
@@ -1014,12 +1024,44 @@ void processAll(
                isBinGrouped ? cfg.sepBinHistBinCorr : cfg.getHistBinCorr);
   }
 
-  std::cout << printTimestamp() << " Completed computing "
+  LOG_INFO << printTimestamp() << " Completed computing "
             << (isPostfit ? "post-fit" : "pre-fit") << " results....\n\n\n"
             << std::endl;
 }
 
 int main(int argc, char *argv[]) {
+
+  // Parse log level before other options and remove it from argv
+  std::vector<char *> argVec(argv, argv + argc);
+  std::vector<char *> filtered;
+  filtered.push_back(argVec[0]);
+  for (size_t i = 1; i < argVec.size(); ++i) {
+    std::string arg = argVec[i];
+    auto parseLevel = [&](const std::string &lvl) {
+      std::string level = lvl;
+      std::transform(level.begin(), level.end(), level.begin(), ::tolower);
+      if (level == "info")
+        CURRENT_LOG_LEVEL = LogLevel::INFO;
+      else if (level == "warn" || level == "warning")
+        CURRENT_LOG_LEVEL = LogLevel::WARN;
+      else if (level == "error")
+        CURRENT_LOG_LEVEL = LogLevel::ERROR;
+    };
+
+    if (arg == "--logLevel" || arg == "--log-level") {
+      if (i + 1 < argVec.size()) {
+        parseLevel(argVec[++i]);
+      }
+      continue;
+    } else if (arg.rfind("--logLevel=", 0) == 0) {
+      parseLevel(arg.substr(11));
+      continue;
+    } else if (arg.rfind("--log-level=", 0) == 0) {
+      parseLevel(arg.substr(12));
+      continue;
+    }
+    filtered.push_back(argVec[i]);
+  }
 
   displayStartupMessage();
 
@@ -1029,7 +1071,8 @@ int main(int argc, char *argv[]) {
   gStyle->SetCanvasPreferGL(1);
 
   gSystem->Load("libHiggsAnalysisCombinedLimit");
-  ChronoSpectraConfig cfg = parseCommandLine(argc, argv);
+  ChronoSpectraConfig cfg = parseCommandLine(static_cast<int>(filtered.size()),
+                                             filtered.data());
 
   // Ensure either pre-fit or post-fit histograms are requested
   if (cfg.skipprefit && !cfg.postfit)
@@ -1057,7 +1100,7 @@ int main(int argc, char *argv[]) {
                  : nullptr;
 
     if (fitRes) {
-      std::cout << printTimestamp() << " Valid fit result found (" << cfg.fitresult
+      LOG_INFO << printTimestamp() << " Valid fit result found (" << cfg.fitresult
                 << "), with " << fitRes->floatParsFinal().getSize()
                 << " parameters." << std::endl;
     } else {
@@ -1065,7 +1108,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  std::cout << std::endl;
+  LOG_INFO << std::endl;
 
   // Load datacard for later histogram rebinning
   if (!std::filesystem::exists(cfg.datacard))
@@ -1080,7 +1123,7 @@ int main(int argc, char *argv[]) {
         "Failed to load datacard '" + cfg.datacard +
         "' into cmb_restore: No bins or processes were found.");
   }
-  std::cout << "\n\n"
+  LOG_INFO << "\n\n"
             << printTimestamp()
             << " Successfully loaded text datacard: " << cfg.datacard << "\n"
             << std::endl;
@@ -1093,7 +1136,7 @@ int main(int argc, char *argv[]) {
   if (!ws)
     throw std::runtime_error("Workspace 'w' not found in file: " + cfg.workspace);
   else
-    std::cout << printTimestamp() << " Loaded workspace from " << cfg.workspace
+    LOG_INFO << printTimestamp() << " Loaded workspace from " << cfg.workspace
               << "\n"
               << std::endl;
 
@@ -1101,7 +1144,7 @@ int main(int argc, char *argv[]) {
   ch::CombineHarvester cmb;
   cmb.SetFlag("workspaces-use-clone", true);
   ch::ParseCombineWorkspace(cmb, *ws, "ModelConfig", cfg.dataset, false);
-  std::cout << "\n\n"
+  LOG_INFO << "\n\n"
             << printTimestamp()
             << " Initialized CombineHarvester instance from workspace " << "\n"
             << std::endl;
@@ -1128,7 +1171,7 @@ int main(int argc, char *argv[]) {
 
       par->set_frozen(true);
 
-      std::cout << "\n"
+      LOG_INFO << "\n"
                 << printTimestamp() << " Freezing parameter: " << parts[0]
                 << (parts.size() == 2 ? " to " + parts[1] : "") << std::endl;
     }
@@ -1155,7 +1198,7 @@ int main(int argc, char *argv[]) {
           cfg.systSaveDir);
     }
 
-    std::cout << "\n"
+    LOG_INFO << "\n"
               << printTimestamp()
               << " Created systematics plotting directory: " << cfg.systSaveDir
               << std::endl;
@@ -1169,7 +1212,7 @@ int main(int argc, char *argv[]) {
     writeHistogramsToFile(prefitHists, outfile, "prefit");
   }
 
-  std::cout << "\n\n";
+  LOG_INFO << "\n\n";
 
   // Generate post-fit histograms if requested
   if (cfg.postfit) {
@@ -1215,7 +1258,7 @@ int main(int argc, char *argv[]) {
 
     ApplyTH2FStyle(parCorrMatrix);
     ch::WriteToTFile(&parCorrMatrix, &outfile, "postfit/parCorrMat");
-    std::cout << "\n"
+    LOG_INFO << "\n"
               << printTimestamp()
               << " Parameter correlations extracted -> postfit/parCorrMat"
               << std::endl;
@@ -1227,7 +1270,7 @@ int main(int argc, char *argv[]) {
       ApplyTH2FStyle(globalRateCorrMatrix);
       ch::WriteToTFile(&globalRateCorrMatrix, &outfile,
                        "postfit/globalRateCorr");
-      std::cout
+      LOG_INFO
           << printTimestamp() << std::setw(50) << std::left
           << " Global rate correlations computed -> postfit/globalRateCorr"
           << std::endl;
@@ -1239,10 +1282,10 @@ int main(int argc, char *argv[]) {
     delete ws;
   infile.Close();
   outfile.Close();
-  std::cout << "\n\n"
+  LOG_INFO << "\n\n"
             << printTimestamp() << " Output file: " << outfile.GetName()
             << std::endl;
-  std::cout << "\n\n\n\n"
+  LOG_INFO << "\n\n\n\n"
             << printTimestamp() << " Task complete!\n\n\n\n"
             << std::endl;
   return 0;
