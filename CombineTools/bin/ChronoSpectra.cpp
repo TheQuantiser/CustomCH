@@ -204,6 +204,7 @@ ChronoSpectra --help \
 #include <boost/algorithm/string.hpp>
 #include <cctype>
 #include <chrono>
+#include <cstdint>
 #include <cmath>
 #include <filesystem>
 #include <iomanip>
@@ -215,6 +216,40 @@ ChronoSpectra --help \
 #include <sstream>
 #include <string>
 #include <vector>
+#include <RooFitResult.h>
+
+// Commonly used container types
+using HistMap = std::map<std::string, std::map<std::string, TH1F>>;
+using MatrixMap = std::map<std::string, std::map<std::string, TH2F>>;
+
+// Enumeration to control optional computations for a bin/process pair
+enum class ProcTask : uint8_t { Histogram = 1 << 0, RateCorr = 1 << 1, BinCorr = 1 << 2 };
+using ProcTaskFlags = uint8_t;
+
+inline bool hasTask(ProcTaskFlags flags, ProcTask task) {
+  return (flags & static_cast<ProcTaskFlags>(task)) != 0;
+}
+
+inline ProcTaskFlags makeTasks(bool hist, bool rate, bool bin) {
+  ProcTaskFlags flags = 0;
+  if (hist)
+    flags |= static_cast<ProcTaskFlags>(ProcTask::Histogram);
+  if (rate)
+    flags |= static_cast<ProcTaskFlags>(ProcTask::RateCorr);
+  if (bin)
+    flags |= static_cast<ProcTaskFlags>(ProcTask::BinCorr);
+  return flags;
+}
+
+// Context bundle for process computations
+struct ProcessContext {
+  bool doSamplingUnc;
+  unsigned samples;
+  RooFitResult *fitRes;
+  HistMap &histograms;
+  MatrixMap *RateCorrMap;
+  MatrixMap *HistBinCorrMap;
+};
 
 std::string printTimestamp() {
   auto now = std::chrono::system_clock::now();
@@ -765,6 +800,63 @@ void writeCorrToFile(
   std::cout << printTimestamp() << " ... done." << std::endl;
 }
 
+/** Helper to log results for a specific bin/process combination. */
+void logResult(const std::string &binName, const std::string &procName,
+               const std::string &msg) {
+  std::cout << printTimestamp() << std::setw(50) << std::left
+            << std::string("\t") + binName + "/" + procName + " " << msg
+            << std::endl;
+}
+
+/** Create a histogram for a bin/process pair and store it in the context. */
+void createHistogram(ch::CombineHarvester &subCmb, const std::string &binName,
+                     const std::string &procName, ProcessContext &ctx) {
+  ctx.histograms[binName][procName] =
+      ctx.doSamplingUnc
+          ? subCmb.cp().GetShapeWithUncertainty(*ctx.fitRes, ctx.samples)
+          : subCmb.cp().GetShapeWithUncertainty();
+  const TH1F &tmp = ctx.histograms[binName][procName];
+  std::ostringstream ss;
+  ss << "-> " << tmp.Integral() << " ± " << tmp.GetBinContent(0);
+  logResult(binName, procName, ss.str());
+}
+
+/** Compute rate correlation matrix for a bin/process pair if requested. */
+void createRateCorrelation(ch::CombineHarvester &subCmb,
+                           const std::string &binName,
+                           const std::string &procName, ProcessContext &ctx) {
+  if (ctx.RateCorrMap && ctx.doSamplingUnc) {
+    (*ctx.RateCorrMap)[binName][procName] =
+        subCmb.cp().GetRateCorrelation(*ctx.fitRes, ctx.samples);
+    logResult(binName, procName, "rate correlation computed");
+  }
+}
+
+/** Compute histogram bin correlation matrix for a bin/process pair if requested. */
+void createBinCorrelation(ch::CombineHarvester &subCmb,
+                          const std::string &binName,
+                          const std::string &procName, ProcessContext &ctx) {
+  if (ctx.HistBinCorrMap && ctx.doSamplingUnc) {
+    (*ctx.HistBinCorrMap)[binName][procName] =
+        subCmb.cp().GetHistogramBinCorrelation(*ctx.fitRes, ctx.samples);
+    logResult(binName, procName, "histogram bin correlation computed");
+  }
+}
+
+/** Run selected tasks for a given bin/process combination. */
+void computeProcess(ch::CombineHarvester &subCmb, const std::string &binName,
+                    const std::string &procName, ProcTaskFlags tasks,
+                    ProcessContext &ctx) {
+  if (subCmb.process_set().empty())
+    return;
+  if (hasTask(tasks, ProcTask::Histogram))
+    createHistogram(subCmb, binName, procName, ctx);
+  if (hasTask(tasks, ProcTask::RateCorr))
+    createRateCorrelation(subCmb, binName, procName, ctx);
+  if (hasTask(tasks, ProcTask::BinCorr))
+    createBinCorrelation(subCmb, binName, procName, ctx);
+}
+
 // Function to process all histograms, rate correlations, and bin correlations
 // Based on the provided CombineHarvester object and input parameters
 void processAll(
@@ -796,67 +888,8 @@ void processAll(
 
   std::set<std::string> systNominals;
 
-  // Lambda: Create histograms with or without uncertainty
-  auto createHistogram = [&](ch::CombineHarvester &subCmb,
-                             const std::string &binName,
-                             const std::string &procName) -> void {
-    if (subCmb.process_set().empty())
-      return;
-    histograms[binName][procName] =
-        doSamplingUnc ? subCmb.cp().GetShapeWithUncertainty(*fitRes, samples)
-                      : subCmb.cp().GetShapeWithUncertainty();
-    const TH1F &tmp = histograms[binName][procName];
-    std::cout << printTimestamp() << std::setw(50) << std::left
-              << std::string("\t") + binName + "/" + procName << " -> "
-              << tmp.Integral() << " ± " << tmp.GetBinContent(0) << std::endl;
-  };
-
-  // Lambda: Handle rate correlations
-  auto createRateCorrelation = [&](ch::CombineHarvester &subCmb,
-                                   const std::string &binName,
-                                   const std::string &procName) -> void {
-    if (subCmb.process_set().empty())
-      return;
-    if (RateCorrMap && doSamplingUnc) {
-      (*RateCorrMap)[binName][procName] =
-          subCmb.cp().GetRateCorrelation(*fitRes, samples);
-      std::cout << printTimestamp() << std::setw(50) << std::left
-                << std::string("\t") + binName + "/" + procName +
-                       " rate correlation computed"
-                << std::endl;
-    }
-  };
-
-  // Lambda: Handle histogram bin correlations
-  auto createBinCorrelation = [&](ch::CombineHarvester &subCmb,
-                                  const std::string &binName,
-                                  const std::string &procName) -> void {
-    if (subCmb.process_set().empty())
-      return;
-    if (HistBinCorrMap && doSamplingUnc) {
-      (*HistBinCorrMap)[binName][procName] =
-          subCmb.cp().GetHistogramBinCorrelation(*fitRes, samples);
-      std::cout << printTimestamp() << std::setw(50) << std::left
-                << std::string("\t") + binName + "/" + procName +
-                       " histogram bin correlation computed"
-                << std::endl;
-    }
-  };
-
-  // Lambda: Handle histogram bin correlations
-  auto computeProcess =
-      [&](ch::CombineHarvester &subCmb, const std::string &binName,
-          const std::string &procName, const bool doHist, const bool doRateCorr,
-          const bool doBinCorr) -> void {
-    if (subCmb.process_set().empty())
-      return;
-    if (doHist)
-      createHistogram(subCmb, binName, procName);
-    if (doRateCorr)
-      createRateCorrelation(subCmb, binName, procName);
-    if (doBinCorr)
-      createBinCorrelation(subCmb, binName, procName);
-  };
+  ProcessContext ctx{doSamplingUnc, samples, fitRes, histograms, RateCorrMap,
+                     HistBinCorrMap};
 
   // Lambda: Process all computations for a bin or bin group
   auto computeBin = [&](ch::CombineHarvester &binCmb,
@@ -879,12 +912,10 @@ void processAll(
     }
 
     // Process total, signals, and backgrounds
-    computeProcess(binCmb.cp().signals(), binName, "signal", doBinHists,
-                   doBinRateCorr, doBinHistBinCorr);
-    computeProcess(binCmb.cp().backgrounds(), binName, "background", doBinHists,
-                   doBinRateCorr, doBinHistBinCorr);
-    computeProcess(binCmb, binName, "total", doBinHists, doBinRateCorr,
-                   doBinHistBinCorr);
+    ProcTaskFlags binTasks = makeTasks(doBinHists, doBinRateCorr, doBinHistBinCorr);
+    computeProcess(binCmb.cp().signals(), binName, "signal", binTasks, ctx);
+    computeProcess(binCmb.cp().backgrounds(), binName, "background", binTasks, ctx);
+    computeProcess(binCmb, binName, "total", binTasks, ctx);
 
     // Handle observed or pseudo-data
     if (doBinHists) {
@@ -900,11 +931,10 @@ void processAll(
       obsHist.SetBinContent(0, std::sqrt(obsHist.Integral()));
       obsHist.SetBinErrorOption(TH1::kPoisson);
 
-      std::cout << printTimestamp() << std::setw(50) << std::left
-                << "\t" + binName + "/" + cfg.dataset +
-                       (cfg.skipObs ? " (pseudo-data)" : "")
-                << " -> " << obsHist.Integral() << " ± "
-                << obsHist.GetBinContent(0) << std::endl;
+      std::ostringstream ss;
+      ss << "-> " << obsHist.Integral() << " ± " << obsHist.GetBinContent(0);
+      logResult(binName, cfg.dataset + (cfg.skipObs ? " (pseudo-data)" : ""),
+                ss.str());
     }
 
     // Process grouped processes
@@ -921,8 +951,7 @@ void processAll(
       }
 
       // Compute grouped processes
-      computeProcess(procGroupCmb, binName, procGroupName, doBinHists,
-                     doBinRateCorr, doBinHistBinCorr);
+      computeProcess(procGroupCmb, binName, procGroupName, binTasks, ctx);
 
       // Log and track processes within the group
       std::cout << printTimestamp() << "\t-- Process group " << procGroupName
@@ -958,10 +987,10 @@ void processAll(
       }
 
       // Compute ungrouped processes
-      computeProcess(singleProcCmb, binName, proc,
-                     doBinHists && (!isProcGrouped || cfg.sepProcHists), false,
-                     doBinHistBinCorr &&
-                         (!isProcGrouped || cfg.sepProcHistBinCorr));
+      ProcTaskFlags procTasks = makeTasks(
+          doBinHists && (!isProcGrouped || cfg.sepProcHists), false,
+          doBinHistBinCorr && (!isProcGrouped || cfg.sepProcHistBinCorr));
+      computeProcess(singleProcCmb, binName, proc, procTasks, ctx);
     }
   };
 
