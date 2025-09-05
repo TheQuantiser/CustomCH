@@ -4,8 +4,9 @@ from pathlib import Path
 from importlib import resources
 from WMCore.Configuration import Configuration
 
-
-cmssw_base = os.environ.get('CMSSW_BASE')
+# Prefer the CH_BASE environment variable to locate the combine executable,
+# falling back to a relative search if it is not set.
+ch_base = os.environ.get('CH_BASE')
 scram_arch = os.environ.get('SCRAM_ARCH')
 combine_path = os.environ.get('COMBINE_PATH')
 scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'scripts'))
@@ -25,7 +26,7 @@ config.JobType.scriptExe = ''
 config.JobType.inputFiles = [
     str(scripts / 'FrameworkJobReport.xml'),
     str(scripts / 'copyRemoteWorkspace.sh'),
-    os.environ['CMSSW_BASE']+'/bin/'+os.environ['SCRAM_ARCH']+'/combine'
+    os.path.join(ch_base or '', 'bin', scram_arch or '', 'combine')
 ]
 config.JobType.outputFiles = ['combine_output.tar']
 # config.JobType.maxMemoryMB = args.maxMemory

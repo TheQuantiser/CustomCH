@@ -10,8 +10,10 @@ import os
 
 cb = ch.CombineHarvester()
 
-auxiliaries  = os.environ['CMSSW_BASE'] + '/src/auxiliaries/'
-aux_shapes   = auxiliaries +'shapes/'
+# Use the CombineHarvester path helpers to locate the external auxiliaries
+# repository instead of relying on CMSSW specific environment variables.
+auxiliaries = ch.paths.auxiliaries()
+aux_shapes = os.path.join(auxiliaries, 'shapes')
 
 chns = ['et', 'mt', 'tt']
 

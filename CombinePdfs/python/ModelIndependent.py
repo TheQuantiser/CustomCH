@@ -114,7 +114,9 @@ class FloatingMSSMXSHiggs(MSSMLikeHiggsModel):
         ## the values are given by the value in brakets. In principle three values can be passed on: value, lower bound and upper
         ## bound.
         #
-        #mssm_scan = mssm_xsec_tools("{CMSSW_BASE}/src/{PATH}".format(CMSSW_BASE=os.environ['CMSSW_BASE'], PATH="HiggsAnalysis/HiggsToTauTau/data/out.mhmax-mu+200-7TeV-nnlo.root"))
+        #mssm_scan = mssm_xsec_tools(
+        #    "{CH_BASE}/src/{PATH}".format(CH_BASE=os.environ.get('CH_BASE', ''),
+        #                                 PATH="HiggsAnalysis/HiggsToTauTau/data/out.mhmax-mu+200-7TeV-nnlo.root"))
         #mssm_xsec = mssm_scan.query(self.options.mass, float(self.tanb))
         #self.modelBuilder.doVar("bbH_xsec[%g]" % (mssm_xsec['higgses']['A']['xsec']['santander']*mssm_xsec['higgses']['A']['BR']))
         #self.modelBuilder.doVar("ggH_xsec[%g]" % (mssm_xsec['higgses']['A']['xsec']['ggF'      ]*mssm_xsec['higgses']['A']['BR']))

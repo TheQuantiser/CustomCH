@@ -7,6 +7,7 @@ from functools import partial
 from multiprocessing import Pool
 from six.moves import range
 from importlib import resources
+import CombineHarvester.CombineTools.ch as ch
 
 DRY_RUN = False
 
@@ -127,7 +128,7 @@ class CombineToolBase:
         self.crab_files = []
         self.combine = None
         self.combine_exec = 'combine'
-        self.cmssw_base = os.environ.get('CMSSW_BASE')
+        self.cmssw_base = os.environ.get('CH_BASE', ch.paths.base())
         self.scram_arch = os.environ.get('SCRAM_ARCH')
         self.standalone = False
         self.job_prefix = _build_job_prefix(self.cmssw_base, self.scram_arch, self.standalone)
@@ -281,9 +282,9 @@ class CombineToolBase:
                     path = resources.files(job_pkg).joinpath(f"job_prefix_{self.prefix_file}.txt")
                     job_prefix_file = path.open('r')
                 global JOB_PREFIX
-                JOB_PREFIX=job_prefix_file.read() %({
-                  'CMSSW_BASE': os.environ['CMSSW_BASE'],
-                  'SCRAM_ARCH': os.environ['SCRAM_ARCH'],
+                JOB_PREFIX = job_prefix_file.read() %({
+                  'CMSSW_BASE': ch.paths.base(),
+                  'SCRAM_ARCH': os.environ.get('SCRAM_ARCH', ''),
                   'PWD': os.environ['PWD']
                 })
                 job_prefix_file.close()

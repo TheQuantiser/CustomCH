@@ -7,8 +7,10 @@ import os
 
 cb = ch.CombineHarvester()
 
-auxiliaries  = os.environ['CMSSW_BASE'] + '/src/auxiliaries/'
-aux_shapes   = auxiliaries +'shapes/'
+# Resolve the location of the external auxiliaries repository using CH_BASE
+# or by searching relative to this file. This avoids reliance on CMSSW.
+auxiliaries = ch.paths.auxiliaries()
+aux_shapes = os.path.join(auxiliaries, 'shapes')
 
 procs = {
   'sig'  : ['tH_YtMinus', 'tHW'],

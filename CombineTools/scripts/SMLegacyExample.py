@@ -11,9 +11,12 @@ from importlib import resources
 
 cb = ch.CombineHarvester()
 
-auxiliaries  = os.environ['CMSSW_BASE'] + '/src/auxiliaries/'
-aux_shapes   = auxiliaries +'shapes/'
-aux_pruning  = auxiliaries +'pruning/'
+# Locate the external auxiliaries repository via CH_BASE or by searching
+# upwards from the current directory. This removes the dependency on a
+# CMSSW environment.
+auxiliaries = ch.paths.auxiliaries()
+aux_shapes = os.path.join(auxiliaries, 'shapes')
+aux_pruning = os.path.join(auxiliaries, 'pruning')
 input_dir = resources.files('CombineHarvester.CombineTools.input')
 
 chns = ['et', 'mt', 'em', 'ee', 'mm', 'tt']
