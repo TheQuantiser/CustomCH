@@ -13,6 +13,8 @@
 # September 2012
 
 from __future__ import print_function
+import argparse
+
 def pdgRound(value, error) :
     "Given a value and an error, round and format them according to the PDG rules for significant digits"
     def threeDigits(value) :
@@ -50,6 +52,14 @@ def test(valueError=(0., 0.)) :
     val, err = pdgRound(val, err)
     print(' ',val,' +/- ',err)
 
+def main():
+    parser = argparse.ArgumentParser(
+        description="Round a value and uncertainty using PDG rules.")
+    parser.add_argument("value", type=float, help="Central value")
+    parser.add_argument("error", type=float, help="Uncertainty on the value")
+    args = parser.parse_args()
+    val, err = pdgRound(args.value, args.error)
+    print(f"{val} +/- {err}")
+
 if __name__=='__main__' :
-    for x in [(26710, 177)
-                ] : test(x)
+    main()

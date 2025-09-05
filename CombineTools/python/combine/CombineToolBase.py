@@ -6,6 +6,7 @@ import shutil
 from functools import partial
 from multiprocessing import Pool
 from six.moves import range
+from importlib import resources
 
 DRY_RUN = False
 
@@ -275,11 +276,14 @@ class CombineToolBase:
             if self.prefix_file != '':
                 if self.prefix_file.endswith('.txt'):
                     job_prefix_file = open(self.prefix_file,'r')
-                else :
-                    job_prefix_file = open((self.cmssw_base or '')+"/src/CombineHarvester/CombineTools/input/job_prefixes/job_prefix_"+self.prefix_file+".txt",'r')
-                self.job_prefix = job_prefix_file.read() %({
-                  'CMSSW_BASE': self.cmssw_base or '',
-                  'SCRAM_ARCH': self.scram_arch or '',
+                else:
+                    job_pkg = 'CombineHarvester.CombineTools.input.job_prefixes'
+                    path = resources.files(job_pkg).joinpath(f"job_prefix_{self.prefix_file}.txt")
+                    job_prefix_file = path.open('r')
+                global JOB_PREFIX
+                JOB_PREFIX=job_prefix_file.read() %({
+                  'CMSSW_BASE': os.environ['CMSSW_BASE'],
+                  'SCRAM_ARCH': os.environ['SCRAM_ARCH'],
                   'PWD': os.environ['PWD']
                 })
                 job_prefix_file.close()
@@ -406,13 +410,15 @@ class CombineToolBase:
             config.Data.outputDatasetTag = config.General.requestName
             if self.memory is not None:
                 config.JobType.maxMemoryMB = self.memory
-            scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'scripts'))
-            do_nothing_script = open(os.path.join(scripts_dir, 'do_nothing_cfg.py'), "w")
-            do_nothing_script.write(CRAB_DO_NOTHING)
-            if self.cores is not None:
-                config.JobType.numCores = self.cores
-                do_nothing_script.write('\nprocess.options.numberOfThreads=cms.untracked.uint32(%i)'%self.cores)
-            do_nothing_script.close()
+            template_pkg = 'CombineHarvester.CombineTools.scripts'
+            template = resources.files(template_pkg).joinpath('do_nothing_cfg.py')
+            with template.open('r') as src:
+                do_nothing_script = open('do_nothing_cfg.py', 'w')
+                do_nothing_script.write(src.read())
+                if self.cores is not None:
+                    config.JobType.numCores = self.cores
+                    do_nothing_script.write('\nprocess.options.numberOfThreads=cms.untracked.uint32(%i)' % self.cores)
+                do_nothing_script.close()
             if self.crab_area is not None:
                 config.General.workArea = self.crab_area
             if self.custom_crab is not None:
