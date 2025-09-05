@@ -15,6 +15,10 @@ Examples Part I {#intro1}
       cmake --build build -j4
       ./build/bin/Example1
 
+> **Note:** Job-prefix templates for `combineTool.py` understand the
+> `%(CH_BASE)s` placeholder, which refers to the repository root and defaults to
+> `$CMSSW_BASE/src` when `CH_BASE` is unset.
+
 Parsing a single card {#ex1-p1}
 ===============================
 In the first part we locate and open a single text datacard file:

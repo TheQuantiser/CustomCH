@@ -14,6 +14,10 @@ Examples Part II {#intro2}
       cmake --build build -j4
       ./build/bin/Example2
 
+> **Note:** Job-prefix templates for `combineTool.py` recognise the
+> `%(CH_BASE)s` placeholder pointing to the repository base. It falls back to
+> `$CMSSW_BASE/src` if `CH_BASE` is not defined.
+
 Defining categories and processes {#ex2-p1}
 ===========================================
 

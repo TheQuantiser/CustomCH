@@ -52,6 +52,10 @@ Set the `CH_BASE` environment variable to the repository location:
 export CH_BASE=$(pwd)
 ```
 
+Job-prefix templates such as those used by `combineTool.py` can reference this
+path via the `%(CH_BASE)s` placeholder, which defaults to `$CMSSW_BASE/src` when
+`CH_BASE` is unset.
+
 Auxiliary ROOT files used by some examples can be obtained with:
 
 ```
