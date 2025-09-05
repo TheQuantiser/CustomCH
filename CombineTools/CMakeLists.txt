@@ -2,7 +2,9 @@ file(GLOB COMBINE_TOOLS_SRC src/*.cc)
 
 get_target_property(_CL_INC HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit INTERFACE_INCLUDE_DIRECTORIES)
 
-add_library(CombineTools ${COMBINE_TOOLS_SRC})
+# Build a shared library so that ROOT and CombinedLimit
+# dependencies are linked once and reused by all executables.
+add_library(CombineTools SHARED ${COMBINE_TOOLS_SRC})
 
 # Many sources include headers via the historic
 #   "CombineHarvester/CombineTools/interface/..." path.
@@ -25,7 +27,9 @@ set(COMBINE_TOOLS_BINARIES)
 foreach(src ${COMBINE_TOOLS_BINS})
   get_filename_component(name ${src} NAME_WE)
   add_executable(${name} ${src})
-  target_link_libraries(${name} CombineTools)
+  # Link ROOT and CombinedLimit libraries explicitly to avoid
+  # unresolved RooFit symbols when using the static library.
+  target_link_libraries(${name} PRIVATE CombineTools ${CH_EXTERNAL_LIBS} HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
   list(APPEND COMBINE_TOOLS_BINARIES ${name})
 endforeach()
 

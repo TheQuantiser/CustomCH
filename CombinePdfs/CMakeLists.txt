@@ -2,7 +2,8 @@ file(GLOB COMBINE_PDFS_SRC src/*.cc)
 
 get_target_property(_CL_INC HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit INTERFACE_INCLUDE_DIRECTORIES)
 
-add_library(CombinePdfs ${COMBINE_PDFS_SRC})
+# Build a shared library so that ROOT dependencies are linked once.
+add_library(CombinePdfs SHARED ${COMBINE_PDFS_SRC})
 
 # Allow includes of the form
 #   "CombineHarvester/CombineTools/interface/..."
@@ -23,7 +24,7 @@ set(COMBINE_PDFS_BINARIES)
 foreach(src ${COMBINE_PDFS_BINS})
   get_filename_component(name ${src} NAME_WE)
   add_executable(${name} ${src})
-  target_link_libraries(${name} CombinePdfs)
+  target_link_libraries(${name} PRIVATE CombinePdfs ${CH_EXTERNAL_LIBS} HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
   list(APPEND COMBINE_PDFS_BINARIES ${name})
 endforeach()
 
