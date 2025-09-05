@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from __future__ import absolute_import
 import CombineHarvester.CombineTools.ch as ch
 cb = ch.CombineHarvester()
 cb.SetFlag('check-negative-bins-on-import', 0)

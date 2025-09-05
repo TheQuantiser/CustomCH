@@ -13,8 +13,6 @@ Google style guide into appropriate Doxygen tags, and is even aware of
 doctests.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 from ast import NodeVisitor, parse, iter_fields, AST, Name, get_docstring
 from re import compile as regexpCompile, IGNORECASE, MULTILINE
 from types import GeneratorType

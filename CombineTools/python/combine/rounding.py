@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Performs rounding of values with uncertainties and produces output that can be used in ROOT or LaTeX
 
@@ -5,8 +6,6 @@ Written by andre.david@cern.ch
 """
 
 
-from __future__ import absolute_import
-from __future__ import print_function
 from math import *
 from decimal import *
 from six.moves import range
