@@ -4,7 +4,11 @@ get_target_property(_CL_INC HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLim
 
 add_library(CombinePdfs ${COMBINE_PDFS_SRC})
 
+# Allow includes of the form
+#   "CombineHarvester/CombineTools/interface/..."
+# by exposing the repository root during the build.
 target_include_directories(CombinePdfs PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/interface>
   $<INSTALL_INTERFACE:include>
   ${CH_EXTERNAL_INCLUDES}

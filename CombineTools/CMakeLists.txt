@@ -4,7 +4,13 @@ get_target_property(_CL_INC HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLim
 
 add_library(CombineTools ${COMBINE_TOOLS_SRC})
 
+# Many sources include headers via the historic
+#   "CombineHarvester/CombineTools/interface/..." path.
+# Expose the repository root during the build so this
+# prefix resolves to the symlinked layout created in
+# the source tree.
 target_include_directories(CombineTools PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/interface>
   $<INSTALL_INTERFACE:include>
   ${CH_EXTERNAL_INCLUDES}
