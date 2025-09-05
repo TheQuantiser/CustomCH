@@ -1,0 +1,28 @@
+name: Docs
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.md'
+      - '**.yml'
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    name: Build and deploy docs
+
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Build documentation
+      run: |
+        python3 -m pip install mkdocs pymdown-extensions mkdocs-material mike
+        git fetch origin gh-pages --depth=1
+        git config user.name ci-bot
+        git config user.email ci-bot@example.com
+        mike deploy --push v10.2.X latest
