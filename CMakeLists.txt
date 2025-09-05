@@ -4,16 +4,25 @@ project(CombineHarvester)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 option(USE_SYSTEM_COMBINEDLIMIT "Use system-installed HiggsAnalysisCombinedLimit" OFF)
+set(COMBINEDLIMIT_TAG "v10.2.7" CACHE STRING "Git tag or commit of HiggsAnalysis-CombinedLimit to fetch")
 
 if(USE_SYSTEM_COMBINEDLIMIT)
   find_package(HiggsAnalysisCombinedLimit REQUIRED)
 else()
-  if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/HiggsAnalysis/CombinedLimit/CMakeLists.txt")
-    message(FATAL_ERROR "HiggsAnalysis/CombinedLimit not found. Either enable USE_SYSTEM_COMBINEDLIMIT or fetch the sources as described in the README")
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/HiggsAnalysis/CombinedLimit/CMakeLists.txt")
+    add_subdirectory(HiggsAnalysis/CombinedLimit)
+    set(HiggsAnalysisCombinedLimit_LIBRARIES HiggsAnalysisCombinedLimit)
+    set(HiggsAnalysisCombinedLimit_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/HiggsAnalysis/CombinedLimit/interface)
+  else()
+    include(FetchContent)
+    FetchContent_Declare(CombinedLimit
+      GIT_REPOSITORY https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git
+      GIT_TAG        ${COMBINEDLIMIT_TAG}
+    )
+    FetchContent_MakeAvailable(CombinedLimit)
+    set(HiggsAnalysisCombinedLimit_LIBRARIES HiggsAnalysisCombinedLimit)
+    set(HiggsAnalysisCombinedLimit_INCLUDE_DIRS ${combinedlimit_SOURCE_DIR}/interface)
   endif()
-  add_subdirectory(HiggsAnalysis/CombinedLimit)
-  set(HiggsAnalysisCombinedLimit_LIBRARIES HiggsAnalysisCombinedLimit)
-  set(HiggsAnalysisCombinedLimit_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/HiggsAnalysis/CombinedLimit/interface)
 endif()
 
 find_package(ROOT REQUIRED COMPONENTS RooFit RooStats)

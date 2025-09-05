@@ -20,8 +20,13 @@ ROOT installation if required.
 ```bash
 git clone https://github.com/cms-analysis/CombineHarvester.git
 cd CombineHarvester
-git submodule update --init
 ```
+
+The CMake build will automatically download the
+[HiggsAnalysis/CombinedLimit](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit)
+sources if they are not already present. Alternatively the dependency can be
+provided separately by setting `-DUSE_SYSTEM_COMBINEDLIMIT=ON` and installing
+the package via its own instructions.
 
 ## Building with CMake
 
