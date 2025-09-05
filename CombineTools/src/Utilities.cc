@@ -6,13 +6,15 @@
 #include <fstream>
 #include <map>
 #include <memory>
-#include "TIterator.h"
 #include "boost/format.hpp"
 #include "RooFitResult.h"
 #include "RooRealVar.h"
 #include "RooDataHist.h"
 #include "RooAbsReal.h"
 #include "RooAbsData.h"
+#include "RooArgSet.h"
+#include "RooArgList.h"
+#include "RooLinkedListIter.h"
 #include "CombineHarvester/CombineTools/interface/CombineHarvester.h"
 
 namespace ch {
