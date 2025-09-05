@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+#!/usr/bin/env python3
 import ROOT
 from CombineHarvester.CombineTools.plotting import *
 ROOT.PyConfig.IgnoreCommandLineOptions = True

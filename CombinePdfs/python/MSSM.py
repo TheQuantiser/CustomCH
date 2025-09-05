@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-from __future__ import print_function
+#!/usr/bin/env python3
 from HiggsAnalysis.CombinedLimit.PhysicsModel import *
 import CombineHarvester.CombineTools.plotting as plot
 import os

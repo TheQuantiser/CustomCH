@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+#!/usr/bin/env python3
 import CombineHarvester.CombineTools.plotting as plot
 import ROOT as R
 from array import array

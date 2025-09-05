@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # This python module is essentially a thin wrapper around the real module which is embedded
 # in the shared library built by scram from the C++ source code. We import everything from
 # this module below, then attach a few functions that could not easily be wrapped from the
@@ -5,8 +6,6 @@
 # most notable example is the AddSyst method. The C++ version relies heavily on templates
 # which is not readily adaptable to python. Instead we write the functionality entirely in a
 # python function, then "attach" this function to the CombineHarvester class.
-from __future__ import absolute_import
-from __future__ import print_function
 import itertools
 import os
 from pathlib import Path
