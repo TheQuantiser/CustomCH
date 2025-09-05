@@ -5,6 +5,8 @@
 #include <string>
 #include <fstream>
 #include <map>
+#include <memory>
+#include "TIterator.h"
 #include "boost/format.hpp"
 #include "RooFitResult.h"
 #include "RooRealVar.h"
@@ -22,17 +24,17 @@ RooArgSet ParametersByName(RooAbsReal const* pdf, RooArgSet const* dat_vars) {
   std::unique_ptr<RooArgSet> all_vars(pdf->getParameters(RooArgSet()));
   // Get the data variables and fill a set with all the names
   std::set<std::string> names;
-  RooFIter dat_it = dat_vars->fwdIterator();
+  std::unique_ptr<TIterator> dat_it(dat_vars->createIterator());
   RooAbsArg *dat_arg = nullptr;
-  while ((dat_arg = dat_it.next())) {
+  while ((dat_arg = static_cast<RooAbsArg *>(dat_it->Next()))) {
     names.insert(dat_arg->GetName());
   }
 
   // Build a new RooArgSet from all_vars, excluding any in names
   RooArgSet result_set;
-  RooFIter vars_it = all_vars->fwdIterator();
+  std::unique_ptr<TIterator> vars_it(all_vars->createIterator());
   RooAbsArg *vars_arg = nullptr;
-  while ((vars_arg = vars_it.next())) {
+  while ((vars_arg = static_cast<RooAbsArg *>(vars_it->Next()))) {
     if (!names.count(vars_arg->GetName())) {
       result_set.add(*vars_arg);
     }
