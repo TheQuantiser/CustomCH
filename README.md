@@ -12,8 +12,8 @@ See the [standalone installation guide](docs/StandaloneInstallation.md) for
 full details.  A typical quick-start workflow is:
 
 ```
-git clone https://github.com/cms-analysis/CombineHarvester.git
-cd CombineHarvester
+git clone https://github.com/TheQuantiser/CustomCH.git
+cd CustomCH
 git submodule update --init
 cmake -S . -B build
 cmake --build build --target install
@@ -21,6 +21,43 @@ export CH_BASE=$(pwd)
 source build/setup.sh
 $CH_BASE/build/bin/Example1
 ```
+
+If `CMAKE_INSTALL_PREFIX` is not explicitly set, the build installs into the
+active Conda environment (`$CONDA_PREFIX`) when available, or the first entry of
+`CMAKE_PREFIX_PATH`.  Use `-DCMAKE_INSTALL_PREFIX=/desired/path` to override this
+location.
+
+The configure step will automatically download the
+[`HiggsAnalysis/CombinedLimit`](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit)
+`main` branch source if it is not present.
+
+If you already have `HiggsAnalysis/CombinedLimit` built and installed on your
+system, configure the build with
+
+```
+cmake -S . -B build -DUSE_SYSTEM_COMBINEDLIMIT=ON \
+      -DCMAKE_PREFIX_PATH=/path/to/combinedlimit
+```
+
+`find_package(HiggsAnalysisCombinedLimit)` will then locate the installation via
+`CMAKE_PREFIX_PATH`.
+When working from a source tree that was built using the repository `Makefile`
+instructions (for example cloned into `HiggsAnalysis/CombinedLimit` and built
+with `make`), point CMake to the checkout with
+
+```
+cmake -S . -B build -DUSE_SYSTEM_COMBINEDLIMIT=ON \
+      -DHiggsAnalysisCombinedLimit_ROOT=/path/to/HiggsAnalysis/CombinedLimit
+```
+
+You may also use the more explicit
+`-DHiggsAnalysisCombinedLimit_DIR=/path/to/combinedlimit/lib/cmake/HiggsAnalysisCombinedLimit`
+form. In this mode no download occurs and the headers and library from the
+existing build are used.
+
+If a build of `HiggsAnalysis/CombinedLimit` exists in a sibling directory named
+`../HiggsAnalysis/CombinedLimit`, the CMake configuration will automatically
+discover and use it when `-DUSE_SYSTEM_COMBINEDLIMIT=ON` is specified.
 
 The build requires several external C++ libraries: [ROOT](https://root.cern)
 (with the RooFit and RooStats components), Boost, libxml2, vdt and
@@ -41,7 +78,6 @@ Set the `CH_BASE` environment variable to the location of the repository (or ins
 ```
 export CH_BASE=$(pwd)
 ```
-
 Some examples require auxiliary ROOT files. These can be obtained from the
 [HiggsAnalysis-HiggsToTauTau-auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries)
 repository. By default these files are expected in `$CH_BASE/auxiliaries/`.
@@ -52,24 +88,6 @@ variable:
 git clone https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries.git "$CH_BASE/auxiliaries"
 ```
 
-### Examples without CMSSW
-
-After building, binaries are available in `build/bin` and can be executed directly:
-
-```
-./build/bin/Example1
-python3 CombineTools/scripts/Example3.py
-```
-
-No CMSSW environment is required for these commands.
-
-### Compatibility with CMSSW
-
-For backward support the previous CMSSW-based workflow remains available. The framework is compatible with the CMSSW 14_1_X and 11_3_X series releases and can still be placed in a CMSSW release area together with `HiggsAnalysis/CombinedLimit` and compiled with `scram b` following the recommendations of the combine developers.
-
-When running the python utilities such as `combineTool.py` outside of a
-CMSSW release, the `--standalone` option can be used to bypass the CMSSW
-environment setup in generated job scripts.
 
 Previously this package contained some analysis-specific subpackages. These packages can now be found [here](https://gitlab.cern.ch/cms-hcg/ch-areas). If you would like a repository for your analysis package to be created in that group, please create an issue in the CombineHarvester repository stating the desired package name and your NICE username. Note: you are not obliged to store your analysis package in this central group.
 
