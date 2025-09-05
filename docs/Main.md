@@ -26,57 +26,20 @@ As well as histogram-based templates, the production of datacards with arbitrary
 
 Getting started {#getting-started}
 ==================================
-CombineHarvester can now be used as a standalone project. It currently provides two sub-packages:
+CombineHarvester can now be used as a standalone project.  See the
+[standalone installation guide](StandaloneInstallation.md) for the
+repository checkout and build instructions.  It currently provides two
+sub-packages:
 
   * **CombineHarvester/CombineTools**, which contains the CombineHarvester class and other parts of the core framework
   * **CombineHarvester/CombinePdfs**, which provides tools for building custom RooFit pdfs
 
-Clone the repository and initialise the submodules:
+After building, example programs can be invoked directly, e.g.
 
 ```
-git clone https://github.com/cms-analysis/CombineHarvester.git
-cd CombineHarvester
-git submodule update --init --recursive
-```
-
-Build the code with CMake:
-
-```
-cmake -S . -B build
-cmake --build build -j4
-```
-
-Set the `CH_BASE` environment variable to the repository location:
-
-```
-export CH_BASE=$(pwd)
-```
-
-Job-prefix templates such as those used by `combineTool.py` can reference this
-path via the `%(CH_BASE)s` placeholder. The path is determined automatically
-when `CH_BASE` is unset.
-
-Auxiliary ROOT files used by some examples can be obtained with:
-
-```
-git clone https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries.git "$CH_BASE/auxiliaries"
-```
-
-After building, example programs can be invoked directly without a CMSSW environment, e.g.
-
-```
-./build/bin/Example1
+$CH_BASE/build/bin/Example1
 python3 CombineTools/scripts/Example3.py
 ```
-
-### Compatibility with CMSSW
-
-For backward support the framework remains compatible with the CMSSW 14_1_X
-and 11_3_X series releases. The repository may still be placed inside a
-CMSSW release area under `src/CombineHarvester` alongside
-`HiggsAnalysis/CombinedLimit` and compiled with `scram b` following the
-recommendations of the combine developers. Job scripts will attempt to set up
-this environment unless the `--standalone` option is given.
 
 If you are using this framework for the first time we recommend taking a look through some of the examples below which demonstrate the main features:
 

@@ -8,19 +8,18 @@ Continuous integration and automated checks now run on GitHub Actions. The previ
 
 ## Installation
 
-The project can be built as a standalone package with [CMake](https://cmake.org/). Clone the repository and initialise the submodules:
+See the [standalone installation guide](docs/StandaloneInstallation.md) for
+full details.  A typical quick-start workflow is:
 
 ```
 git clone https://github.com/cms-analysis/CombineHarvester.git
 cd CombineHarvester
-git submodule update --init --recursive
-```
-
-Configure and build the project:
-
-```
+git submodule update --init
 cmake -S . -B build
-cmake --build build -j4
+cmake --build build --target install
+export CH_BASE=$(pwd)
+source build/setup.sh
+$CH_BASE/build/bin/Example1
 ```
 
 The build requires several external C++ libraries: [ROOT](https://root.cern)
