@@ -18,3 +18,20 @@ A new full release area can be set up and compiled in the following steps:
     scram b
 
 Previously this package contained some analysis-specific subpackages. These packages can now be found [here](https://gitlab.cern.ch/cms-hcg/ch-areas). If you would like a repository for your analysis package to be created in that group, please create an issue in the CombineHarvester repository stating the desired package name and your NICE username. Note: you are not obliged to store your analysis package in this central group.
+
+## Repository layout and `CH_BASE`
+
+Many of the standalone utilities and examples use the environment variable
+`CH_BASE` to locate input files. This variable should point to the root of the
+CombineHarvester repository. If it is not set, the tools will attempt to infer
+the location automatically. The expected default layout is
+
+```
+$CH_BASE/            # Clone of this repository
+$CH_BASE/CombineTools/input/
+$CH_BASE/../auxiliaries/     # Optional external data repository
+```
+
+In the examples the helper functions in `CombineTools/interface/PathTools.h`
+provide convenient access to these locations, e.g. `ch::paths::auxiliaries()`
+and `ch::paths::input()`.
