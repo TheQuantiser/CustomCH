@@ -63,6 +63,11 @@ cmake -S . -B build
 cmake --build build --target install
 ```
 
+Without additional options the installation step writes into the active Conda
+environment (`$CONDA_PREFIX`) when defined, or the first path listed in
+`CMAKE_PREFIX_PATH`.  Specify `-DCMAKE_INSTALL_PREFIX=/desired/path` during
+configuration to override this behaviour.
+
 ## Environment setup
 
 ```bash

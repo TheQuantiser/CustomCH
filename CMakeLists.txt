@@ -6,6 +6,18 @@ project(CombineHarvester)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Default installation prefix: prefer an active Conda environment or the first
+# path in CMAKE_PREFIX_PATH.  This avoids installing into /usr/local when
+# working in a user environment.
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  if(DEFINED ENV{CONDA_PREFIX})
+    set(CMAKE_INSTALL_PREFIX "$ENV{CONDA_PREFIX}" CACHE PATH "Install path prefix" FORCE)
+  elseif(CMAKE_PREFIX_PATH)
+    list(GET CMAKE_PREFIX_PATH 0 _prefix_from_path)
+    set(CMAKE_INSTALL_PREFIX "${_prefix_from_path}" CACHE PATH "Install path prefix" FORCE)
+  endif()
+endif()
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 option(USE_SYSTEM_COMBINEDLIMIT "Use system-installed HiggsAnalysisCombinedLimit" OFF)

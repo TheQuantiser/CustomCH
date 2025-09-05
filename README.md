@@ -22,6 +22,11 @@ source build/setup.sh
 $CH_BASE/build/bin/Example1
 ```
 
+If `CMAKE_INSTALL_PREFIX` is not explicitly set, the build installs into the
+active Conda environment (`$CONDA_PREFIX`) when available, or the first entry of
+`CMAKE_PREFIX_PATH`.  Use `-DCMAKE_INSTALL_PREFIX=/desired/path` to override this
+location.
+
 The configure step will automatically download the
 [`HiggsAnalysis/CombinedLimit`](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit)
 `main` branch source if it is not present.
