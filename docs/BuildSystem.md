@@ -32,3 +32,11 @@ export CH_BASE=$(pwd)
 CMake handles dependency tracking automatically, so incremental builds only
 recompile files that have changed.  To clean the build simply delete the
 `build` directory.
+
+### Executable targets
+
+Each `.cpp` file placed in the `bin` subdirectories of `CombineTools` or
+`CombinePdfs` is automatically built as a standalone executable.  CMake uses
+file globbing in the package `CMakeLists.txt` files to discover these sources
+and creates the corresponding targets without any additional steps.  The
+former `updateBinBuildFile.py` helper script is no longer required.
