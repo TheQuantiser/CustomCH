@@ -15,7 +15,11 @@ A new full release area can be set up and compiled in the following steps:
     # IMPORTANT: Checkout the recommended tag on the link above
     git clone https://github.com/cms-analysis/CombineHarvester.git CombineHarvester
     git checkout v3.0.0-pre1
-    scram b
+    mkdir build && cd build
+    cmake ..
+    cmake --build .
+
+This project now uses CMake and no longer relies on `BuildFile.xml`.
 
 ### Standalone dependency
 
