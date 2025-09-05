@@ -25,7 +25,9 @@ std::string base() {
 }
 
 std::string auxiliaries() {
-  return base() + "/../auxiliaries/";
+  const char* env = std::getenv("CH_AUXILIARIES");
+  if (env) return std::string(env);
+  return base() + "/auxiliaries/";
 }
 
 std::string input() {

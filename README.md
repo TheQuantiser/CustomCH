@@ -25,7 +25,11 @@ Set the `CH_BASE` environment variable to the location of the repository (or ins
 export CH_BASE=$(pwd)
 ```
 
-Some examples require auxiliary ROOT files. These can be obtained from the [HiggsAnalysis-HiggsToTauTau-auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries) repository:
+Some examples require auxiliary ROOT files. These can be obtained from the
+[HiggsAnalysis-HiggsToTauTau-auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries)
+repository. By default these files are expected in `$CH_BASE/auxiliaries/`.
+This location can be overridden by setting the `CH_AUXILIARIES` environment
+variable:
 
 ```
 git clone https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries.git "$CH_BASE/auxiliaries"
