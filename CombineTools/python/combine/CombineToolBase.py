@@ -130,6 +130,12 @@ class CombineToolBase:
         self.cmssw_base = os.environ.get('CMSSW_BASE')
         self.scram_arch = os.environ.get('SCRAM_ARCH')
         self.standalone = False
+        self.ch_base = os.environ.get('CH_BASE')
+        if not self.ch_base:
+            if self.cmssw_base:
+                self.ch_base = os.path.join(self.cmssw_base, 'src')
+            else:
+                self.ch_base = os.getcwd()
         self.job_prefix = _build_job_prefix(self.cmssw_base, self.scram_arch, self.standalone)
 
     def attach_job_args(self, group):
@@ -284,9 +290,10 @@ class CombineToolBase:
                     path = resources.files(job_pkg).joinpath(f"job_prefix_{self.prefix_file}.txt")
                     job_prefix_file = path.open('r')
                 env = {
-                    'CMSSW_BASE': os.environ.get('CMSSW_BASE', ''),
+                    'CMSSW_BASE': self.cmssw_base or '',
                     'SCRAM_ARCH': os.environ.get('SCRAM_ARCH', ''),
-                    'PWD': os.environ.get('PWD', os.getcwd())
+                    'PWD': os.environ.get('PWD', os.getcwd()),
+                    'CH_BASE': self.ch_base
                 }
                 self.job_prefix = job_prefix_file.read() % env
                 job_prefix_file.close()

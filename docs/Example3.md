@@ -19,6 +19,10 @@ Examples Part III {#intro3}
       cmake --build build -j4
       ./build/bin/Example3
 
+> **Note:** Job-prefix templates used with `combineTool.py` recognise the
+> `%(CH_BASE)s` placeholder pointing to the repository root. If `CH_BASE` is not
+> set it falls back to `$CMSSW_BASE/src`.
+
 We start by defining four categories: A, B, C and D in the normal way. Contrary to the previous shape-based examples, with a counting experiment we have to specify all of the observed and expected yields directly. To start with we'll define a map containing the observed yields in each category.
 
 \snippet CombineTools/bin/Example3.cpp part1
