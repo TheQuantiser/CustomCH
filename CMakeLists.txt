@@ -29,8 +29,14 @@ target_include_directories(CombineHarvester INTERFACE
   ${HiggsAnalysisCombinedLimit_INCLUDE_DIRS}
 )
 
-target_link_libraries(CombineHarvester INTERFACE ${HiggsAnalysisCombinedLimit_LIBRARIES})
+target_link_libraries(CombineHarvester INTERFACE CombineTools CombinePdfs ${HiggsAnalysisCombinedLimit_LIBRARIES})
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/HiggsAnalysis/CombinedLimit/interface/
         DESTINATION include/HiggsAnalysis/CombinedLimit
         FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
+
+install(TARGETS CombineHarvester EXPORT CombineHarvesterTargets)
+install(EXPORT CombineHarvesterTargets
+        FILE CombineHarvesterTargets.cmake
+        NAMESPACE CombineHarvester::
+        DESTINATION lib/cmake/CombineHarvester)

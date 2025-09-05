@@ -9,7 +9,8 @@ namespace paths {
 // discover the location by searching upwards from the current directory.
 std::string base();
 
-// Path to the external auxiliaries directory.
+// Path to the external auxiliaries directory. Can be overridden by the
+// CH_AUXILIARIES environment variable.
 std::string auxiliaries();
 
 // Path to the CombineTools input directory.

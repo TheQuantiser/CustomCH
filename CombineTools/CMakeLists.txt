@@ -12,8 +12,16 @@ install(TARGETS CombineTools
         ARCHIVE DESTINATION CombineHarvester/CombineTools)
 
 file(GLOB COMBINE_TOOLS_BINS bin/*.cpp)
+set(COMBINE_TOOLS_BINARIES)
 foreach(src ${COMBINE_TOOLS_BINS})
   get_filename_component(name ${src} NAME_WE)
   add_executable(${name} ${src})
   target_link_libraries(${name} CombineTools)
+  list(APPEND COMBINE_TOOLS_BINARIES ${name})
 endforeach()
+
+install(TARGETS CombineTools ${COMBINE_TOOLS_BINARIES}
+  EXPORT CombineHarvesterTargets
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib)

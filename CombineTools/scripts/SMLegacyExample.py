@@ -11,9 +11,10 @@ from importlib import resources
 
 cb = ch.CombineHarvester()
 
-auxiliaries  = os.environ['CMSSW_BASE'] + '/src/auxiliaries/'
-aux_shapes   = auxiliaries +'shapes/'
-aux_pruning  = auxiliaries +'pruning/'
+ch_base = os.environ.get('CH_BASE', os.environ.get('CMSSW_BASE', '') + '/src/CombineHarvester')
+auxiliaries  = os.environ.get('CH_AUXILIARIES', ch_base + '/auxiliaries/')
+aux_shapes   = auxiliaries + 'shapes/'
+aux_pruning  = auxiliaries + 'pruning/'
 input_dir = resources.files('CombineHarvester.CombineTools.input')
 
 chns = ['et', 'mt', 'em', 'ee', 'mm', 'tt']
