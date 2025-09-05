@@ -26,21 +26,48 @@ As well as histogram-based templates, the production of datacards with arbitrary
 
 Getting started {#getting-started}
 ==================================
-This repository is a "top-level" CMSSW package, i.e. it should be located at `$CMSSW_BASE/src/CombineHarvester`. It currently provides two sub-packages:
+CombineHarvester can now be used as a standalone project. It currently provides two sub-packages:
 
   * **CombineHarvester/CombineTools**, which contains the CombineHarvester class and other parts of the core framework
   * **CombineHarvester/CombinePdfs**, which provides tools for building custom RooFit pdfs
 
-The CMSSW version that should be used with CombineHarvester is driven by the recommendation for the HiggsAnalysis/CombinedLimit package, which is also required. The latest instructions can be found [here](https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/#setting-up-the-environment-and-installation). The CombineHarvester framework is compatible with the CMSSW 14_1_X and 11_3_X series releases. A new release area can be set up and compiled in the following steps:
+Clone the repository and initialise the submodules:
 
-    cmsrel CMSSW_14_1_0_pre4
-    cd CMSSW_14_1_0_pre4/src
-    cmsenv
-    git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
-    # IMPORTANT: Checkout the recommended tag on the link above
-    git clone https://github.com/cms-analysis/CombineHarvester.git CombineHarvester
-    git checkout v3.0.0-pre1
-    scram b
+```
+git clone https://github.com/cms-analysis/CombineHarvester.git
+cd CombineHarvester
+git submodule update --init --recursive
+```
+
+Build the code with CMake:
+
+```
+cmake -S . -B build
+cmake --build build -j4
+```
+
+Set the `CH_BASE` environment variable to the repository location:
+
+```
+export CH_BASE=$(pwd)
+```
+
+Auxiliary ROOT files used by some examples can be obtained with:
+
+```
+git clone https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries.git "$CH_BASE/auxiliaries"
+```
+
+After building, example programs can be invoked directly without a CMSSW environment, e.g.
+
+```
+./build/bin/Example1
+python3 CombineTools/scripts/Example3.py
+```
+
+### Compatibility with CMSSW
+
+For backward support the framework remains compatible with the CMSSW 14_1_X and 11_3_X series releases. The repository may still be placed at `$CMSSW_BASE/src/CombineHarvester` alongside `HiggsAnalysis/CombinedLimit` and compiled with `scram b` following the recommendations of the combine developers.
 
 If you are using this framework for the first time we recommend taking a look through some of the examples below which demonstrate the main features:
 
@@ -49,9 +76,9 @@ If you are using this framework for the first time we recommend taking a look th
   * [Examples Part 3](\ref intro3): Creating a counting-experiment datacard and using rateParam directives to float process yields via free parameters while express other yields as functions of these parameters.
   * [Limit setting](\ref limits): Using the `combineTool.py` script to build workspaces, compute asymptotic limits and plot the ouput.
 
-\warning To run many of these examples you must first ensure the [auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries) repository is located at `$CMSSW_BASE/src/auxiliaries` and up-to-date:
+\warning To run many of these examples you must first ensure the [auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries) repository is located at `$CH_BASE/auxiliaries` and up-to-date:
 \verbatim
-git clone https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries.git auxiliaries \endverbatim
+git clone https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries.git "$CH_BASE/auxiliaries" \endverbatim
 The input root files will be sourced from here.
 
 More realistic, though less well documented, examples can be found in the following files:

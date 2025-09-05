@@ -2,40 +2,49 @@
 
 Full documentation: http://cms-analysis.github.io/CombineHarvester
 
-## Quick start
+## Installation
 
-This package requires HiggsAnalysis/CombinedLimit to be in your local CMSSW area. We follow the release recommendations of the combine developers which can be found [here](https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/#setting-up-the-environment-and-installation). The CombineHarvester framework is compatible with the CMSSW 14_1_X and 11_3_X series releases. The default branch, `main`, is for developments in the 14_1_X releases, and the current recommended tag is `v3.0.0-pre1`. The `v2.1.0` tag should be used in CMSSW_11_3_X.
+The project can be built as a standalone package with [CMake](https://cmake.org/). Clone the repository and initialise the submodules:
 
-A new full release area can be set up and compiled in the following steps:
+```
+git clone https://github.com/cms-analysis/CombineHarvester.git
+cd CombineHarvester
+git submodule update --init --recursive
+```
 
-    cmsrel CMSSW_14_1_0_pre4
-    cd CMSSW_14_1_0_pre4/src
-    cmsenv
-    git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
-    # IMPORTANT: Checkout the recommended tag on the link above
-    git clone https://github.com/cms-analysis/CombineHarvester.git CombineHarvester
-    git checkout v3.0.0-pre1
-    mkdir build && cd build
-    cmake ..
-    cmake --build .
+Configure and build the project:
 
-This project now uses CMake and no longer relies on `BuildFile.xml`.
+```
+cmake -S . -B build
+cmake --build build -j4
+```
 
-### Standalone dependency
+Set the `CH_BASE` environment variable to the location of the repository (or installation prefix if you run `cmake --install`):
 
-When building CombineHarvester outside of a CMSSW release, the
-`HiggsAnalysis/CombinedLimit` package is still required.  The sources can be
-retrieved either as a git submodule
+```
+export CH_BASE=$(pwd)
+```
 
-    git submodule add https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
+Some examples require auxiliary ROOT files. These can be obtained from the [HiggsAnalysis-HiggsToTauTau-auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries) repository:
 
-or by downloading a release tarball from the
-[CombinedLimit GitHub releases](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit/releases)
-and unpacking it into `HiggsAnalysis/CombinedLimit`.
+```
+git clone https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries.git "$CH_BASE/auxiliaries"
+```
 
-The CMake build exports an option `USE_SYSTEM_COMBINEDLIMIT` which, when set to
-`ON`, will search for an existing system installation instead of building from
-the sources bundled with this repository.
+### Examples without CMSSW
+
+After building, binaries are available in `build/bin` and can be executed directly:
+
+```
+./build/bin/Example1
+python3 CombineTools/scripts/Example3.py
+```
+
+No CMSSW environment is required for these commands.
+
+### Compatibility with CMSSW
+
+For backward support the previous CMSSW-based workflow remains available. The framework is compatible with the CMSSW 14_1_X and 11_3_X series releases and can still be placed in a CMSSW release area together with `HiggsAnalysis/CombinedLimit` and compiled with `scram b` following the recommendations of the combine developers.
 
 Previously this package contained some analysis-specific subpackages. These packages can now be found [here](https://gitlab.cern.ch/cms-hcg/ch-areas). If you would like a repository for your analysis package to be created in that group, please create an issue in the CombineHarvester repository stating the desired package name and your NICE username. Note: you are not obliged to store your analysis package in this central group.
 
