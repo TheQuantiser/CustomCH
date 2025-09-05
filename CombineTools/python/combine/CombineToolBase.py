@@ -25,7 +25,7 @@ ulimit -s unlimited
 set -e
 {cmssw}
 cd {pwd}
-""".format(cmssw=cmssw_cmds, pwd=os.environ['PWD'])
+""".format(cmssw=cmssw_cmds, pwd=os.environ.get('PWD', os.getcwd()))
 
 CONDOR_TEMPLATE = """executable = %(EXE)s
 arguments = $(ProcId)
@@ -167,6 +167,8 @@ class CombineToolBase:
                            help='txt file containing command lines that can be used in the crab job script instead of the defaults.')
         group.add_argument('--combine', dest='combine',
                            help='Path to the combine executable to use')
+        group.add_argument('--standalone', action='store_true',
+                           help='Bypass CMSSW setup in job scripts')
 
     def attach_intercept_args(self, group):
         pass
@@ -194,6 +196,7 @@ class CombineToolBase:
         self.custom_crab_post = self.args.custom_crab_post
         self.post_job_cmd= self.args.post_job_cmd
         self.combine = self.args.combine
+        self.standalone = self.args.standalone
         found = shutil.which('combine')
         if self.combine:
             self.combine_exec = self.combine
@@ -275,17 +278,17 @@ class CombineToolBase:
         if self.job_mode in ['script', 'lxbatch', 'SGE', 'slurm']:
             if self.prefix_file != '':
                 if self.prefix_file.endswith('.txt'):
-                    job_prefix_file = open(self.prefix_file,'r')
+                    job_prefix_file = open(self.prefix_file, 'r')
                 else:
                     job_pkg = 'CombineHarvester.CombineTools.input.job_prefixes'
                     path = resources.files(job_pkg).joinpath(f"job_prefix_{self.prefix_file}.txt")
                     job_prefix_file = path.open('r')
-                global JOB_PREFIX
-                JOB_PREFIX=job_prefix_file.read() %({
-                  'CMSSW_BASE': os.environ['CMSSW_BASE'],
-                  'SCRAM_ARCH': os.environ['SCRAM_ARCH'],
-                  'PWD': os.environ['PWD']
-                })
+                env = {
+                    'CMSSW_BASE': os.environ.get('CMSSW_BASE', ''),
+                    'SCRAM_ARCH': os.environ.get('SCRAM_ARCH', ''),
+                    'PWD': os.environ.get('PWD', os.getcwd())
+                }
+                self.job_prefix = job_prefix_file.read() % env
                 job_prefix_file.close()
         if self.job_mode in ['script', 'lxbatch', 'SGE']:
             for i, j in enumerate(range(0, len(self.job_queue), self.merge)):
