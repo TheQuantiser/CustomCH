@@ -23,10 +23,12 @@ cmake -S . -B build
 cmake --build build -j4
 ```
 
-The build requires the **vdt** and **HistFactory** libraries. These are
-often provided with ROOT. Set the `ROOTSYS` environment variable to the
-location of your ROOT installation so that the headers and libraries can
-be discovered:
+The build requires several external C++ libraries: [ROOT](https://root.cern)
+(with the RooFit and RooStats components), Boost, libxml2, vdt and
+HistFactory. These dependencies must be installed and discoverable by
+CMake. ROOT often provides vdt and HistFactory. Set the `ROOTSYS`
+environment variable to the location of your ROOT installation so that
+the headers and libraries can be found:
 
 ```
 export ROOTSYS=/path/to/root
