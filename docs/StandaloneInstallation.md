@@ -38,16 +38,22 @@ cmake -S . -B build -DUSE_SYSTEM_COMBINEDLIMIT=ON \
 `CMAKE_PREFIX_PATH` for an installation that provides
 `HiggsAnalysisCombinedLimitConfig.cmake`.
 
-When working from a CombinedLimit source tree built with the provided Makefile,
-set
+When working from a CombinedLimit source tree built with the provided
+`Makefile` (for example after running `make CONDA=1 -j8` in the
+`HiggsAnalysis/CombinedLimit` directory), point CMake to the checkout with
 
 ```bash
--DHiggsAnalysisCombinedLimit_ROOT=/path/to/combinedlimit
+cmake -S . -B build -DUSE_SYSTEM_COMBINEDLIMIT=ON \
+      -DHiggsAnalysisCombinedLimit_ROOT=/path/to/HiggsAnalysis/CombinedLimit
 ```
 
-to point CMake to the repository so that the headers and library are picked up
-correctly. In all cases no download occurs and the build links against the
-existing library.
+so that the headers and library are picked up correctly. In all cases no
+download occurs and the build links against the existing library.
+
+If a build directory for `HiggsAnalysis/CombinedLimit` is present alongside the
+CombineHarvester source tree (for example `../HiggsAnalysis/CombinedLimit/build`),
+it will be detected automatically when configuring with
+`-DUSE_SYSTEM_COMBINEDLIMIT=ON`.
 
 ## Building with CMake
 
