@@ -6,6 +6,7 @@ from functools import partial
 from multiprocessing import Pool
 from six.moves import range
 from importlib import resources
+import CombineHarvester.CombineTools.ch as ch
 
 DRY_RUN = False
 
@@ -128,13 +129,8 @@ class CombineToolBase:
         self.cmssw_base = os.environ.get('CMSSW_BASE')
         self.scram_arch = os.environ.get('SCRAM_ARCH')
         self.standalone = False
-        self.ch_base = os.environ.get('CH_BASE')
-        if not self.ch_base:
-            if self.cmssw_base:
-                self.ch_base = os.path.join(self.cmssw_base, 'src')
-            else:
-                self.ch_base = os.getcwd()
-        self.job_prefix = _build_job_prefix(self.cmssw_base, self.scram_arch, self.standalone, self.ch_base)
+        self.ch_base = os.environ.get('CH_BASE', ch.paths.base())
+        self.job_prefix = _build_job_prefix(self.cmssw_base, self.scram_arch, self.standalone)
 
     def attach_job_args(self, group):
         group.add_argument('--job-mode', default=self.job_mode, choices=[
