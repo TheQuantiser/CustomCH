@@ -589,6 +589,10 @@ private:
                  TH1 const* high, bool linear);
   void ShapeDiff(double x, TH1F* target, RooDataHist const* nom,
                  RooDataHist const* low, RooDataHist const* high);
+  void ShapeDiffShapeN(double x, TH1F* target, TH1 const* nom,
+                       TH1 const* low, TH1 const* high);
+  void ShapeDiffShapeN(double x, TH1F* target, RooDataHist const* low,
+                       RooDataHist const* high);
 
   // bug fix for RooConstVar compatibility between ROOT626 and workspace created with earlier versions
   RooWorkspace* fixRooConstVar(RooWorkspace *win, bool useRooRealVar = true, bool clean = true);

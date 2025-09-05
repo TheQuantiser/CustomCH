@@ -18,6 +18,7 @@
 #include "CombineHarvester/CombineTools/interface/Process.h"
 #include "CombineHarvester/CombineTools/interface/Systematic.h"
 #include "CombineHarvester/CombineTools/interface/Parameter.h"
+#include <cmath>
 #include "CombineHarvester/CombineTools/interface/MakeUnique.h"
 #include "CombineHarvester/CombineTools/interface/Utilities.h"
 #include "CombineHarvester/CombineTools/interface/Algorithm.h"
@@ -606,6 +607,12 @@ TH1F CombineHarvester::GetShapeInternal(ProcSystMap const& lookup, std::string c
     if (sys->type() == "shape" || sys->type() == "shapeN2" || sys->type() == "shapeU") {
       bool linear = sys->type() != "shapeN2";
       ShapeDiff(sys->scale(), shape, shape, sys->shape_d(), sys->shape_u(), linear);
+    } else if (sys->type() == "shapeN") {
+      if (sys->shape_u() && sys->shape_d()) {
+        ShapeDiffShapeN(sys->scale(), shape, shape, sys->shape_d(), sys->shape_u());
+      } else if (sys->data_u() && sys->data_d()) {
+        ShapeDiffShapeN(sys->scale(), shape, sys->data_d(), sys->data_u());
+      }
     }
   };
 
@@ -791,6 +798,54 @@ void CombineHarvester::ShapeDiff(double x,
 
     // Update target bin content
     target->SetBinContent(i, target->GetBinContent(i) + 0.5f * x * (diff + corr));
+  }
+}
+
+void CombineHarvester::ShapeDiffShapeN(double x,
+                                       TH1F* target,
+                                       const TH1* nom,
+                                       const TH1* low,
+                                       const TH1* high) {
+  const int nBins = target->GetNbinsX();
+  const double abx = std::fabs(x);
+  for (int i = 1; i <= nBins; ++i) {
+    const double n = nom->GetBinContent(i);
+    const double h = high->GetBinContent(i);
+    const double l = low->GetBinContent(i);
+    double t = target->GetBinContent(i);
+    if (n <= 0.0 || t <= 0.0) continue;
+    if (x >= 0.0) {
+      if (h <= 0.0) continue;
+      t *= std::pow(h / n, abx);
+    } else {
+      if (l <= 0.0) continue;
+      t *= std::pow(n / l, abx);
+    }
+    target->SetBinContent(i, t);
+  }
+}
+
+void CombineHarvester::ShapeDiffShapeN(double x,
+                                       TH1F* target,
+                                       const RooDataHist* low,
+                                       const RooDataHist* high) {
+  const int nBins = target->GetNbinsX();
+  const double abx = std::fabs(x);
+  for (int i = 1; i <= nBins; ++i) {
+    high->get(i - 1);
+    low->get(i - 1);
+    const double h = high->weight();
+    const double l = low->weight();
+    double t = target->GetBinContent(i);
+    if (t <= 0.0) continue;
+    if (x >= 0.0) {
+      if (h <= 0.0) continue;
+      t *= std::pow(h / t, abx);
+    } else {
+      if (l <= 0.0) continue;
+      t *= std::pow(t / l, abx);
+    }
+    target->SetBinContent(i, t);
   }
 }
 
