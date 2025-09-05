@@ -1,7 +1,9 @@
 #!/bin/sh
 ulimit -s unlimited
 cd %(CH_BASE)s
-export SCRAM_ARCH=%(SCRAM_ARCH)s
-source /vols/grid/cms/setup.sh
-eval `scramv1 runtime -sh`
+if [ -n "%(SCRAM_ARCH)s" ]; then
+  export SCRAM_ARCH=%(SCRAM_ARCH)s
+  source /vols/grid/cms/setup.sh
+  eval `scramv1 runtime -sh`
+fi
 cd %(PWD)s

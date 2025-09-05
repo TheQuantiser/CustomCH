@@ -15,9 +15,10 @@ Examples Part I {#intro1}
       cmake --build build -j4
       ./build/bin/Example1
 
-> **Note:** Job-prefix templates for `combineTool.py` understand the
-> `%(CH_BASE)s` placeholder, which refers to the repository root and defaults to
-> `$CMSSW_BASE/src` when `CH_BASE` is unset.
+> **Note:** Job-prefix templates for `combineTool.py` understand placeholders
+> like `%(CH_BASE)s` (the repository root, defaulting to `$CMSSW_BASE/src` when
+> unset) and `%(SCRAM_ARCH)s` (the CMSSW architecture). Use the `--standalone`
+> flag to bypass the CMSSW setup in generated job scripts.
 
 Parsing a single card {#ex1-p1}
 ===============================
