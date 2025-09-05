@@ -1,5 +1,11 @@
 #include "CombineHarvester/CombineTools/interface/ParseCombineWorkspace.h"
+
+#if __has_include("HiggsAnalysis/CombinedLimit/interface/CMSHistErrorPropagator.h")
 #include "HiggsAnalysis/CombinedLimit/interface/CMSHistErrorPropagator.h"
+#define CH_HAS_CMSHISTERRORPROPAGATOR 1
+#else
+#define CH_HAS_CMSHISTERRORPROPAGATOR 0
+#endif
 #include <iostream>
 #include <string>
 #include <vector>
