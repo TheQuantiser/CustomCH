@@ -19,6 +19,18 @@ cmake -S . -B build
 cmake --build build -j4
 ```
 
+The build requires the **vdt** and **HistFactory** libraries. These are
+often provided with ROOT. Set the `ROOTSYS` environment variable to the
+location of your ROOT installation so that the headers and libraries can
+be discovered:
+
+```
+export ROOTSYS=/path/to/root
+```
+
+If the packages are installed elsewhere, ensure their include and library
+paths are discoverable by the compiler and linker.
+
 Set the `CH_BASE` environment variable to the location of the repository (or installation prefix if you run `cmake --install`):
 
 ```

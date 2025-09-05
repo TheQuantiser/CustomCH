@@ -26,16 +26,14 @@ set(CH_EXTERNAL_INCLUDES
   ${ROOT_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${LIBXML2_INCLUDE_DIR}
-  ${vdt_INCLUDE_DIRS}
-  ${HistFactory_INCLUDE_DIRS}
 )
 
 set(CH_EXTERNAL_LIBS
   ${ROOT_LIBRARIES}
   ${Boost_LIBRARIES}
   ${LIBXML2_LIBRARIES}
-  ${vdt_LIBRARIES}
-  ${HistFactory_LIBRARIES}
+  vdt::vdt
+  HistFactory::HistFactory
 )
 
 add_subdirectory(CombineTools)
