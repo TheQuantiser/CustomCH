@@ -8,11 +8,23 @@
 # and defines an imported target
 #  HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit
 
+set(_HACL_HINTS "" )
+if(DEFINED HiggsAnalysisCombinedLimit_ROOT)
+  list(APPEND _HACL_HINTS ${HiggsAnalysisCombinedLimit_ROOT})
+endif()
+if(DEFINED ENV{HiggsAnalysisCombinedLimit_ROOT})
+  list(APPEND _HACL_HINTS $ENV{HiggsAnalysisCombinedLimit_ROOT})
+endif()
+
 find_path(HiggsAnalysisCombinedLimit_INCLUDE_DIR
-          NAMES HiggsAnalysis/CombinedLimit/interface/Combine.h)
+          NAMES HiggsAnalysis/CombinedLimit/interface/Combine.h
+          HINTS ${_HACL_HINTS}
+          PATH_SUFFIXES include)
 
 find_library(HiggsAnalysisCombinedLimit_LIBRARY
-             NAMES HiggsAnalysisCombinedLimit)
+             NAMES HiggsAnalysisCombinedLimit
+             HINTS ${_HACL_HINTS}
+             PATH_SUFFIXES lib build/lib)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(

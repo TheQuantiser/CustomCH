@@ -11,8 +11,7 @@ if(USE_SYSTEM_COMBINEDLIMIT)
 else()
   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/HiggsAnalysis/CombinedLimit/CMakeLists.txt")
     add_subdirectory(HiggsAnalysis/CombinedLimit)
-    set(HiggsAnalysisCombinedLimit_LIBRARIES HiggsAnalysisCombinedLimit)
-    set(HiggsAnalysisCombinedLimit_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/HiggsAnalysis/CombinedLimit/interface)
+    set(HiggsAnalysisCombinedLimit_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/HiggsAnalysis/CombinedLimit)
   else()
     include(FetchContent)
     FetchContent_Declare(CombinedLimit
@@ -20,9 +19,9 @@ else()
       GIT_TAG        ${COMBINEDLIMIT_TAG}
     )
     FetchContent_MakeAvailable(CombinedLimit)
-    set(HiggsAnalysisCombinedLimit_LIBRARIES HiggsAnalysisCombinedLimit)
-    set(HiggsAnalysisCombinedLimit_INCLUDE_DIRS ${combinedlimit_SOURCE_DIR}/interface)
+    set(HiggsAnalysisCombinedLimit_SOURCE_DIR ${combinedlimit_SOURCE_DIR})
   endif()
+  add_library(HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit ALIAS HiggsAnalysisCombinedLimit)
 endif()
 
 find_package(ROOT REQUIRED COMPONENTS RooFit RooStats)
@@ -52,14 +51,18 @@ add_library(CombineHarvester INTERFACE)
 target_include_directories(CombineHarvester INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR}/CombineTools/interface
   ${CMAKE_CURRENT_SOURCE_DIR}/CombinePdfs/interface
-  ${HiggsAnalysisCombinedLimit_INCLUDE_DIRS}
 )
 
-target_link_libraries(CombineHarvester INTERFACE CombineTools CombinePdfs ${HiggsAnalysisCombinedLimit_LIBRARIES})
+target_link_libraries(CombineHarvester INTERFACE
+  CombineTools
+  CombinePdfs
+  HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/HiggsAnalysis/CombinedLimit/interface/
-        DESTINATION include/HiggsAnalysis/CombinedLimit
-        FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
+if(NOT USE_SYSTEM_COMBINEDLIMIT)
+  install(DIRECTORY ${HiggsAnalysisCombinedLimit_SOURCE_DIR}/interface/
+          DESTINATION include/HiggsAnalysis/CombinedLimit
+          FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
+endif()
 
 install(TARGETS CombineHarvester EXPORT CombineHarvesterTargets)
 install(EXPORT CombineHarvesterTargets
