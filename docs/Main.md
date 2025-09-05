@@ -69,7 +69,7 @@ A number of high-level tools have been developed to provide a more convenient in
 
 Other comments {#note}
 ======================
-**Creating a new package**: It is planned that each new analysis will create their own package within the `CombineHarvester` directory, where all the datacard creation, plotting and other tools specific to the analysis will be stored. This keeps the analysis-specific code self-contained, and ensures different analyses do not disrupt each other's workflow during the development phase. We expect that some tools or functions developed for specific analyses will be of more general use, in which case they will be promoted to the common `CombineTools` package. **Please raise an issue [here](https://github.com/cms-analysis/CombineHarvester/issues/new) if you would like a new package to be created for your analysis.**
+**Creating a new package**: It is planned that each new analysis will create their own package within the `CombineHarvester` directory, where all the datacard creation, plotting and other tools specific to the analysis will be stored. This keeps the analysis-specific code self-contained, and ensures different analyses do not disrupt each other's workflow during the development phase. We expect that some tools or functions developed for specific analyses will be of more general use, in which case they will be promoted to the common `CombineTools` package. **Please raise an issue [here](https://github.com/TheQuantiser/CustomCH/issues/new) if you would like a new package to be created for your analysis.**
 
 **Code developments**: New features and developments, or even just suggestions, are always welcome - either contact the developers directly or make a pull request.
 
@@ -85,7 +85,7 @@ Other comments {#note}
       Problem: TH1 eleTau_0jet_medium/ggH not found in $CH_BASE/auxiliaries/shapes/htt_et.inputs-sm-7TeV-hcg.root
     *******************************************************************************
 
-If the cause of such an error message is unclear, or if you believe the error message should not have been produced, please raise an issue here with full details on reproducing the problem: https://github.com/cms-analysis/CombineHarvester/issues/new
+If the cause of such an error message is unclear, or if you believe the error message should not have been produced, please raise an issue here with full details on reproducing the problem: https://github.com/TheQuantiser/CustomCH/issues/new
 
 Please also raise an issue if you encounter any bugs, unintended behaviour, abrupt errors or segmentation faults - these will be addressed promptly by the developers.
 
