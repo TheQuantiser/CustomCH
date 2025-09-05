@@ -18,7 +18,6 @@ import CombineHarvester.CombineTools.combine.utils as utils
 from CombineHarvester.CombineTools.combine.opts import OPTS
 
 from CombineHarvester.CombineTools.combine.CombineToolBase import CombineToolBase
-from six.moves import range
 import ctypes
 
 class ImpactsFromScans(CombineToolBase):

@@ -8,7 +8,6 @@ Written by andre.david@cern.ch
 
 from math import *
 from decimal import *
-from six.moves import range
 
 ###
 def roundUnc(unc, method="Publication"):

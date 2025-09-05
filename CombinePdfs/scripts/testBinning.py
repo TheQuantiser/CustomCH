@@ -6,7 +6,6 @@ from functools import partial
 import Tools.Plotting.plotting as plot
 import os.path
 import bisect
-from six.moves import range
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
