@@ -15,8 +15,8 @@ Examples Part II {#intro2}
       ./build/bin/Example2
 
 > **Note:** Job-prefix templates for `combineTool.py` recognise the
-> `%(CH_BASE)s` placeholder pointing to the repository base. It falls back to
-> `$CMSSW_BASE/src` if `CH_BASE` is not defined.
+> `%(CH_BASE)s` placeholder pointing to the repository root and can be
+> overridden with the `CH_BASE` environment variable.
 
 Defining categories and processes {#ex2-p1}
 ===========================================
