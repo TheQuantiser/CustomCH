@@ -153,7 +153,8 @@ required for `true`.
 the output ROOT file (skipped if false) (implicit: true; default: false). No
 input required for `true`.
   --plotSyst               : Plot stored shape variations. Accepts `all` or a
-comma-separated list of `bin/process` patterns with `*` wildcards.
+comma-separated list of `bin/process/systematic` patterns with `*` wildcards;
+missing combinations are skipped silently.
   --systSaveDir             : Directory for saving pdf and png plots of
 systematic shape variations for each parameter.
 
@@ -166,8 +167,8 @@ ChronoSpectra --help \
 --freeze Wrate=1.5,pdf --groupBins "region1:bin1,bin2;region2:bin3,bin4" \
 --groupProcs "signal:procA,procB;background:procC,procD" --skipObs \
 --getRateCorr=false --getHistBinCorr --skipprefit \
---sepProcHists --sepBinHists --sepProcHistBinCorr --sepBinHistBinCorr
---sepBinRateCorr
+--sepProcHists --sepBinHists --sepProcHistBinCorr --sepBinHistBinCorr \
+--sepBinRateCorr --plotSyst=binA/procX/syst1
 
  Output Structure:
  -----------------
@@ -403,18 +404,23 @@ bool WildcardMatch(const std::string &pattern, const std::string &value) {
   return std::regex_match(value, std::regex(regexPattern));
 }
 
-bool ShouldPlot(const std::string &bin, const std::string &proc) {
+// Check if a given bin/process/systematic combination should be plotted
+bool ShouldPlot(const std::string &bin, const std::string &proc,
+                const std::string &syst) {
   if (plotSystAll)
     return true;
   if (plotSystPatterns.empty())
     return false;
   for (const auto &pat : plotSystPatterns) {
-    auto pos = pat.find('/');
-    if (pos == std::string::npos)
+    auto first = pat.find('/');
+    auto second = pat.find('/', first + 1);
+    if (first == std::string::npos || second == std::string::npos)
       continue;
-    std::string binPat = pat.substr(0, pos);
-    std::string procPat = pat.substr(pos + 1);
-    if (WildcardMatch(binPat, bin) && WildcardMatch(procPat, proc))
+    std::string binPat = pat.substr(0, first);
+    std::string procPat = pat.substr(first + 1, second - first - 1);
+    std::string systPat = pat.substr(second + 1);
+    if (WildcardMatch(binPat, bin) && WildcardMatch(procPat, proc) &&
+        WildcardMatch(systPat, syst))
       return true;
   }
   return false;
@@ -717,7 +723,8 @@ void StoreSystematics(ch::CombineHarvester &cmb, const std::string &bin,
     std::string base = "systematics/" + bin + "/" + proc + "_syst/" + p->name();
     ch::WriteToTFile(&hists.up, &outfile, base + "_Up");
     ch::WriteToTFile(&hists.down, &outfile, base + "_Down");
-    if (ShouldPlot(bin, proc)) {
+    // Plot variations only for selected bin/process/systematic combinations
+    if (ShouldPlot(bin, proc, p->name())) {
       plotShapeSystVariations(hists, p->name(), bin + "_" + proc);
     }
   }
@@ -1156,7 +1163,8 @@ int main(int argc, char *argv[]) {
       boost::program_options::value<std::string>(&plotSystArg)
           ->default_value(""),
       "Plot stored shape variations. Accepts 'all' or a comma-separated list "
-      "of 'bin/process' patterns with '*' wildcards.")(
+      "of 'bin/process/systematic' patterns with '*' wildcards. Missing "
+      "combinations are skipped silently.")(
       "systSaveDir",
       boost::program_options::value<std::string>(&systSaveDir)
           ->default_value(systSaveDir),
@@ -1184,16 +1192,16 @@ int main(int argc, char *argv[]) {
         << "-groupProcs 'type1:procA,procB;type2:procC,procD' "
         << "--skipObs --getRateCorr=false --getHistBinCorr --skipprefit "
         << "--sepProcHists --sepBinHists --sepProcHistBinCorr "
-           "--sepBinHistBinCorr --sepBinRateCorr\n";
+           "--sepBinHistBinCorr --sepBinRateCorr --plotSyst=binA/proc*/syst1\n";
     return 0;
   }
 
   // Validate other options
   boost::program_options::notify(vm);
 
-  // Parse plotting patterns
+  // Parse bin/process/systematic plotting patterns
   if (!plotSystArg.empty()) {
-    if (plotSystArg == "all" || plotSystArg == "*/*") {
+    if (plotSystArg == "all" || plotSystArg == "*/*/*") {
       plotSystAll = true;
     } else {
       std::vector<std::string> pats;
@@ -1202,11 +1210,17 @@ int main(int argc, char *argv[]) {
         boost::trim(p);
         if (p.empty())
           continue;
-        if (p == "*/*") {
+        if (p == "*/*/*") {
           plotSystAll = true;
           continue;
         }
-        plotSystPatterns.insert(p);
+        std::vector<std::string> parts;
+        boost::split(parts, p, boost::is_any_of("/"));
+        if (parts.size() != 3)
+          continue;
+        for (auto &part : parts)
+          boost::trim(part);
+        plotSystPatterns.insert(parts[0] + "/" + parts[1] + "/" + parts[2]);
       }
     }
   }
