@@ -1,5 +1,11 @@
 #include "CombineHarvester/CombineTools/interface/ParseCombineWorkspace.h"
+
+#if __has_include("HiggsAnalysis/CombinedLimit/interface/CMSHistErrorPropagator.h")
 #include "HiggsAnalysis/CombinedLimit/interface/CMSHistErrorPropagator.h"
+#define CH_HAS_CMSHISTERRORPROPAGATOR 1
+#else
+#define CH_HAS_CMSHISTERRORPROPAGATOR 0
+#endif
 #include <iostream>
 #include <string>
 #include <vector>
@@ -84,12 +90,14 @@ void ParseCombineWorkspace(CombineHarvester& cb, RooWorkspace& ws,
           throw std::runtime_error(FNERROR("This RooRealSumPdf is not extended!"));
         }
         if (pdfs->getSize() == 1) {
+#if CH_HAS_CMSHISTERRORPROPAGATOR
            CMSHistErrorPropagator *err = dynamic_cast<CMSHistErrorPropagator*>(pdfs->at(0));
            if (err) {
              coeffs = &(err->coefList());
              pdfs = new RooArgList(err->wrapperList());
              delete_pdfs = true;
            }
+#endif
         }
       }
       for (int j = 0; j < coeffs->getSize(); ++j) {
