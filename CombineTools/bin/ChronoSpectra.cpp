@@ -216,6 +216,8 @@ ChronoSpectra --help \
 #include <sstream>
 #include <string>
 #include <vector>
+#include <expected>
+#include <stdexcept>
 #include <RooFitResult.h>
 
 // Commonly used container types
@@ -315,9 +317,12 @@ void ApplyTH2FStyle(TH2F &matrix) {
 // names. Output:
 // - A map where keys are group names, and values are vectors of items in the
 // group.
-std::map<std::string, std::vector<std::string>>
-parseNamedGroups(const std::string &groupsArg) {
+using NamedGroupResult =
+    std::expected<std::map<std::string, std::vector<std::string>>, std::vector<std::string>>;
+
+NamedGroupResult parseNamedGroups(const std::string &groupsArg) {
   std::map<std::string, std::vector<std::string>> namedGroups;
+  std::vector<std::string> diagnostics;
 
   if (groupsArg.empty())
     return namedGroups;
@@ -331,22 +336,24 @@ parseNamedGroups(const std::string &groupsArg) {
     size_t colonPos = group.find(':');
     if (colonPos == std::string::npos || colonPos == 0 ||
         colonPos == group.size() - 1) {
-      throw std::runtime_error("Invalid group format: '" + group +
-                               "' (missing or misplaced ':')");
+      diagnostics.push_back("Invalid group format: '" + group +
+                             "' (missing or misplaced ':')");
+      continue;
     }
 
     std::string groupName = group.substr(0, colonPos);
     boost::trim(groupName);
 
     if (groupName.empty() || groupName.find(' ') != std::string::npos) {
-      throw std::runtime_error("Invalid group name: '" + groupName + "'");
+      diagnostics.push_back("Invalid group name: '" + groupName + "'");
+      continue;
     }
 
     auto [it, inserted] =
         namedGroups.emplace(groupName, std::vector<std::string>{});
     if (!inserted) {
-      throw std::runtime_error("Duplicate group name found: '" + groupName +
-                               "'");
+      diagnostics.push_back("Duplicate group name found: '" + groupName + "'");
+      continue;
     }
 
     std::vector<std::string> items;
@@ -360,11 +367,16 @@ parseNamedGroups(const std::string &groupsArg) {
 
     if (items.empty()) {
       namedGroups.erase(groupName);
-      throw std::runtime_error("Group '" + groupName +
-                               "' contains no valid items.");
+      diagnostics.push_back("Group '" + groupName +
+                            "' contains no valid items.");
+      continue;
     }
 
     it->second = std::move(items);
+  }
+
+  if (!diagnostics.empty()) {
+    return std::unexpected(diagnostics);
   }
 
   // Print out the groups and their elements
@@ -1067,8 +1079,23 @@ int main(int argc, char *argv[]) {
         "At least one of skipprefit=false or postfit=true must be set.");
 
   // Parse group arguments
-  auto binGroups = parseNamedGroups(cfg.groupBinsArg);
-  auto processGroups = parseNamedGroups(cfg.groupProcsArg);
+  auto binGroupsExp = parseNamedGroups(cfg.groupBinsArg);
+  if (!binGroupsExp) {
+    for (const auto &msg : binGroupsExp.error()) {
+      std::cerr << "groupBins: " << msg << "\n";
+    }
+    throw std::runtime_error("Failed to parse --groupBins option");
+  }
+  auto binGroups = std::move(binGroupsExp.value());
+
+  auto processGroupsExp = parseNamedGroups(cfg.groupProcsArg);
+  if (!processGroupsExp) {
+    for (const auto &msg : processGroupsExp.error()) {
+      std::cerr << "groupProcs: " << msg << "\n";
+    }
+    throw std::runtime_error("Failed to parse --groupProcs option");
+  }
+  auto processGroups = std::move(processGroupsExp.value());
 
   std::unique_ptr<RooFitResult> fitResPtr;
   RooFitResult *fitRes = nullptr;

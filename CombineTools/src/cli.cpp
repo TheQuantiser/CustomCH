@@ -3,7 +3,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 #include <boost/any.hpp>
+#include <filesystem>
 #include <iostream>
+#include <stdexcept>
 
 ChronoSpectraConfig parseCommandLine(int argc, char *argv[]) {
   ChronoSpectraConfig cfg;
@@ -78,6 +80,33 @@ ChronoSpectraConfig parseCommandLine(int argc, char *argv[]) {
   }
 
   po::notify(vm);
+
+  namespace fs = std::filesystem;
+
+  if (cfg.postfit && cfg.fitresult.empty()) {
+    throw std::runtime_error("--postfit requires --fitresult to be specified.");
+  }
+
+  if (!cfg.fitresult.empty()) {
+    auto colonPos = cfg.fitresult.find(':');
+    if (colonPos == std::string::npos || colonPos == 0 ||
+        colonPos == cfg.fitresult.size() - 1) {
+      throw std::runtime_error(
+          "Invalid format for --fitresult. Expected 'file.root:fit_name'.");
+    }
+    std::string fitFile = cfg.fitresult.substr(0, colonPos);
+    if (!fs::exists(fitFile)) {
+      throw std::runtime_error("Fit result file '" + fitFile + "' does not exist.");
+    }
+  }
+
+  if (!fs::exists(cfg.workspace)) {
+    throw std::runtime_error("Workspace file '" + cfg.workspace + "' does not exist.");
+  }
+
+  if (!fs::exists(cfg.datacard)) {
+    throw std::runtime_error("Datacard file '" + cfg.datacard + "' does not exist.");
+  }
 
   if (!cfg.plotSystArg.empty()) {
     if (cfg.plotSystArg == "all" || cfg.plotSystArg == "*/*/*") {
