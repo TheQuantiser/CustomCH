@@ -5,6 +5,12 @@ target_include_directories(CombinePdfs PUBLIC interface ${CH_EXTERNAL_INCLUDES})
 
 target_link_libraries(CombinePdfs PUBLIC CombineTools ${CH_EXTERNAL_LIBS})
 
+set_target_properties(CombinePdfs PROPERTIES OUTPUT_NAME CombineHarvesterCombinePdfs)
+
+install(TARGETS CombinePdfs
+        LIBRARY DESTINATION CombineHarvester/CombineTools
+        ARCHIVE DESTINATION CombineHarvester/CombineTools)
+
 file(GLOB COMBINE_PDFS_BINS bin/*.cpp)
 foreach(src ${COMBINE_PDFS_BINS})
   get_filename_component(name ${src} NAME_WE)

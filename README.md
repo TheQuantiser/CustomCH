@@ -62,6 +62,16 @@ This installs the `CombineHarvester` package together with the compiled
 with the package are accessed via `importlib.resources` so no manual path
 configuration is required.
 
+Building from source requires a working installation of
+[ROOT](https://root.cern), Boost headers and libraries and a C++17
+compiler available on the PATH. These dependencies must be discoverable
+by CMake when `pip install .` runs.
+
+For Linux and macOS on common architectures prebuilt wheels containing
+the compiled libraries are published with each release.  `pip` will
+automatically fall back to these wheels if the build dependencies are not
+available locally.
+
 ### Example
 
 ```

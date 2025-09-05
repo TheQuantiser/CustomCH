@@ -16,6 +16,12 @@ else()
   set(HiggsAnalysisCombinedLimit_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/HiggsAnalysis/CombinedLimit/interface)
 endif()
 
+set(CH_EXTERNAL_INCLUDES "")
+set(CH_EXTERNAL_LIBS "")
+
+add_subdirectory(CombineTools)
+add_subdirectory(CombinePdfs)
+
 add_library(CombineHarvester INTERFACE)
 target_include_directories(CombineHarvester INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR}/CombineTools/interface

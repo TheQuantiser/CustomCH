@@ -5,6 +5,12 @@ target_include_directories(CombineTools PUBLIC interface ${CH_EXTERNAL_INCLUDES}
 
 target_link_libraries(CombineTools PUBLIC ${CH_EXTERNAL_LIBS})
 
+set_target_properties(CombineTools PROPERTIES OUTPUT_NAME CombineHarvesterCombineTools)
+
+install(TARGETS CombineTools
+        LIBRARY DESTINATION CombineHarvester/CombineTools
+        ARCHIVE DESTINATION CombineHarvester/CombineTools)
+
 file(GLOB COMBINE_TOOLS_BINS bin/*.cpp)
 foreach(src ${COMBINE_TOOLS_BINS})
   get_filename_component(name ${src} NAME_WE)
