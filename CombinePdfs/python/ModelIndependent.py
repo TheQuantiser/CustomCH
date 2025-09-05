@@ -5,7 +5,6 @@ import os
 import ROOT
 import math
 import itertools
-import six
 
 class BRChargedHiggs(PhysicsModel):
     def __init__(self):
@@ -27,7 +26,7 @@ class BRChargedHiggs(PhysicsModel):
         # self.modelBuilder.out.Print()
 
     def getYieldScale(self,bin,process):
-        for prefix, model in six.iteritems(self.processScaling):
+        for prefix, model in self.processScaling.items():
             if process == prefix:
                 print('Scaling %s/%s as %s' % (bin, process, 'Scaling_'+model))
                 return 'Scaling_'+model

@@ -3,7 +3,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 import os
-import six.moves.cPickle as pickle
 import math
 import json
 import itertools
@@ -15,9 +14,7 @@ from pprint import pprint
 from functools import partial
 from CombineHarvester.CombineTools.combine.opts import OPTS
 from CombineHarvester.CombineTools.combine.CombineToolBase import CombineToolBase
-import six
-from six.moves import range
-from six.moves import zip
+import pickle
 
 
 def Eval(obj, x, params):
@@ -260,7 +257,7 @@ class TaylorExpand(CombineToolBase):
 
         if self.args.workspace_bestfit:
             fitvals = self.get_snpashot_pois(dc, POIs)
-            for POI, val in six.iteritems(fitvals):
+            for POI, val in fitvals.items():
                 print('>> Updating POI best fit from %f to %f' % (cfg[POI]["BestFit"], val))
                 cfg[POI]["BestFit"] = val
 
@@ -416,7 +413,7 @@ class TaylorExpand(CombineToolBase):
                 skip_term = False
                 for skip_item in can_skip:
                     has_all_terms = True
-                    for x, freq in six.iteritems(skip_item[1]):
+                    for x, freq in skip_item[1].items():
                         if item.count(x) < freq:
                             has_all_terms = False
                             break
@@ -576,7 +573,7 @@ class TaylorExpand(CombineToolBase):
         sorted_terms = []
         for i in range(self.args.order + 1):
             sorted_tmp = []
-            for tracker, val in six.iteritems(cached_terms):
+            for tracker, val in cached_terms.items():
                 if len(tracker) == i:
                     sorted_tmp.append((tracker, val))
                     if i == 2 and save_cov_matrix:

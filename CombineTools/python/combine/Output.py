@@ -14,7 +14,6 @@ import CombineHarvester.CombineTools.plotting as plot
 # from CombineHarvester.CombineTools.combine.opts import OPTS
 
 from CombineHarvester.CombineTools.combine.CombineToolBase import CombineToolBase
-import six
 
 def isfloat(value):
     try:
@@ -61,7 +60,7 @@ class PrintFit(CombineToolBase):
                 val = res[p]
                 print('%-30s = %+.3f' % (p, val))
             if self.args.json is not None:
-                for key,val in six.iteritems(res):
+                for key, val in res.items():
                     js_target[key] = { 'Val' : val }
                 with open(json_structure[0], 'w') as outfile:
                     json.dump(js, outfile, sort_keys=True, indent=4, separators=(',', ': '))
@@ -128,7 +127,7 @@ class CollectLimits(CombineToolBase):
                 limit_sets[label].append(filename)
         # print limit_sets
 
-        for label, filenames in six.iteritems(limit_sets):
+        for label, filenames in limit_sets.items():
             js_out = {}
             for filename in filenames:
                 if plot.TFileIsGood(filename):
@@ -259,7 +258,7 @@ class CollectGoodnessOfFit(CombineToolBase):
                 limit_sets[label][0].append(filename)
 
 
-        for label, (filenames, toyfiles) in six.iteritems(limit_sets):
+        for label, (filenames, toyfiles) in limit_sets.items():
             js_out = {}
             for filename in filenames:
                 file = ROOT.TFile(filename)

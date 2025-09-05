@@ -6,9 +6,7 @@ from array import array
 import re
 import json
 import types
-import six
 import ctypes
-from six.moves import range
 
 COL_STORE = []
 
@@ -295,7 +293,7 @@ def CreateTransparentColor(color, alpha):
 
 
 def Set(obj, **kwargs):
-    for key, value in six.iteritems(kwargs):
+    for key, value in kwargs.items():
         if value is None:
             getattr(obj, 'Set' + key)()
         elif isinstance(value, (list, tuple)):
