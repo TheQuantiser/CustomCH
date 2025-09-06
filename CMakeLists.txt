@@ -77,6 +77,9 @@ find_package(HistFactory REQUIRED)
 add_library(tabulate INTERFACE)
 target_include_directories(tabulate INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR}/extern/tabulate/include)
+install(TARGETS tabulate EXPORT CombineHarvesterTargets)
+install(DIRECTORY extern/tabulate/include/tabulate
+        DESTINATION include)
 
 set(CH_EXTERNAL_INCLUDES
   ${ROOT_INCLUDE_DIRS}
