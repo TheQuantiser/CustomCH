@@ -1,55 +1,18 @@
 /* ============================================================================
- ChronoSpectra.cpp
- Author: Mohammad Abrar Wadud, 2024
- ============================================================================
- Efficient Pre-fit & Post-fit Histogram Extraction for CMS Physics Analyses
- ============================================================================
+  ChronoSpectra.cpp
+  Author: Mohammad Abrar Wadud (2024)
+  Efficient pre-/post-fit histogram extraction for CMS Combine workspaces
+  Inspired by CombineHarvester's PostFitShapesFromWorkspace.cpp
+===============================================================================
 
- ChronoSpectra License (Creative Commons Attribution 4.0 International - CC
-BY 4.0)
-
- Copyright (c) 2024 Mohammad Abrar Wadud
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software (the "Software"), to use, copy, modify, merge, publish,
- and distribute the Software for personal, academic, research, or commercial
- purposes, subject to the following conditions:
-
- 1. Attribution:
-    - Proper credit must be given to the original author, including citing this
-      Software in any publications, presentations, or projects that directly
-      or indirectly use the Software.
-    - Include a clear reference to the Software's official repository (if
-applicable).
-
- 2. Use for Derivative Works:
-    - If this Software is modified, extended, or used as inspiration for other
-      works, acknowledgment must be given to the original author.
-    - Any derivative work must include a notice stating that the original
-Software has been modified, along with a description of the modifications.
-
- 3. Commercial Use:
-    - This Software may be used in commercial products or services, provided
-that appropriate credit is given in any associated documentation or promotional
-      materials.
-
- 4. Disclaimer of Warranty:
-    - This Software is provided "as is," without warranty of any kind, express
-      or implied, including but not limited to warranties of merchantability,
-      fitness for a particular purpose, and non-infringement.
-
- 5. Limitation of Liability:
-    - In no event shall the author or copyright holder be liable for any claim,
-      damages, or other liability, whether in an action of contract, tort, or
-      otherwise, arising from, out of, or in connection with the Software or
-      the use or other dealings in the Software.
-
- 6. License Reference:
-    - This license is governed by the Creative Commons Attribution 4.0
-      International License (CC BY 4.0). For more details, visit:
-      https://creativecommons.org/licenses/by/4.0/
-
- ============================================================================
+Summary:
+- Extracts and analyzes pre-fit (pre-optimization) and post-fit (with RooFitResult) histograms.
+- Flexible grouping or per-item handling of bins/processes with user-defined labels.
+- Uncertainty estimation via random sampling.
+- Correlation matrices: bin–bin and process–process rates.
+- Parameter freezing with optional fixed values for custom fits.
+- Structured outputs: prefit/ and postfit/.
+ ============================================================================*/
 
  Purpose:
  --------
@@ -61,16 +24,7 @@ that appropriate credit is given in any associated documentation or promotional
  ChronoSpectra builds on its foundation to offer more organized outputs,
  structured analysis options, and improved usability.
 
- ==========================
- Installation instructions:
- ==========================
-    git clone https://github.com/TheQuantiser/CustomCH.git
-    cd CustomCH
-    git submodule update --init
-    cmake -S . -B build
-    cmake --build build --target install
-    export CH_BASE=$(pwd)
-    source build/setup.sh
+
 
  ---------
  Features:
