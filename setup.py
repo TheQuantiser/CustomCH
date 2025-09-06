@@ -1,0 +1,40 @@
+from skbuild import setup
+
+setup(
+    name="combineharvester",
+    version="0.1.0",
+    description="CMS CombineHarvester tools",
+    packages=[
+        "CombineHarvester",
+        "CombineHarvester.CombineTools",
+        "CombineHarvester.CombineTools.combine",
+        "CombineHarvester.CombineTools.systematics",
+        "CombineHarvester.CombineTools.scripts",
+        "CombineHarvester.CombineTools.input",
+        "CombineHarvester.CombineTools.input.examples",
+        "CombineHarvester.CombineTools.input.job_prefixes",
+        "CombineHarvester.CombineTools.input.xsecs_brs",
+        "CombineHarvester.CombinePdfs",
+    ],
+    package_dir={
+        "CombineHarvester": "CombineHarvester",
+        "CombineHarvester.CombineTools": "CombineTools/python",
+        "CombineHarvester.CombineTools.combine": "CombineTools/python/combine",
+        "CombineHarvester.CombineTools.systematics": "CombineTools/python/systematics",
+        "CombineHarvester.CombineTools.scripts": "CombineTools/scripts",
+        "CombineHarvester.CombineTools.input": "CombineTools/input",
+        "CombineHarvester.CombineTools.input.examples": "CombineTools/input/examples",
+        "CombineHarvester.CombineTools.input.job_prefixes": "CombineTools/input/job_prefixes",
+        "CombineHarvester.CombineTools.input.xsecs_brs": "CombineTools/input/xsecs_brs",
+        "CombineHarvester.CombinePdfs": "CombinePdfs/python",
+    },
+    package_data={
+        "CombineHarvester.CombineTools": ["*.so"],
+        "CombineHarvester.CombineTools.scripts": ["*"],
+        "CombineHarvester.CombineTools.input": ["*"],
+        "CombineHarvester.CombineTools.input.examples": ["*"],
+        "CombineHarvester.CombineTools.input.job_prefixes": ["*"],
+        "CombineHarvester.CombineTools.input.xsecs_brs": ["*"],
+        "CombineHarvester.CombinePdfs": ["*.so"],
+    },
+)
