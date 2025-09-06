@@ -1,14 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import absolute_import
-from __future__ import print_function
 import ROOT
 
 import CombineHarvester.CombineTools.combine.utils as utils
 from CombineHarvester.CombineTools.combine.opts import OPTS
 
 from CombineHarvester.CombineTools.combine.CombineToolBase import CombineToolBase
-from six.moves import range
 import ctypes
 
 class CovMatrix(CombineToolBase):

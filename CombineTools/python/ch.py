@@ -1,20 +1,45 @@
+#!/usr/bin/env python3
 # This python module is essentially a thin wrapper around the real module which is embedded
-# in the shared library built by scram from the C++ source code. We import everything from
+# in the shared library built from the C++ source code. We import everything from
 # this module below, then attach a few functions that could not easily be wrapped from the
 # C++, but instead are re-implemented in python in terms of other wrapped functions. The
 # most notable example is the AddSyst method. The C++ version relies heavily on templates
 # which is not readily adaptable to python. Instead we write the functionality entirely in a
 # python function, then "attach" this function to the CombineHarvester class.
-from __future__ import absolute_import
-from __future__ import print_function
 import itertools
-from os import environ
+import os
+from pathlib import Path
+from importlib.resources import files
 
 # Prevent cppyy's check for the PCH
-environ['CLING_STANDARD_PCH'] = 'none'
+os.environ['CLING_STANDARD_PCH'] = 'none'
 import cppyy
 
-cppyy.load_reflection_info("libCombineHarvesterCombineTools")
+
+def _load_library() -> None:
+    libname = "libCombineHarvesterCombineTools"
+    search_dir = os.environ.get("CH_LIBRARY_PATH")
+    if search_dir:
+        base = Path(search_dir)
+    else:
+        base = Path(files(__package__))
+    for ext in (".so", ".dylib"):
+        candidate = base / f"{libname}{ext}"
+        if candidate.exists():
+            try:
+                cppyy.load_reflection_info(str(candidate.resolve()))
+            except OSError as err:
+                raise OSError(
+                    f"Failed to load {candidate}. Rebuild the project or set CH_LIBRARY_PATH"
+                ) from err
+            return
+    raise OSError(
+        f"Could not find {libname}. Rebuild the project or set CH_LIBRARY_PATH to its location."
+    )
+
+
+_load_library()
+paths = cppyy.gbl.ch.paths
 AutoRebin = cppyy.gbl.ch.AutoRebin
 BinByBinFactory = cppyy.gbl.ch.BinByBinFactory
 CardWriter = cppyy.gbl.ch.CardWriter

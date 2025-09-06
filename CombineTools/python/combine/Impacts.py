@@ -1,7 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import absolute_import
-from __future__ import print_function
 import sys
 import re
 import json
@@ -9,7 +7,6 @@ import ROOT
 import CombineHarvester.CombineTools.combine.utils as utils
 
 from CombineHarvester.CombineTools.combine.CombineToolBase import CombineToolBase
-from six.moves import map
 
 
 class Impacts(CombineToolBase):
@@ -243,10 +240,7 @@ class Impacts(CombineToolBase):
         w = wsFile.Get(wsp)
         config = w.genobj(mc)
         pdfvars = config.GetPdf().getParameters(config.GetObservables())
-        it = pdfvars.createIterator()
-        var = it.Next()
-        while var:
+        for var in utils.iter_collection(pdfvars):
             if var.GetName() not in pois and (not var.isConstant()) and var.InheritsFrom("RooRealVar"):
                 res.append(var.GetName())
-            var = it.Next()
         return res

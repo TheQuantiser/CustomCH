@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-from __future__ import print_function
+#!/usr/bin/env python3
 from HiggsAnalysis.CombinedLimit.PhysicsModel import *
 import CombineHarvester.CombineTools.plotting as plot
 import os
@@ -9,8 +8,6 @@ import itertools
 import pprint
 import sys
 from collections import defaultdict
-import six
-from six.moves import range
 
 class MSSMHiggsModel(PhysicsModel):
     def __init__(self):
@@ -279,7 +276,7 @@ class MSSMHiggsModel(PhysicsModel):
         pars = [mA, tanb]
         doneMasses = False
 
-        for era, (file, version) in six.iteritems(self.modelFiles):
+        for era, (file, version) in self.modelFiles.items():
             hd = self.h_dict[version]
             f = ROOT.TFile(self.filePrefix + file)
 

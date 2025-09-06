@@ -1,7 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import absolute_import
-from __future__ import print_function
 import sys
 import json
 import ROOT
@@ -10,7 +8,6 @@ import CombineHarvester.CombineTools.combine.utils as utils
 
 from CombineHarvester.CombineTools.combine.CombineToolBase import CombineToolBase
 import CombineHarvester.CombineTools.plotting as plot
-from six.moves import range
 
 
 class FastScan(CombineToolBase):
@@ -34,11 +31,8 @@ class FastScan(CombineToolBase):
         group.add_argument('-p', '--points', default=200, type=int, help="Number of NLL points to sample in each scan")
 
     def RooColIter(self, coll):
-        it = coll.createIterator()
-        var = it.Next()
-        while var:
+        for var in utils.iter_collection(coll):
             yield var
-            var = it.Next()
 
     def run_method(self):
         ROOT.gROOT.SetBatch(ROOT.kTRUE)

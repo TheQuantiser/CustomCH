@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # a dictionary with some pre-defined (mostly minimizer) combine options
 
 OPTS = {

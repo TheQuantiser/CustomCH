@@ -1,19 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import absolute_import
-from __future__ import print_function
 import CombineHarvester.CombineTools.ch as ch
 import CombineHarvester.CombineTools.systematics.SMLegacy as SMLegacySysts
 import ROOT as R
 import glob
 import os
+from importlib import resources
 
 cb = ch.CombineHarvester()
 
-auxiliaries  = os.environ['CMSSW_BASE'] + '/src/auxiliaries/'
-aux_shapes   = auxiliaries +'shapes/'
-aux_pruning  = auxiliaries +'pruning/'
-input_dir    = os.environ['CMSSW_BASE'] + '/src/CombineHarvester/CombineTools/input';
+auxiliaries = os.environ.get('CH_AUXILIARIES', ch.paths.auxiliaries())
+aux_shapes = os.path.join(auxiliaries, 'shapes') + '/'
+aux_pruning = os.path.join(auxiliaries, 'pruning') + '/'
+input_dir = resources.files('CombineHarvester.CombineTools.input')
 
 chns = ['et', 'mt', 'em', 'ee', 'mm', 'tt']
 
@@ -119,17 +118,17 @@ for era in ['7TeV', '8TeV']:
 print('>> Scaling signal process rates...')
 xs = { }
 # Get the table of H->tau tau BRs vs mass
-xs['htt'] = ch.TGraphFromTable(input_dir+'/xsecs_brs/htt_YR3.txt', 'mH', 'br')
+xs['htt'] = ch.TGraphFromTable(str(input_dir / 'xsecs_brs' / 'htt_YR3.txt'), 'mH', 'br')
 for e in ['7TeV', '8TeV']:
     for p in sig_procs:
         # Get the table of xsecs vs mass for process 'p' and era 'e':
-        xs[p+'_'+e] = ch.TGraphFromTable(input_dir+'/xsecs_brs/'+p+'_'+e+'_YR3.txt', 'mH', 'xsec')
+        xs[p+'_'+e] = ch.TGraphFromTable(str(input_dir / 'xsecs_brs' / (p+'_'+e+'_YR3.txt')), 'mH', 'xsec')
         print('>>>> Scaling for process ' + p + ' and era ' + e)
         cb.cp().process([p]).era([e]).ForEachProc(
           lambda x : x.set_rate(
             x.rate() * xs[p+'_'+e].Eval(float(x.mass())) * xs['htt'].Eval(float(x.mass())))
         )
-xs['hww_over_htt'] = ch.TGraphFromTable(input_dir+'/xsecs_brs/hww_over_htt.txt', 'mH', 'ratio')
+xs['hww_over_htt'] = ch.TGraphFromTable(str(input_dir / 'xsecs_brs' / 'hww_over_htt.txt'), 'mH', 'ratio')
 
 for e in ['7TeV', '8TeV']:
     for p in sig_procs:
