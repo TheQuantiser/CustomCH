@@ -9,7 +9,7 @@
 import itertools
 import os
 from pathlib import Path
-from importlib.resources import files
+from importlib.resources import as_file, files
 
 # Prevent cppyy's check for the PCH
 os.environ['CLING_STANDARD_PCH'] = 'none'
@@ -17,24 +17,54 @@ import cppyy
 
 
 def _load_library() -> None:
-    libname = "libCombineHarvesterCombineTools"
+    libnames = ["libCombineHarvesterCombineTools", "libCombineTools"]
     search_dir = os.environ.get("CH_LIBRARY_PATH")
+    bases = []
     if search_dir:
-        base = Path(search_dir)
-    else:
-        base = Path(files(__package__))
-    for ext in (".so", ".dylib"):
-        candidate = base / f"{libname}{ext}"
-        if candidate.exists():
-            try:
-                cppyy.load_reflection_info(str(candidate.resolve()))
-            except OSError as err:
-                raise OSError(
-                    f"Failed to load {candidate}. Rebuild the project or set CH_LIBRARY_PATH"
-                ) from err
-            return
+        bases.append(Path(search_dir))
+    bases.append(files(__package__))
+    for parent in Path(__file__).resolve().parents:
+        build_dir = parent / "build" / "CombineTools"
+        if build_dir.exists():
+            bases.append(build_dir)
+            break
+    for base in bases:
+        for libname in libnames:
+            for ext in (".so", ".dylib"):
+                candidate = base / f"{libname}{ext}"
+                try:
+                    if isinstance(base, Path):
+                        path = candidate
+                        exists = path.exists()
+                    else:
+                        with as_file(candidate) as path:
+                            exists = path.exists()
+                    if exists:
+                        try:
+                            cppyy.add_library_path(str(path.parent))
+                            try:
+                                cppyy.load_library(path.name)
+                            except Exception:
+                                # Some cppyy versions no longer expose the CppyyLegacy
+                                # namespace used internally by load_library. Fallback to
+                                # ROOT's system loader in that case.
+                                try:
+                                    if cppyy.gbl.gSystem.Load(str(path)) != 0:
+                                        raise OSError
+                                except Exception as err:
+                                    raise OSError(
+                                        f"Failed to load {path}. Rebuild the project or set CH_LIBRARY_PATH"
+                                    ) from err
+                        except OSError as err:
+                            raise OSError(
+                                f"Failed to load {path}. Rebuild the project or set CH_LIBRARY_PATH"
+                            ) from err
+                        return
+                except FileNotFoundError:
+                    continue
     raise OSError(
-        f"Could not find {libname}. Rebuild the project or set CH_LIBRARY_PATH to its location."
+        "Could not find CombineHarvester CombineTools library. "
+        "Rebuild the project or set CH_LIBRARY_PATH to its location."
     )
 
 
