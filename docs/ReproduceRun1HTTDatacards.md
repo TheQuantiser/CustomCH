@@ -14,41 +14,9 @@ For analyses with a large number of systematic uncertainties, it is neater to de
 Legacy SM H->tautau results {#run1HTTSM}
 =========================
 
-**Files** : CombineTools/bin/SMLegacyExample.cpp, CombineTools/scripts/SMLegacyExample.py
-
-**Files** : CombinePdfs/bin/SMLegacyMorphing.cpp
-
-The datacards for the legacy SM H->tautau results can be produced using the files listed above, available in both c++ and python. The code currently includes all the main tautau channels: ee, mm, mt, et, em and tt, and not the VH channels. The datacards are up to date with those used in the most recent CMS-ATLAS combination.
-
-The code itself makes use of similar functions as to those already described for Example1 and Example2. A few new features are used as well:
-
-1) Scaling signals by a cross-section times branching ratio factor
-
-Generally for the SM analysis, limits are set on best fit signal strength mu with reference to the SM prediction for cross section times branching ratio. Thus it makes sense to scale the signal according to this value when filling the datacard. This can be done via code like:
-
-\snippet CombineTools/bin/SMLegacyExample.cpp part1
-
-This reads the values for cross section times branching ratio from a text file and then uses them to scale each of the signal processes by the appropriate value.  
-
-2) Merging bin by bin uncertainties
-
-The addition of bin by bin uncertainties was illustrated in Example2. The SM H->tautau code uses an additional option in the BinByBinFactory which allows the user to merge uncertainties from different background processes in a given bin. This can be useful when an analysis has a large number of bins and/or processes contributing, such that adding a separate nuisance for each case would be costly in computing time for the limit calculations. The code starts in the same way as in Example2, by setting up the BinByBinFactory as follows:
-
-\snippet CombineTools/bin/SMLegacyExample.cpp part2
-
-In this example the merge threshold is set to 0.5. This controls the proportion of the total error that is allowed to be merged. The add threshold controls the value below which the stat uncertainty should be for the bin by bin uncertainty to be added. The uncertainties for different processes can then be added and merged simultaneously using calls like:
-
-\snippet CombineTools/bin/SMLegacyExample.cpp part3
-
-The filters for eta, bin id and channel can be used in this way to add the specific requirements for each channel and category, of which there were many for the legacy SM analysis.
-
-3) Pruning uncertainties
-
-Alongside merging of bin by bin uncertainties, another trick is employed in the SM analysis to help reduce the computing time for the limits. The method is to first run a maximum likelihood fit in each of the channels separately, using the full uncertainty model, and then use the information on the impacts of the uncertainties to judge which ones have a negligible effect on the fit result. These are then removed from the uncertainty model for the full combined fit. The procedure is to read in a text file which includes the list of uncertainties to be dropped (this was created at the time using the old statistical framework, but could easily be created again if required). The systematics added to the CH instance are then filtered using this list, with code as follows: 
-
-\snippet CombineTools/bin/SMLegacyExample.cpp part4
-
-The validation of the produced SM cards as compared to the official cards can be found in the Analysis Note.
+The previous example scripts for producing the legacy SM H->tautau datacards
+have been retired and are no longer distributed with CombineHarvester. Refer to
+the repository history if the original code is required for reference.
 
 
 Run 1 H->hh->bbtautau and A->Zh->lltautau results {#run1HTTHhhAZh}

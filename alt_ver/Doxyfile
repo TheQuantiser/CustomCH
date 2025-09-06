@@ -770,7 +770,6 @@ INPUT  = CombineTools/interface \
          CombinePdfs/interface \
          CombinePdfs/src \
          CombineTools/python/plotting.py \
-         CombineTools/bin/SMLegacyExample.cpp \
          CombineTools/bin/MSSMYieldTable.cpp \
          CombineTools/bin/PostFitShapesFromWorkspace.cpp \
          docs/Main.md \
