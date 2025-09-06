@@ -1,1 +1,0 @@
-"""Example inputs for CombineHarvester."""

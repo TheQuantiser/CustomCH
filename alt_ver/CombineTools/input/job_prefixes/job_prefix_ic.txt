@@ -1,4 +1,0 @@
-#!/bin/sh
-ulimit -s unlimited
-cd %(CH_BASE)s
-cd %(PWD)s
