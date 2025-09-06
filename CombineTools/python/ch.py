@@ -1,75 +1,20 @@
-#!/usr/bin/env python3
 # This python module is essentially a thin wrapper around the real module which is embedded
-# in the shared library built from the C++ source code. We import everything from
+# in the shared library built by scram from the C++ source code. We import everything from
 # this module below, then attach a few functions that could not easily be wrapped from the
 # C++, but instead are re-implemented in python in terms of other wrapped functions. The
 # most notable example is the AddSyst method. The C++ version relies heavily on templates
 # which is not readily adaptable to python. Instead we write the functionality entirely in a
 # python function, then "attach" this function to the CombineHarvester class.
+from __future__ import absolute_import
+from __future__ import print_function
 import itertools
-import os
-from pathlib import Path
-from importlib.resources import as_file, files
+from os import environ
 
 # Prevent cppyy's check for the PCH
-os.environ['CLING_STANDARD_PCH'] = 'none'
+environ['CLING_STANDARD_PCH'] = 'none'
 import cppyy
 
-
-def _load_library() -> None:
-    libnames = ["libCombineHarvesterCombineTools", "libCombineTools"]
-    search_dir = os.environ.get("CH_LIBRARY_PATH")
-    bases = []
-    if search_dir:
-        bases.append(Path(search_dir))
-    bases.append(files(__package__))
-    for parent in Path(__file__).resolve().parents:
-        build_dir = parent / "build" / "CombineTools"
-        if build_dir.exists():
-            bases.append(build_dir)
-            break
-    for base in bases:
-        for libname in libnames:
-            for ext in (".so", ".dylib"):
-                candidate = base / f"{libname}{ext}"
-                try:
-                    if isinstance(base, Path):
-                        path = candidate
-                        exists = path.exists()
-                    else:
-                        with as_file(candidate) as path:
-                            exists = path.exists()
-                    if exists:
-                        try:
-                            cppyy.add_library_path(str(path.parent))
-                            try:
-                                cppyy.load_library(path.name)
-                            except Exception:
-                                # Some cppyy versions no longer expose the CppyyLegacy
-                                # namespace used internally by load_library. Fallback to
-                                # ROOT's system loader in that case.
-                                try:
-                                    if cppyy.gbl.gSystem.Load(str(path)) != 0:
-                                        raise OSError
-                                except Exception as err:
-                                    raise OSError(
-                                        f"Failed to load {path}. Rebuild the project or set CH_LIBRARY_PATH"
-                                    ) from err
-                        except OSError as err:
-                            raise OSError(
-                                f"Failed to load {path}. Rebuild the project or set CH_LIBRARY_PATH"
-                            ) from err
-                        return
-                except FileNotFoundError:
-                    continue
-    raise OSError(
-        "Could not find CombineHarvester CombineTools library. "
-        "Rebuild the project or set CH_LIBRARY_PATH to its location."
-    )
-
-
-_load_library()
-paths = cppyy.gbl.ch.paths
+cppyy.load_reflection_info("libCombineHarvesterCombineTools")
 AutoRebin = cppyy.gbl.ch.AutoRebin
 BinByBinFactory = cppyy.gbl.ch.BinByBinFactory
 CardWriter = cppyy.gbl.ch.CardWriter
