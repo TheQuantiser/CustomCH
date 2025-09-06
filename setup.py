@@ -24,6 +24,8 @@ class CMakeBuild(build_ext):
             "-B",
             str(build_temp),
             f"-DPython_EXECUTABLE={sys.executable}",
+            "-DUSE_SYSTEM_COMBINEDLIMIT=ON",
+            f"-DCMAKE_PREFIX_PATH={sys.prefix}",
         ])
         subprocess.check_call(["cmake", "--build", str(build_temp), "--target", "CombineTools"])
 
