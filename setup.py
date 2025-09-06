@@ -17,7 +17,14 @@ class CMakeBuild(build_ext):
         build_temp = Path(self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
         source_dir = Path(__file__).resolve().parent
-        subprocess.check_call(["cmake", "-S", str(source_dir), "-B", str(build_temp)])
+        subprocess.check_call([
+            "cmake",
+            "-S",
+            str(source_dir),
+            "-B",
+            str(build_temp),
+            f"-DPython3_EXECUTABLE={sys.executable}",
+        ])
         subprocess.check_call(["cmake", "--build", str(build_temp), "--target", "CombineTools"])
 
         suffix = ".dll" if sys.platform == "win32" else (".dylib" if sys.platform == "darwin" else ".so")
