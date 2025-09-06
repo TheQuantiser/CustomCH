@@ -1,9 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/mohammad/mod/CombineHarvester/build/cmake_install.cmake",
-		"/home/mohammad/mod/CombineHarvester/build/CombineTools/cmake_install.cmake",
-		"/home/mohammad/mod/CombineHarvester/build/CombinePdfs/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

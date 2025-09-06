@@ -14,18 +14,6 @@
 # EXTERNAL cache entries
 ########################
 
-//The directory containing a CMake configuration file for Boost.
-Boost_DIR:PATH=/home/mohammad/.conda/envs/inferris/lib/cmake/Boost-1.85.0
-
-Boost_FILESYSTEM_LIBRARY_RELEASE:STRING=/home/mohammad/.conda/envs/inferris/lib/libboost_filesystem.so.1.85.0
-
-//Path to a file.
-Boost_INCLUDE_DIR:PATH=/home/mohammad/.conda/envs/inferris/include
-
-Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE:STRING=/home/mohammad/.conda/envs/inferris/lib/libboost_program_options.so.1.85.0
-
-Boost_SYSTEM_LIBRARY_RELEASE:STRING=/home/mohammad/.conda/envs/inferris/lib/libboost_system.so.1.85.0
-
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/x86_64-conda-linux-gnu-addr2line
 
@@ -261,177 +249,19 @@ CombineHarvester_IS_TOP_LEVEL:STATIC=ON
 CombineHarvester_SOURCE_DIR:STATIC=/home/mohammad/mod/CombineHarvester
 
 //Path to a file.
-HiggsAnalysisCombinedLimit_INCLUDE_DIR:PATH=/home/mohammad/mod/HiggsAnalysis/CombinedLimit/.
+HiggsAnalysisCombinedLimit_INCLUDE_DIR:PATH=HiggsAnalysisCombinedLimit_INCLUDE_DIR-NOTFOUND
 
 //Path to a library.
-HiggsAnalysisCombinedLimit_LIBRARY:FILEPATH=/home/mohammad/mod/HiggsAnalysis/CombinedLimit/build/lib/libHiggsAnalysisCombinedLimit.so
-
-//Path to a file.
-HistFactory_INCLUDE_DIR:PATH=/home/mohammad/.conda/envs/inferris/include
-
-//Path to a library.
-HistFactory_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libHistFactory.so
-
-//Path to a file.
-LIBXML2_INCLUDE_DIR:PATH=/home/mohammad/.conda/envs/inferris/include/libxml2
-
-//Path to a library.
-LIBXML2_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libxml2.so
-
-//Path to a program.
-LIBXML2_XMLLINT_EXECUTABLE:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/xmllint
-
-//Arguments to supply to pkg-config
-PKG_CONFIG_ARGN:STRING=
-
-//pkg-config executable
-PKG_CONFIG_EXECUTABLE:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/pkg-config
-
-//Path to a library.
-ROOT_Core_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libCore.so
-
-//The directory containing a CMake configuration file for ROOT.
-ROOT_DIR:PATH=/home/mohammad/.conda/envs/inferris/cmake
-
-//Path to a library.
-ROOT_Gpad_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libGpad.so
-
-//Path to a library.
-ROOT_Graf3d_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libGraf3d.so
-
-//Path to a library.
-ROOT_Graf_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libGraf.so
-
-//Path to a library.
-ROOT_Hist_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libHist.so
-
-//Path to a library.
-ROOT_Imt_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libImt.so
-
-//Path to a library.
-ROOT_MathCore_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libMathCore.so
-
-//Path to a library.
-ROOT_Matrix_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libMatrix.so
-
-//Path to a library.
-ROOT_MultiProc_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libMultiProc.so
-
-//Path to a library.
-ROOT_Net_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libNet.so
-
-//Path to a library.
-ROOT_Physics_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libPhysics.so
-
-//Path to a library.
-ROOT_Postscript_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libPostscript.so
-
-//Path to a library.
-ROOT_RIO_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libRIO.so
-
-//Path to a library.
-ROOT_ROOTDataFrame_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libROOTDataFrame.so
-
-//Path to a library.
-ROOT_ROOTVecOps_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libROOTVecOps.so
-
-//Path to a library.
-ROOT_Rint_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libRint.so
-
-//Path to a library.
-ROOT_RooFitCore_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libRooFitCore.so
-
-//Path to a library.
-ROOT_RooFit_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libRooFit.so
-
-//Path to a library.
-ROOT_RooStats_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libRooStats.so
-
-//Path to a library.
-ROOT_Thread_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libThread.so
-
-//Path to a library.
-ROOT_TreePlayer_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libTreePlayer.so
-
-//Path to a library.
-ROOT_Tree_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libTree.so
-
-//Path to a program.
-ROOT_genmap_CMD:FILEPATH=ROOT_genmap_CMD-NOTFOUND
-
-//Path to a program.
-ROOT_genreflex_CMD:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/genreflex
-
-//Path to a program.
-ROOT_hadd_CMD:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/hadd
-
-//Path to a program.
-ROOT_root_CMD:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/root
-
-//Path to a program.
-ROOT_rootbrowse_CMD:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/rootbrowse
-
-//Path to a program.
-ROOT_rootcint_CMD:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/rootcint
-
-//Path to a program.
-ROOT_rootcling_CMD:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/rootcling
-
-//Path to a program.
-ROOT_rootcp_CMD:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/rootcp
-
-//Path to a program.
-ROOT_rootdraw_CMD:FILEPATH=ROOT_rootdraw_CMD-NOTFOUND
-
-//Path to a program.
-ROOT_rootls_CMD:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/rootls
-
-//Path to a program.
-ROOT_rootmkdir_CMD:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/rootmkdir
-
-//Path to a program.
-ROOT_rootmv_CMD:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/rootmv
-
-//Path to a program.
-ROOT_rootrm_CMD:FILEPATH=/home/mohammad/.conda/envs/inferris/bin/rootrm
+HiggsAnalysisCombinedLimit_LIBRARY:FILEPATH=HiggsAnalysisCombinedLimit_LIBRARY-NOTFOUND
 
 //Use system-installed HiggsAnalysisCombinedLimit
 USE_SYSTEM_COMBINEDLIMIT:BOOL=ON
-
-//Path to a file.
-VDT_INCLUDE_DIR:PATH=/home/mohammad/.conda/envs/inferris/include
-
-//Path to a library.
-VDT_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libvdt.so
-
-//The directory containing a CMake configuration file for boost_filesystem.
-boost_filesystem_DIR:PATH=/home/mohammad/.conda/envs/inferris/lib/cmake/boost_filesystem-1.85.0
-
-//The directory containing a CMake configuration file for boost_headers.
-boost_headers_DIR:PATH=/home/mohammad/.conda/envs/inferris/lib/cmake/boost_headers-1.85.0
-
-//The directory containing a CMake configuration file for boost_program_options.
-boost_program_options_DIR:PATH=/home/mohammad/.conda/envs/inferris/lib/cmake/boost_program_options-1.85.0
-
-//The directory containing a CMake configuration file for boost_system.
-boost_system_DIR:PATH=/home/mohammad/.conda/envs/inferris/lib/cmake/boost_system-1.85.0
-
-//Path to a library.
-pkgcfg_lib_PC_LIBXML_xml2:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libxml2.so
-
-//Path to a file.
-vdt_INCLUDE_DIR:PATH=/home/mohammad/.conda/envs/inferris/include
-
-//Path to a library.
-vdt_LIBRARY:FILEPATH=/home/mohammad/.conda/envs/inferris/lib/libvdt.so
 
 
 ########################
 # INTERNAL cache entries
 ########################
 
-//ADVANCED property for variable: Boost_DIR
-Boost_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_ADDR2LINE
 CMAKE_ADDR2LINE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_AR
@@ -536,7 +366,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=3
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -581,144 +411,4 @@ CMAKE_TAPI-ADVANCED:INTERNAL=1
 CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
-//Details about finding Boost
-FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[/home/mohammad/.conda/envs/inferris/lib/cmake/Boost-1.85.0/BoostConfig.cmake][found components: program_options filesystem system ][v1.85.0()]
-//Details about finding HiggsAnalysisCombinedLimit
-FIND_PACKAGE_MESSAGE_DETAILS_HiggsAnalysisCombinedLimit:INTERNAL=[/home/mohammad/mod/HiggsAnalysis/CombinedLimit/.][/home/mohammad/mod/HiggsAnalysis/CombinedLimit/build/lib/libHiggsAnalysisCombinedLimit.so][v()]
-//Details about finding HistFactory
-FIND_PACKAGE_MESSAGE_DETAILS_HistFactory:INTERNAL=[/home/mohammad/.conda/envs/inferris/include][/home/mohammad/.conda/envs/inferris/lib/libHistFactory.so][v()]
-//Details about finding LibXml2
-FIND_PACKAGE_MESSAGE_DETAILS_LibXml2:INTERNAL=[/home/mohammad/.conda/envs/inferris/lib/libxml2.so][/home/mohammad/.conda/envs/inferris/include/libxml2][v2.13.8()]
-//Details about finding Vdt
-FIND_PACKAGE_MESSAGE_DETAILS_Vdt:INTERNAL=[/home/mohammad/.conda/envs/inferris/include][/home/mohammad/.conda/envs/inferris/lib/libvdt.so][v0.4()]
-//Details about finding vdt
-FIND_PACKAGE_MESSAGE_DETAILS_vdt:INTERNAL=[/home/mohammad/.conda/envs/inferris/include][/home/mohammad/.conda/envs/inferris/lib/libvdt.so][v()]
-//ADVANCED property for variable: LIBXML2_INCLUDE_DIR
-LIBXML2_INCLUDE_DIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: LIBXML2_LIBRARY
-LIBXML2_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: LIBXML2_XMLLINT_EXECUTABLE
-LIBXML2_XMLLINT_EXECUTABLE-ADVANCED:INTERNAL=1
-PC_LIBXML_CFLAGS:INTERNAL=-I/home/mohammad/.conda/envs/inferris/include/libxml2;-I/home/mohammad/.conda/envs/inferris/include
-PC_LIBXML_CFLAGS_I:INTERNAL=
-PC_LIBXML_CFLAGS_OTHER:INTERNAL=
-PC_LIBXML_FOUND:INTERNAL=1
-PC_LIBXML_INCLUDEDIR:INTERNAL=/home/mohammad/.conda/envs/inferris/include
-PC_LIBXML_INCLUDE_DIRS:INTERNAL=/home/mohammad/.conda/envs/inferris/include/libxml2;/home/mohammad/.conda/envs/inferris/include
-PC_LIBXML_LDFLAGS:INTERNAL=-L/home/mohammad/.conda/envs/inferris/lib;-lxml2
-PC_LIBXML_LDFLAGS_OTHER:INTERNAL=
-PC_LIBXML_LIBDIR:INTERNAL=/home/mohammad/.conda/envs/inferris/lib
-PC_LIBXML_LIBRARIES:INTERNAL=xml2
-PC_LIBXML_LIBRARY_DIRS:INTERNAL=/home/mohammad/.conda/envs/inferris/lib
-PC_LIBXML_LIBS:INTERNAL=
-PC_LIBXML_LIBS_L:INTERNAL=
-PC_LIBXML_LIBS_OTHER:INTERNAL=
-PC_LIBXML_LIBS_PATHS:INTERNAL=
-PC_LIBXML_MODULE_NAME:INTERNAL=libxml-2.0
-PC_LIBXML_PREFIX:INTERNAL=/home/mohammad/.conda/envs/inferris
-PC_LIBXML_STATIC_CFLAGS:INTERNAL=-I/home/mohammad/.conda/envs/inferris/include/libxml2;-I/home/mohammad/.conda/envs/inferris/include
-PC_LIBXML_STATIC_CFLAGS_I:INTERNAL=
-PC_LIBXML_STATIC_CFLAGS_OTHER:INTERNAL=
-PC_LIBXML_STATIC_INCLUDE_DIRS:INTERNAL=/home/mohammad/.conda/envs/inferris/include/libxml2;/home/mohammad/.conda/envs/inferris/include
-PC_LIBXML_STATIC_LDFLAGS:INTERNAL=-L/home/mohammad/.conda/envs/inferris/lib;-lxml2;-lz;-llzma;-liconv;-lm;-licui18n;-licuuc;-licudata;-lpthread;-ldl;-lm
-PC_LIBXML_STATIC_LDFLAGS_OTHER:INTERNAL=
-PC_LIBXML_STATIC_LIBDIR:INTERNAL=
-PC_LIBXML_STATIC_LIBRARIES:INTERNAL=xml2;z;lzma;iconv;m;icui18n;icuuc;icudata;pthread;dl;m
-PC_LIBXML_STATIC_LIBRARY_DIRS:INTERNAL=/home/mohammad/.conda/envs/inferris/lib
-PC_LIBXML_STATIC_LIBS:INTERNAL=
-PC_LIBXML_STATIC_LIBS_L:INTERNAL=
-PC_LIBXML_STATIC_LIBS_OTHER:INTERNAL=
-PC_LIBXML_STATIC_LIBS_PATHS:INTERNAL=
-PC_LIBXML_VERSION:INTERNAL=2.13.8
-PC_LIBXML_libxml-2.0_INCLUDEDIR:INTERNAL=
-PC_LIBXML_libxml-2.0_LIBDIR:INTERNAL=
-PC_LIBXML_libxml-2.0_PREFIX:INTERNAL=
-PC_LIBXML_libxml-2.0_VERSION:INTERNAL=
-//ADVANCED property for variable: PKG_CONFIG_ARGN
-PKG_CONFIG_ARGN-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: PKG_CONFIG_EXECUTABLE
-PKG_CONFIG_EXECUTABLE-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Core_LIBRARY
-ROOT_Core_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Gpad_LIBRARY
-ROOT_Gpad_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Graf3d_LIBRARY
-ROOT_Graf3d_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Graf_LIBRARY
-ROOT_Graf_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Hist_LIBRARY
-ROOT_Hist_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Imt_LIBRARY
-ROOT_Imt_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_MathCore_LIBRARY
-ROOT_MathCore_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Matrix_LIBRARY
-ROOT_Matrix_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_MultiProc_LIBRARY
-ROOT_MultiProc_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Net_LIBRARY
-ROOT_Net_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Physics_LIBRARY
-ROOT_Physics_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Postscript_LIBRARY
-ROOT_Postscript_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_RIO_LIBRARY
-ROOT_RIO_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_ROOTDataFrame_LIBRARY
-ROOT_ROOTDataFrame_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_ROOTVecOps_LIBRARY
-ROOT_ROOTVecOps_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Rint_LIBRARY
-ROOT_Rint_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_RooFitCore_LIBRARY
-ROOT_RooFitCore_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_RooFit_LIBRARY
-ROOT_RooFit_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_RooStats_LIBRARY
-ROOT_RooStats_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Thread_LIBRARY
-ROOT_Thread_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_TreePlayer_LIBRARY
-ROOT_TreePlayer_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_Tree_LIBRARY
-ROOT_Tree_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_genreflex_CMD
-ROOT_genreflex_CMD-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_hadd_CMD
-ROOT_hadd_CMD-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_root_CMD
-ROOT_root_CMD-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_rootbrowse_CMD
-ROOT_rootbrowse_CMD-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_rootcint_CMD
-ROOT_rootcint_CMD-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_rootcling_CMD
-ROOT_rootcling_CMD-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_rootcp_CMD
-ROOT_rootcp_CMD-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_rootls_CMD
-ROOT_rootls_CMD-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_rootmkdir_CMD
-ROOT_rootmkdir_CMD-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_rootmv_CMD
-ROOT_rootmv_CMD-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: ROOT_rootrm_CMD
-ROOT_rootrm_CMD-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: VDT_INCLUDE_DIR
-VDT_INCLUDE_DIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: VDT_LIBRARY
-VDT_LIBRARY-ADVANCED:INTERNAL=1
-__pkg_config_arguments_PC_LIBXML:INTERNAL=QUIET;libxml-2.0
-__pkg_config_checked_PC_LIBXML:INTERNAL=1
-//ADVANCED property for variable: boost_filesystem_DIR
-boost_filesystem_DIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: boost_headers_DIR
-boost_headers_DIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: boost_program_options_DIR
-boost_program_options_DIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: boost_system_DIR
-boost_system_DIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_PC_LIBXML_xml2
-pkgcfg_lib_PC_LIBXML_xml2-ADVANCED:INTERNAL=1
-prefix_result:INTERNAL=/home/mohammad/.conda/envs/inferris/lib
 
