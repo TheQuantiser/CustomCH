@@ -54,14 +54,4 @@ After all jobs have finished, the results can be collected by simple rerunning t
 
     python ../CombineTools/scripts/combineTool.py -M AsymptoticGrid scripts/mssm_asymptotic_grid.json -d output/mssm_nomodel/htt_cmb_mhmodp.root --task-name 'mssm_mhodp'
 
-The limits for the median expected, expected error bands and observed are stored in TGraph2D. The resulting file "asymptotic_grid.root" is needed for the plotting.
-
-
-Plotting the limits {#p5}
-=========================
-
-The plotting is done be the "MSSMtanbPlot.py" script.
-
-    python ../CombineTools/scripts/MSSMtanbPlot.py --file=asymptotic_grid.root --scenario="mhmodp"
-
-Again, the filename after "--file" has to be the root file which was created in the previous step. MSSMtanbPlot.py also requires a name for the scenario, which will be written in the plot. MSSMtanbPlot.py will only produce the plots as a png- and pdf file. The plotting is still work in progress.
+The limits for the median expected, expected error bands and observed are stored in TGraph2D. The resulting file "asymptotic_grid.root" is needed for further analysis.

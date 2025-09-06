@@ -57,6 +57,7 @@ More realistic, though less well documented, examples can be found in the follow
   * `CombineTools/bin/PostFitShapesFromWorkspace.cpp` ([source code](\ref CombineTools/bin/PostFitShapesFromWorkspace.cpp)) - see separate page [here](\ref post-fit-shapes-ws)
   * `CombineTools/bin/MSSMYieldTable.cpp` ([source code](\ref CombineTools/bin/MSSMYieldTable.cpp)) - produces the latex yield tables for the MSSM htt analysis (HIG-13-021). Run via the script `CombineTools/scripts/yield_tables_mssm_example.sh`. You will first need to copy the input datacards: `cd CombineTools; cp -r /afs/cern.ch/work/a/agilbert/public/CombineTools/data/mssm-paper-cmb ./input/`
 
+
 High-level tools {#high-level-tools}
 ====================================
 A number of high-level tools have been developed to provide a more convenient interface for some common CombineHarvester tasks:
