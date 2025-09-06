@@ -91,7 +91,6 @@ set(CH_EXTERNAL_LIBS
   HistFactory::HistFactory
 )
 
-
 add_subdirectory(CombineTools)
 add_subdirectory(CombinePdfs)
 
@@ -112,16 +111,15 @@ if(NOT USE_SYSTEM_COMBINEDLIMIT)
           DESTINATION include/HiggsAnalysis/CombinedLimit
           FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
 endif()
+install(TARGETS CombineHarvester EXPORT CombineHarvesterTargets)
+install(EXPORT CombineHarvesterTargets
+        FILE CombineHarvesterTargets.cmake
+        NAMESPACE CombineHarvester::
+        DESTINATION lib/cmake/CombineHarvester)
 
-  install(TARGETS CombineHarvester EXPORT CombineHarvesterTargets)
-  install(EXPORT CombineHarvesterTargets
-          FILE CombineHarvesterTargets.cmake
-          NAMESPACE CombineHarvester::
-          DESTINATION lib/cmake/CombineHarvester)
-
-  install(DIRECTORY CombineTools/interface
-          DESTINATION include/CombineHarvester/CombineTools
-          FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
-  install(DIRECTORY CombinePdfs/interface
-          DESTINATION include/CombineHarvester/CombinePdfs
-          FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
+install(DIRECTORY CombineTools/interface
+        DESTINATION include/CombineHarvester/CombineTools
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
+install(DIRECTORY CombinePdfs/interface
+        DESTINATION include/CombineHarvester/CombinePdfs
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
