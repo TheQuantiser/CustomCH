@@ -1,4 +1,3 @@
-#include "CombineHarvester/CombineTools/interface/HttSystematics.h"
 #include <vector>
 #include <string>
 #include "CombineHarvester/CombineTools/interface/Systematics.h"

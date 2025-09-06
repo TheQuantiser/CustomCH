@@ -8,12 +8,18 @@
 #include "boost/filesystem.hpp"
 #include "CombineHarvester/CombineTools/interface/CombineHarvester.h"
 #include "CombineHarvester/CombineTools/interface/Utilities.h"
-#include "CombineHarvester/CombineTools/interface/HttSystematics.h"
 #include "CombineHarvester/CombinePdfs/interface/MorphFunctions.h"
 #include "CombineHarvester/CombineTools/interface/BinByBin.h"
 #include "CombineHarvester/CombineTools/interface/PathTools.h"
 
 using namespace std;
+
+namespace ch {
+void AddSystematics_et_mt(CombineHarvester& cb);
+void AddSystematics_em(CombineHarvester& cb);
+void AddSystematics_ee_mm(CombineHarvester& cb);
+void AddSystematics_tt(CombineHarvester& cb);
+}
 
 int main() {
   ch::CombineHarvester cb;
