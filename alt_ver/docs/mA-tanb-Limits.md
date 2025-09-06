@@ -31,9 +31,9 @@ Calculating values {#p3}
 
 In the next step we calculate the limits in the considered MSSM model phase space.
 
-    python ../CombineTools/scripts/combineTool.py -M AsymptoticGrid scripts/mssm_asymptotic_grid.json -d output/mssm_nomodel/htt_cmb_mssm.root --job-mode 'lxbatch' --task-name 'mssm_mhodp' --sub-opts '-q 1nh' --merge=8
+    python ../CombineTools/scripts/combineTool.py -M AsymptoticGrid <grid.json> -d output/mssm_nomodel/htt_cmb_mssm.root --job-mode 'lxbatch' --task-name 'mssm_mhodp' --sub-opts '-q 1nh' --merge=8
 
-The scanned grid (=considered mA/tanb points) in the MSSM model is defined in the json file "mssm_asymptotic_grid.json". As example:
+The scanned grid (=considered mA/tanb points) in the MSSM model is defined in a JSON file. For example:
 
    "opts" : "--singlePoint 1.0",
    "POIs" : ["mA", "tanb"],
@@ -50,9 +50,9 @@ Here, the lxbatch computing system is used. Eight grid points are merged in one 
 Collecting the results in a single file {#p4}
 =============================================
 
-After all jobs have finished, the results can be collected by simple rerunning the calculating command.
+After all jobs have finished, the results can be collected by simply rerunning the calculating command.
 
-    python ../CombineTools/scripts/combineTool.py -M AsymptoticGrid scripts/mssm_asymptotic_grid.json -d output/mssm_nomodel/htt_cmb_mhmodp.root --task-name 'mssm_mhodp'
+    python ../CombineTools/scripts/combineTool.py -M AsymptoticGrid <grid.json> -d output/mssm_nomodel/htt_cmb_mhmodp.root --task-name 'mssm_mhodp'
 
 The limits for the median expected, expected error bands and observed are stored in TGraph2D. The resulting file "asymptotic_grid.root" is needed for the plotting.
 

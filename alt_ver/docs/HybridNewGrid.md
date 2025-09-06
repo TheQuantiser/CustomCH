@@ -1,6 +1,6 @@
 # Calculating grids of CLs values using toys
 
-The following are basic instructions for using the **HybridNewGrid** method of `combineTool.py`. In a similar fashion to the **AsymptoticGrid** method most of the settings are  specified in a json file. An example is given in `CombinePdfs/scripts/mssm_hybrid_grid.json`:
+The following are basic instructions for using the **HybridNewGrid** method of `combineTool.py`. In a similar fashion to the **AsymptoticGrid** method most of the settings are specified in a json file. An example configuration is shown below:
 
 ```json
 {
@@ -35,7 +35,7 @@ The following are basic instructions for using the **HybridNewGrid** method of `
 The `combineTool.py` method is then invoked as follows:
 
 ```sh
-combineTool.py -M HybridNewGrid scripts/mssm_hybrid_grid.json --cycles [cycles] -d [workspace]
+combineTool.py -M HybridNewGrid <grid.json> --cycles [cycles] -d [workspace]
 ```
 
 This method will generate the specified number of toy cycles for each model point, where one cycle implies one run of combine with a new random seed. The setting `toys_per_cycle` controls the number of background-only and signal+background toys that will be generated in each combine job. Several options are also provided which can be used concentrate the generation of toys around the relevant observed and expected exclusion contours. These specify a set of criteria which, when fulfilled, prevent the creation of any further combine jobs for that model point. These settings are:
