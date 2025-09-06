@@ -606,6 +606,12 @@ TH1F CombineHarvester::GetShapeInternal(ProcSystMap const& lookup, std::string c
     if (sys->type() == "shape" || sys->type() == "shapeN2" || sys->type() == "shapeU") {
       bool linear = sys->type() != "shapeN2";
       ShapeDiff(sys->scale(), shape, shape, sys->shape_d(), sys->shape_u(), linear);
+    } else if (sys->type() == "shapeN") {
+      if (sys->shape_u() && sys->shape_d()) {
+        ShapeDiffShapeN(sys->scale(), shape, shape, sys->shape_d(), sys->shape_u());
+      } else if (sys->data_u() && sys->data_d()) {
+        ShapeDiffShapeN(sys->scale(), shape, sys->data_d(), sys->data_u());
+      }
     }
   };
 
@@ -791,6 +797,61 @@ void CombineHarvester::ShapeDiff(double x,
 
     // Update target bin content
     target->SetBinContent(i, target->GetBinContent(i) + 0.5f * x * (diff + corr));
+  }
+}
+
+void CombineHarvester::ShapeDiffShapeN(double x,
+                                       TH1F* target,
+                                       const TH1* nom,
+                                       const TH1* low,
+                                       const TH1* high) {
+  (void)nom;  // nominal shape currently matches target
+  const double fx = smoothStepFunc(x);
+  const int nBins = target->GetNbinsX();
+  for (int i = 1; i <= nBins; ++i) {
+    const double h = high->GetBinContent(i);
+    const double l = low->GetBinContent(i);
+    double t = target->GetBinContent(i);
+    if (t <= 0.0) {
+      target->SetBinContent(i, 0.0);
+      continue;
+    }
+    const double logT = std::log(t);
+    const double logH = (h > 0.0) ? std::log(h) : logT;
+    const double logL = (l > 0.0) ? std::log(l) : logT;
+    const double deltaLog = 0.5 * x *
+                             ((logH - logL) + (logH + logL - 2.0 * logT) * fx);
+    target->SetBinContent(i, std::exp(logT + deltaLog));
+  }
+}
+
+void CombineHarvester::ShapeDiffShapeN(double x,
+                                       TH1F* target,
+                                       const RooDataHist* low,
+                                       const RooDataHist* high) {
+  const double fx = smoothStepFunc(x);
+  const int nBins = target->GetNbinsX();
+  const double norm_low = low->sumEntries();
+  const double norm_high = high->sumEntries();
+  if (norm_low <= 0.0 || norm_high <= 0.0) {
+    throw std::runtime_error("Error: Zero or negative normalization factor in ShapeDiffShapeN");
+  }
+  for (int i = 1; i <= nBins; ++i) {
+    high->get(i - 1);
+    low->get(i - 1);
+    const double h = high->weight() / norm_high;
+    const double l = low->weight() / norm_low;
+    double t = target->GetBinContent(i);
+    if (t <= 0.0) {
+      target->SetBinContent(i, 0.0);
+      continue;
+    }
+    const double logT = std::log(t);
+    const double logH = (h > 0.0) ? std::log(h) : logT;
+    const double logL = (l > 0.0) ? std::log(l) : logT;
+    const double deltaLog = 0.5 * x *
+                             ((logH - logL) + (logH + logL - 2.0 * logT) * fx);
+    target->SetBinContent(i, std::exp(logT + deltaLog));
   }
 }
 

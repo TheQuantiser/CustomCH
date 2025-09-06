@@ -1,14 +1,17 @@
-from __future__ import absolute_import
-from __future__ import print_function
+#!/usr/bin/env python3
 import os
 import stat
+import shutil
 from functools import partial
 from multiprocessing import Pool
-from six.moves import range
+from importlib import resources
+import CombineHarvester.CombineTools.ch as ch
 
 DRY_RUN = False
 
-JOB_PREFIX = """#!/bin/sh
+
+def _build_job_prefix(ch_base):
+    return """#!/bin/sh
 ulimit -s unlimited
 set -e
 cd %(CH_BASE)s
@@ -140,7 +143,7 @@ class CombineToolBase:
         fname = script_filename
         logname = script_filename.replace('.sh', '.log')
         with open(fname, "w") as text_file:
-            text_file.write(JOB_PREFIX)
+            text_file.write(self.job_prefix)
             for i, command in enumerate(commands):
                 tee = 'tee' if i == 0 else 'tee -a'
                 log_part = '\n'
@@ -244,14 +247,14 @@ class CombineToolBase:
             subfilename = 'condor_%s.sub' % self.task_name
             print('>> condor job script will be %s' % outscriptname)
             outscript = open(outscriptname, "w")
-            outscript.write(JOB_PREFIX)
+            outscript.write(self.job_prefix)
             jobs = 0
             wsp_files = set()
             for i, j in enumerate(range(0, len(self.job_queue), self.merge)):
                 outscript.write('\nif [ $1 -eq %i ]; then\n' % jobs)
                 jobs += 1
                 for line in self.job_queue[j:j + self.merge]:
-                    newline = self.pre_cmd + line
+                    newline = self.pre_cmd + line.replace('combine', self.combine_exec, 1)
                     outscript.write('  ' + newline + '\n')
                 outscript.write('fi')
             outscript.write('\n' + self.post_job_cmd+'\n')

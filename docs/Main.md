@@ -26,21 +26,20 @@ As well as histogram-based templates, the production of datacards with arbitrary
 
 Getting started {#getting-started}
 ==================================
-This repository is a "top-level" CMSSW package, i.e. it should be located at `$CMSSW_BASE/src/CombineHarvester`. It currently provides two sub-packages:
+CombineHarvester can now be used as a standalone project.  See the
+[standalone installation guide](StandaloneInstallation.md) for the
+repository checkout and build instructions.  It currently provides two
+sub-packages:
 
   * **CombineHarvester/CombineTools**, which contains the CombineHarvester class and other parts of the core framework
   * **CombineHarvester/CombinePdfs**, which provides tools for building custom RooFit pdfs
 
-The CMSSW version that should be used with CombineHarvester is driven by the recommendation for the HiggsAnalysis/CombinedLimit package, which is also required. The latest instructions can be found [here](https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/#setting-up-the-environment-and-installation). The CombineHarvester framework is compatible with the CMSSW 14_1_X and 11_3_X series releases. A new release area can be set up and compiled in the following steps:
+After building, example programs can be invoked directly, e.g.
 
-    cmsrel CMSSW_14_1_0_pre4
-    cd CMSSW_14_1_0_pre4/src
-    cmsenv
-    git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
-    # IMPORTANT: Checkout the recommended tag on the link above
-    git clone https://github.com/cms-analysis/CombineHarvester.git CombineHarvester
-    git checkout v3.0.0-pre1
-    scram b
+```
+$CH_BASE/build/bin/Example1
+python3 CombineTools/scripts/Example3.py
+```
 
 If you are using this framework for the first time we recommend taking a look through some of the examples below which demonstrate the main features:
 
@@ -49,9 +48,9 @@ If you are using this framework for the first time we recommend taking a look th
   * [Examples Part 3](\ref intro3): Creating a counting-experiment datacard and using rateParam directives to float process yields via free parameters while express other yields as functions of these parameters.
   * [Limit setting](\ref limits): Using the `combineTool.py` script to build workspaces, compute asymptotic limits and plot the ouput.
 
-\warning To run many of these examples you must first ensure the [auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries) repository is located at `$CMSSW_BASE/src/auxiliaries` and up-to-date:
+\warning To run many of these examples you must first ensure the [auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries) repository is located at `$CH_BASE/auxiliaries` and up-to-date:
 \verbatim
-git clone https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries.git auxiliaries \endverbatim
+git clone https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries.git "$CH_BASE/auxiliaries" \endverbatim
 The input root files will be sourced from here.
 
 More realistic, though less well documented, examples can be found in the following files:
@@ -70,7 +69,7 @@ A number of high-level tools have been developed to provide a more convenient in
 
 Other comments {#note}
 ======================
-**Creating a new package**: It is planned that each new analysis will create their own package within the `CombineHarvester` directory, where all the datacard creation, plotting and other tools specific to the analysis will be stored. This keeps the analysis-specific code self-contained, and ensures different analyses do not disrupt each other's workflow during the development phase. We expect that some tools or functions developed for specific analyses will be of more general use, in which case they will be promoted to the common `CombineTools` package. **Please raise an issue [here](https://github.com/cms-analysis/CombineHarvester/issues/new) if you would like a new package to be created for your analysis.**
+**Creating a new package**: It is planned that each new analysis will create their own package within the `CombineHarvester` directory, where all the datacard creation, plotting and other tools specific to the analysis will be stored. This keeps the analysis-specific code self-contained, and ensures different analyses do not disrupt each other's workflow during the development phase. We expect that some tools or functions developed for specific analyses will be of more general use, in which case they will be promoted to the common `CombineTools` package. **Please raise an issue [here](https://github.com/TheQuantiser/CustomCH/issues/new) if you would like a new package to be created for your analysis.**
 
 **Code developments**: New features and developments, or even just suggestions, are always welcome - either contact the developers directly or make a pull request.
 
@@ -81,12 +80,12 @@ Other comments {#note}
     terminate called after throwing an instance of 'std::runtime_error'
       what():
     *******************************************************************************
-    Context: Function ch::GetClonedTH1 at
-      CombineHarvester/CombineTools/src/TFileIO.cc:21
-    Problem: TH1 eleTau_0jet_medium/ggH not found in CMSSW_7_1_5/src/auxiliaries/shapes/htt_et.inputs-sm-7TeV-hcg.root
+      Context: Function ch::GetClonedTH1 at
+        CombineHarvester/CombineTools/src/TFileIO.cc:21
+      Problem: TH1 eleTau_0jet_medium/ggH not found in $CH_BASE/auxiliaries/shapes/htt_et.inputs-sm-7TeV-hcg.root
     *******************************************************************************
 
-If the cause of such an error message is unclear, or if you believe the error message should not have been produced, please raise an issue here with full details on reproducing the problem: https://github.com/cms-analysis/CombineHarvester/issues/new
+If the cause of such an error message is unclear, or if you believe the error message should not have been produced, please raise an issue here with full details on reproducing the problem: https://github.com/TheQuantiser/CustomCH/issues/new
 
 Please also raise an issue if you encounter any bugs, unintended behaviour, abrupt errors or segmentation faults - these will be addressed promptly by the developers.
 

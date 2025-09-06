@@ -1,10 +1,8 @@
-from __future__ import absolute_import
-from __future__ import print_function
+#!/usr/bin/env python3
 import CombineHarvester.CombineTools.plotting as plot
 import ROOT
 import math
 import argparse
-from six.moves import range
 
 
 col_store = []

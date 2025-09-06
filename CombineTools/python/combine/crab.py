@@ -1,5 +1,7 @@
-from __future__ import absolute_import
+#!/usr/bin/env python3
 import os
+import shutil
+import CombineHarvester.CombineTools.ch as ch
 from WMCore.Configuration import Configuration
 
 
@@ -12,9 +14,15 @@ config.General.requestName = ''
 
 config.section_('JobType')
 config.JobType.pluginName = 'PrivateMC'
-config.JobType.psetName = os.environ['CMSSW_BASE']+'/src/CombineHarvester/CombineTools/scripts/do_nothing_cfg.py'
+script_dir = os.path.join(ch.paths.base(), 'CombineTools/scripts')
+config.JobType.psetName = os.path.join(script_dir, 'do_nothing_cfg.py')
 config.JobType.scriptExe = ''
-config.JobType.inputFiles = [os.environ['CMSSW_BASE']+'/src/CombineHarvester/CombineTools/scripts/FrameworkJobReport.xml', os.environ['CMSSW_BASE']+'/src/CombineHarvester/CombineTools/scripts/copyRemoteWorkspace.sh', os.environ['CMSSW_BASE']+'/bin/'+os.environ['SCRAM_ARCH']+'/combine']
+combine_exec = shutil.which('combine') or 'combine'
+config.JobType.inputFiles = [
+    os.path.join(script_dir, 'FrameworkJobReport.xml'),
+    os.path.join(script_dir, 'copyRemoteWorkspace.sh'),
+    combine_exec
+]
 config.JobType.outputFiles = ['combine_output.tar']
 # config.JobType.maxMemoryMB = args.maxMemory
 
