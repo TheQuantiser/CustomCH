@@ -25,7 +25,7 @@ The program `AdaptChargedHiggs` will:
 
 To reproduce the model-independent limits from the charged Higgs PAS we will need to use the same physics model that scales the `tt->H+H-bb` and `tt->H+W-bb` processes by the appropriate function of the `t->H+b` branching ratio POI `BR`. This has been adapted from the original version in the combine repository to account for our change of signal process naming:
 
-    text2workspace.py hplus_tauhad_mssm.txt -o hplus_tauhad_mssm.root -P CombineHarvester.CombinePdfs.MSSM:brChargedHiggs
+    text2workspace.py hplus_tauhad_mssm.txt -o hplus_tauhad_mssm.root -P HiggsAnalysis.CombinedLimit.ChargedHiggs:brChargedHiggs
 
 Then we can run the asymptotic limits:
 

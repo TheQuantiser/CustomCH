@@ -28,12 +28,10 @@ Getting started {#getting-started}
 ==================================
 CombineHarvester is organised into a set of packages, each contained
 within a subdirectory that produces shared libraries and executable
-programs.  The two core packages are:
+programs. The core package is:
 
   * **CombineHarvester/CombineTools**, which contains the CombineHarvester
     class and other parts of the core framework
-  * **CombineHarvester/CombinePdfs**, which provides tools for building
-    custom RooFit pdfs
 
 The project is built with CMake and can be compiled without a CMSSW
 release. A minimal build is

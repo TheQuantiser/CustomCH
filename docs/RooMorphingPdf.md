@@ -5,7 +5,7 @@ RooMorphingPdf {#introMorph}
 BuildRooMorphing function {#BuildRooMorph}
 =========================
 
-**File**: CombinePdfs/src/MorphFunctions.cc
+**File**: MorphFunctions.cc
 
 The PDF which is used for the signal is a custom RooFit PDF. Its application is
 made via the datacard production code, with a call to a function named
@@ -15,7 +15,7 @@ itself, which is well commented.
 
 The arguments to the function are as follows:
 
-\snippet CombinePdfs/src/MorphFunctions.cc part1
+<!-- snippet removed: MorphFunctions.cc part1 -->
 
 The options to this function are as follows:
 
@@ -39,7 +39,7 @@ normalisation of the PDF to go to zero outside of the range of available masses.
 The first step of the function is to work out the list of available masspoints
 for the signal process, and sort and count them:
 
-\snippet CombinePdfs/src/MorphFunctions.cc part2
+<!-- snippet removed: MorphFunctions.cc part2 -->
 
 Then it is necessary to track all the information on the systematics affecting
 the signal process. This is done separately for the shape and normalisation
@@ -49,7 +49,7 @@ i.e. has a value different from 1.00), it is possible to build a RooArgList of
 the parameters controlling the vertical template morphing which is internally
 used by combine to apply the effect of the shape systematics to the signal.
 
-\snippet CombinePdfs/src/MorphFunctions.cc part3
+<!-- snippet removed: MorphFunctions.cc part3 -->
 
 Note that the above code takes care over the possibility that the shape
 systematics are not the same for all masspoints - this is not currently
@@ -66,7 +66,7 @@ for the interpolation.
 
 A 1D spline is built directly from the array of rates and masses:
 
-\snippet CombinePdfs/src/MorphFunctions.cc part4
+<!-- snippet removed: MorphFunctions.cc part4 -->
 
 Here the option "force_template_limit" allows the user to use an alternative
 rate array where the rate falls to 0 for masses only very slightly outside of
@@ -76,7 +76,7 @@ normalisation systematics. The array of vertical morphing PDFs is also built
 using the information from earlier. Finally, the RooMorphingPdf is built with
 the following obtained information:
 
-\snippet CombinePdfs/src/MorphFunctions.cc part5
+<!-- snippet removed: MorphFunctions.cc part5 -->
 
 with the arguments:
 * xvar :       the fixed "CMS_th1x" x-axis variable with uniform integer binning
@@ -93,7 +93,7 @@ fit. in order to avoid known problems with the RMS of a peaking distribution
 not being morphed smoothly from mass point to mass point if the binning is too
 wide. A RooProduct is added for the normalisation of this PDF:
 
-\snippet CombinePdfs/src/MorphFunctions.cc part6
+<!-- snippet removed: MorphFunctions.cc part6 -->
 
 The creation of this term is very important. When building the workspace, this
 term will be searched for and tied to the PDF. It is possible at the workspace
@@ -113,7 +113,7 @@ The code to produce SM datacards is almost exactly the same as the example
 described previously with the exception of a few additional lines to call the
 BuildRooMorphing function. The call to BuildRooMorphing is as follows:
 
-\snippet CombinePdfs/bin/SMLegacyMorphing.cpp part1
+<!-- snippet removed: SMLegacyMorphing.cpp part1 -->
 
 A single call is made for each signal process of each channel and category. The
 produced workspace is then imported into the CH instance and the created PDFs
@@ -178,14 +178,14 @@ cross section times branching ratio of the three Higgs bosons.
 These can be added as a function of mA and tanb which can be
 made parameters of the workspace as RooRealVars:
 
-\snippet CombinePdfs/python/MSSM.py part1
+<!-- snippet removed: MSSM.py part1 -->
 
 The histograms containing the information on the different cross-sections and
 branching ratios are included as TH2Ds inside a file for a particular model.
 These are read in and turned into a RooHistFunc via a helper function called
 doHistFunc:
 
-\snippet CombinePdfs/python/MSSM.py part2
+<!-- snippet removed: MSSM.py part2 -->
 
 Note the option 'interpolate' which is off by default - this allows the
 possibility of interpolating the model inputs to reach values beyond the
@@ -196,7 +196,7 @@ which are not the A boson (since this is already controlled by the parameter
 mA, as well as the cross-section and branching ratio, for example using
 terms:
 
-\snippet CombinePdfs/python/MSSM.py part3
+<!-- snippet removed: MSSM.py part3 -->
 
 In this code snippet, 'era' controls the centre of mass energy of the model,
 currently either 7TeV, 8TeV or 13TeV. Note that theoretical uncertainties,
