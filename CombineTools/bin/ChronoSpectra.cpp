@@ -188,8 +188,8 @@ ChronoSpectra --help \
 #include "CombineHarvester/CombineTools/interface/ParseCombineWorkspace.h"
 #include "CombineHarvester/CombineTools/interface/TFileIO.h"
 #include "CombineHarvester/CombineTools/interface/cli.hpp"
-#include "TROOT.h"
 #include "RooMsgService.h"
+#include "TROOT.h"
 #include <TCanvas.h>
 #include <TGaxis.h>
 #include <TH1F.h>
@@ -236,6 +236,13 @@ std::string printTimestamp() {
   std::ostringstream timestamp;
   timestamp << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S") << "]";
   return timestamp.str();
+}
+
+std::string formatDouble(double x, int precision = 6) {
+  std::ostringstream ss;
+  ss.setf(std::ios::fixed);
+  ss << std::setprecision(precision) << x;
+  return ss.str();
 }
 
 void displayStartupMessage() {
@@ -739,15 +746,24 @@ void writeHistogramsToFile(
   LOG_INFO << printTimestamp()
            << " Writing histograms to file: " << outfile.GetName() << std::endl;
 
+  tabulate::Table table;
+  table.add_row({"Histogram Path", "Integral", "Error"});
+
   for (auto &[binName, procMap] : histograms) {
     for (auto &[procName, histogram] : procMap) {
       std::string path = prefix + "/" + binName + "/" + procName;
       histogram.SetTitle(procName.c_str());
-      LOG_INFO << printTimestamp() << "\t--> " << std::setw(50) << std::left
-               << path << " = " << histogram.Integral() << " ± "
-               << histogram.GetBinContent(0) << std::endl;
+      table.add_row({path, formatDouble(histogram.Integral()),
+                     formatDouble(histogram.GetBinContent(0))});
       ch::WriteToTFile(&histogram, &outfile, path);
     }
+  }
+
+  std::stringstream ss;
+  ss << table;
+  std::string line;
+  while (std::getline(ss, line)) {
+    LOG_INFO << "\t" << line << "\n";
   }
 
   // Clear histograms map to ensure memory release
@@ -765,18 +781,29 @@ void writeCorrToFile(
            << " Writing correlation matrices to file: " << outfile.GetName()
            << std::endl;
 
+  tabulate::Table table;
+  table.add_row({"Matrix Path", "Bins X", "Bins Y"});
+
   // Iterate through bins and processes
   for (auto &[binName, procMap] : matrixMap) {
     for (auto &[procName, matrix] : procMap) {
-      // Construct the path and log it
+      // Construct the path
       std::string path = prefix + "/" + binName + "/" + procName + suffix;
-      LOG_INFO << printTimestamp() << "\t--> " << path << std::endl;
+      table.add_row({path, std::to_string(matrix.GetNbinsX()),
+                     std::to_string(matrix.GetNbinsY())});
 
       ApplyTH2FStyle(matrix);
 
       // Write the matrix to the output file
       ch::WriteToTFile(&matrix, &outfile, path);
     }
+  }
+
+  std::stringstream ss;
+  ss << table;
+  std::string line;
+  while (std::getline(ss, line)) {
+    LOG_INFO << "\t" << line << "\n";
   }
 
   // Clear histograms map to ensure memory release
@@ -899,6 +926,8 @@ void processAll(
     }
 
     std::vector<std::pair<std::string, ProcessReport>> processReports;
+    tabulate::Table procGroupTable;
+    procGroupTable.add_row({"Group", "Processes"});
 
     // Process total, signals, and backgrounds
     computeProcess(binCmb.cp().signals(), binName, "signal", doBinHists,
@@ -947,13 +976,12 @@ void processAll(
       computeProcess(procGroupCmb, binName, procGroupName, doBinHists,
                      doBinRateCorr, doBinHistBinCorr, processReports);
 
-      LOG_INFO << printTimestamp() << "\t-- Process group " << procGroupName
-               << " members:" << std::endl;
-      LOG_INFO << std::setw(20) << "Process" << std::endl;
+      std::vector<std::string> pg;
       for (const auto &proc : procGroupCmb.cp().process_set()) {
-        LOG_INFO << std::setw(20) << proc << std::endl;
+        pg.push_back(proc);
         processedProcesses.insert(proc);
       }
+      procGroupTable.add_row({procGroupName, boost::algorithm::join(pg, ", ")});
     }
 
     // Process ungrouped individual processes
@@ -986,16 +1014,28 @@ void processAll(
                      processReports);
     }
 
-    LOG_INFO << printTimestamp() << "\tProcess summary for " << binName
-             << std::endl;
-    LOG_INFO << std::setw(20) << "Process" << std::setw(15) << "Integral"
-             << std::setw(15) << "Unc" << std::setw(10) << "RateCorr"
-             << std::setw(12) << "HistBinCorr" << "Plot" << std::endl;
+    if (procGroupTable.rows().size() > 1) {
+      std::stringstream pgss;
+      pgss << procGroupTable;
+      std::string line;
+      while (std::getline(pgss, line)) {
+        LOG_INFO << "\t" << line << "\n";
+      }
+    }
+
+    tabulate::Table summary;
+    summary.add_row(
+        {"Process", "Integral", "Unc", "RateCorr", "HistBinCorr", "Plot"});
     for (const auto &[name, rep] : processReports) {
-      LOG_INFO << std::setw(20) << name << std::setw(15) << rep.integral
-               << std::setw(15) << rep.uncertainty << std::setw(10)
-               << (rep.rateCorr ? "Y" : "N") << std::setw(12)
-               << (rep.histBinCorr ? "Y" : "N") << rep.plotPath << std::endl;
+      summary.add_row({name, formatDouble(rep.integral),
+                       formatDouble(rep.uncertainty), rep.rateCorr ? "Y" : "N",
+                       rep.histBinCorr ? "Y" : "N", rep.plotPath});
+    }
+    std::stringstream ss;
+    ss << summary;
+    std::string line;
+    while (std::getline(ss, line)) {
+      LOG_INFO << "\t" << line << "\n";
     }
     LOG_INFO << printTimestamp() << "\tFinished processing " << binName
              << std::endl;
@@ -1020,14 +1060,20 @@ void processAll(
     // Compute bin statistics
     computeBin(binCmb, binGroupName, true, cfg.getRateCorr, cfg.getHistBinCorr);
 
-    LOG_INFO << printTimestamp() << " -- Bin group " << binGroupName
-             << " members:" << std::endl;
-    LOG_INFO << std::setw(20) << "Bin" << std::endl;
+    std::vector<std::string> bins;
     for (const auto &b : binCmb.cp().bin_set()) {
-      LOG_INFO << std::setw(20) << b << std::endl;
+      bins.push_back(b);
       processedBins.insert(b);
     }
-    LOG_INFO << std::endl;
+    tabulate::Table bgTable;
+    bgTable.add_row({"Group", "Bins"});
+    bgTable.add_row({binGroupName, boost::algorithm::join(bins, ", ")});
+    std::stringstream bgss;
+    bgss << bgTable;
+    std::string line;
+    while (std::getline(bgss, line)) {
+      LOG_INFO << "\t" << line << "\n";
+    }
   }
 
   // Process ungrouped bins
@@ -1143,8 +1189,10 @@ int main(int argc, char *argv[]) {
                              "' does not exist.");
   ch::CombineHarvester cmb_restore;
   cmb_restore.SetFlag("workspaces-use-clone", true);
+  RooMsgService::instance().setSilentMode(true);
   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
   RooMsgService::instance().getStream(1).removeTopic(RooFit::ObjectHandling);
+  RooMsgService::instance().getStream(2).removeTopic(RooFit::ObjectHandling);
   cmb_restore.ParseDatacard(cfg.datacard, "", "", "", 0, "125.");
   if (cmb_restore.cp().bin_set().empty() ||
       cmb_restore.cp().process_set().empty()) {
