@@ -189,6 +189,7 @@ ChronoSpectra --help \
 #include "CombineHarvester/CombineTools/interface/TFileIO.h"
 #include "CombineHarvester/CombineTools/interface/cli.hpp"
 #include "TROOT.h"
+#include "RooMsgService.h"
 #include <TCanvas.h>
 #include <TGaxis.h>
 #include <TH1F.h>
@@ -1136,6 +1137,8 @@ int main(int argc, char *argv[]) {
                              "' does not exist.");
   ch::CombineHarvester cmb_restore;
   cmb_restore.SetFlag("workspaces-use-clone", true);
+  RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
+  RooMsgService::instance().getStream(1).removeTopic(RooFit::ObjectHandling);
   cmb_restore.ParseDatacard(cfg.datacard, "", "", "", 0, "125.");
   if (cmb_restore.cp().bin_set().empty() ||
       cmb_restore.cp().process_set().empty()) {
