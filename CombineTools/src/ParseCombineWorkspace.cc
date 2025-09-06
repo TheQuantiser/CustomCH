@@ -58,8 +58,6 @@ void ParseCombineWorkspace(CombineHarvester& cb, RooWorkspace& ws,
     obs.set_bin(cats.back());
     cb.InsertObservation(obs);
 
-    bool delete_pdfs = false;
-
     RooAbsReal *ipdf = FindAddPdf(pdf->getPdf(cats.back().c_str()));
     if (ipdf) {
       std::unique_ptr<RooArgSet> pdf_obs(ipdf->getObservables(data->get()));
@@ -89,8 +87,7 @@ void ParseCombineWorkspace(CombineHarvester& cb, RooWorkspace& ws,
               dynamic_cast<CMSHistErrorPropagator *>(pdfs->at(0));
           if (err) {
             coeffs = &(err->coefList());
-            pdfs = new RooArgList(err->wrapperList());
-            delete_pdfs = true;
+            pdfs = &(err->funcList());
           }
         }
       }
@@ -110,7 +107,6 @@ void ParseCombineWorkspace(CombineHarvester& cb, RooWorkspace& ws,
             {proc.bin(), proc.process(), jpdf->GetName(), jcoeff->GetName()});
         cb.InsertProcess(proc);
       }
-      if (delete_pdfs) delete pdfs;
     }
   }
   cb.AddWorkspace(ws);
