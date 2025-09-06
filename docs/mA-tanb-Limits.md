@@ -20,7 +20,7 @@ Scaling the workspace accordingly {#p2}
 
 The combined datacard "htt_mssm.txt" is now transfered to a MSSM model dependent workspace.
 
-    text2workspace.py -b output/mssm_nomodel/htt_mssm.txt -o output/mssm_nomodel/htt_cmb_mhmodp.root -P CombineHarvester.CombinePdfs.MSSMv2:MSSM --PO filePrefix=$CMSSW_BASE/src/auxiliaries/models/ --PO modelFiles=8TeV,out.mhmodp-8TeV-tanbHigh-nnlo.root,0
+    text2workspace.py -b output/mssm_nomodel/htt_mssm.txt -o output/mssm_nomodel/htt_cmb_mhmodp.root -P CombineHarvester.CombinePdfs.MSSMv2:MSSM --PO filePrefix=auxiliaries/models/ --PO modelFiles=8TeV,out.mhmodp-8TeV-tanbHigh-nnlo.root,0
 
 Therefore, a physic model "MSSMv2.py" is used. It will try to read model files from the directory auxiliaries/models/, so we need to add this path as well as the model files themselves as additional parameters. The syntax for setting the path to the models is as above. The general syntax for the model files themselves is "--PO modelFiles=ERA,FILE,VERSION". In this example, we choose the mhmod+ model for high values of tanb at 8TeV. For a list of all available options for text2workspace, run text2workspace.py -h. For upcoming 13/14TeV runs VERSION=1 should be set.
 After the creation the workspace "htt_cmb_mhmodp.root" contains the model information like BR/xs/masses for all considered mA/tanb which are set as parameters of interest. The six signal processes dependent on the parameters of interest.

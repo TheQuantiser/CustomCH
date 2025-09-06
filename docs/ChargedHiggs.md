@@ -3,9 +3,12 @@ Charged Higgs datacards with RooMorphingPdf
 
 # Getting the cards
 
-The cards from the CMS HCG svn need to be copied into the auxiliaries directory:
+The cards from the CMS HCG svn need to be copied into the `auxiliaries`
+directory:
 
-    cp -r /afs/cern.ch/work/a/agilbert/public/CombineTools/data/HIG-14-020.r6636 $CMSSW_BASE/src/auxiliaries/datacards/
+```bash
+cp -r /afs/cern.ch/work/a/agilbert/public/CombineTools/data/HIG-14-020.r6636 auxiliaries/datacards/
+```
 
 We will only be using the "low-mass" cards (m_H+ < m_top), which are named like `combine_datacard_hplushadronic_m[MASS].txt`, where `[MASS]` ranges from 80 to 160 GeV.
 

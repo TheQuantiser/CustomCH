@@ -16,10 +16,13 @@ First we will compute limits vs mH in the legacy SM Higgs analysis (HIG-13-004).
  5. Using these json files to create plots of the limits
 
 ## Creating the datacards {#limits-creating-the-datacards}
-Go to the `CombineTools` directory and create the datacards using the `SMLegacyExample.py` script:
+Go to the `CombineTools` directory and create the datacards using the
+`SMLegacyExample.py` script:
 
-    cd $CMSSW_BASE/src/CombineHarvester/CombineTools
-    python scripts/SMLegacyExample.py
+```bash
+cd CombineTools
+python scripts/SMLegacyExample.py
+```
 
 This will create a familiar structure of datacards in `output/sm_cards`, with one subdirectory containing the datacards for all channels and categories (`cmb`) and subdirectories containing just the cards for specific channels (e.g. `tt`). Within each of these directories the cards are organised into further subdirectories corresponding to the mass of the signal.
 
@@ -172,7 +175,7 @@ Note the use of single quotes to prevent bash removing the double quotes surroun
 
 For datacards using RooMorphingPdfs for the signal, the steps to produce limits are similar to the per-mass case above, with the main difference being the need to specify the set of mass values explicitly rather than picking this up from the directory structure. The `SMLegacyMorphing` program will create similar directory structure with the RooMorphingPdf version of the HIG-13-004 cards:
 
-    cd $CMSSW_BASE/src/CombineHarvester/CombineTools
+    cd CombineTools
     SMLegacyMorphing
 
 This program creates a directory per channel which already contain a combined datacard. We can specify these cards directly in the text2workspace step.

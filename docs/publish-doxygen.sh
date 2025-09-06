@@ -18,7 +18,8 @@ git rm -rf .
 cd -
 
 # Generate the HTML documentation.
-./docs/make_docs.sh
+BUILD_DIR=${BUILD_DIR:-build}
+./docs/make_docs.sh ${BUILD_DIR}
 
 # Create and commit the documentation repo.
 cd ${HTML_PATH}

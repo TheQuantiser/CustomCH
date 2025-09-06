@@ -2,7 +2,9 @@ Python Interface {#python-interface}
 ====================================
 
 [TOC]
-The C++ CombineHarvester class and a number of other tools have a python interface available. The module containing this interface can be imported like any other CMSSW python module:
+The C++ CombineHarvester class and a number of other tools have a
+python interface available. After building and installing the project
+the module can be imported in the usual way:
 
     import CombineHarvester.CombineTools.ch as ch
 

@@ -6,11 +6,16 @@ Examples Part I {#intro1}
 
 **File**: CombineTools/bin/Example1.cpp
 
-In this example we use CombineHarvester to parse an existing datacard and then extract information from it. Open the file above and take a look at the source code. To run the example, first make sure the code has been compiled with `scram`:
+In this example we use CombineHarvester to parse an existing datacard
+and then extract information from it. Open the file above and take a
+look at the source code. To run the example, first build the code with
+CMake and run the executable from the build directory:
 
-    cd $CMSSW_BASE/src
-    scram b -j4
-    Example1
+```bash
+cmake -S . -B build
+cmake --build build -j4
+./build/CombineTools/Example1
+```
 
 Parsing a single card {#ex1-p1}
 ===============================
