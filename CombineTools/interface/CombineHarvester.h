@@ -589,6 +589,7 @@ private:
                  TH1 const* high, bool linear);
   void ShapeDiff(double x, TH1F* target, RooDataHist const* nom,
                  RooDataHist const* low, RooDataHist const* high);
+  // Interpolate between logs of the fraction in each bin (shapeN algorithm)
   void ShapeDiffShapeN(double x, TH1F* target, TH1 const* nom,
                        TH1 const* low, TH1 const* high);
   void ShapeDiffShapeN(double x, TH1F* target, RooDataHist const* low,

@@ -6,6 +6,7 @@
 #include <utility>
 #include <set>
 #include <fstream>
+#include <stdexcept>
 #include "boost/lexical_cast.hpp"
 #include "boost/algorithm/string.hpp"
 #include "boost/range/algorithm_ext/erase.hpp"
@@ -806,22 +807,23 @@ void CombineHarvester::ShapeDiffShapeN(double x,
                                        const TH1* nom,
                                        const TH1* low,
                                        const TH1* high) {
+  (void)nom;  // nominal shape currently matches target
+  const double fx = smoothStepFunc(x);
   const int nBins = target->GetNbinsX();
-  const double abx = std::fabs(x);
   for (int i = 1; i <= nBins; ++i) {
-    const double n = nom->GetBinContent(i);
     const double h = high->GetBinContent(i);
     const double l = low->GetBinContent(i);
     double t = target->GetBinContent(i);
-    if (n <= 0.0 || t <= 0.0) continue;
-    if (x >= 0.0) {
-      if (h <= 0.0) continue;
-      t *= std::pow(h / n, abx);
-    } else {
-      if (l <= 0.0) continue;
-      t *= std::pow(n / l, abx);
+    if (t <= 0.0) {
+      target->SetBinContent(i, 0.0);
+      continue;
     }
-    target->SetBinContent(i, t);
+    const double logT = std::log(t);
+    const double logH = (h > 0.0) ? std::log(h) : logT;
+    const double logL = (l > 0.0) ? std::log(l) : logT;
+    const double deltaLog = 0.5 * x *
+                             ((logH - logL) + (logH + logL - 2.0 * logT) * fx);
+    target->SetBinContent(i, std::exp(logT + deltaLog));
   }
 }
 
@@ -829,23 +831,29 @@ void CombineHarvester::ShapeDiffShapeN(double x,
                                        TH1F* target,
                                        const RooDataHist* low,
                                        const RooDataHist* high) {
+  const double fx = smoothStepFunc(x);
   const int nBins = target->GetNbinsX();
-  const double abx = std::fabs(x);
+  const double norm_low = low->sumEntries();
+  const double norm_high = high->sumEntries();
+  if (norm_low <= 0.0 || norm_high <= 0.0) {
+    throw std::runtime_error("Error: Zero or negative normalization factor in ShapeDiffShapeN");
+  }
   for (int i = 1; i <= nBins; ++i) {
     high->get(i - 1);
     low->get(i - 1);
-    const double h = high->weight();
-    const double l = low->weight();
+    const double h = high->weight() / norm_high;
+    const double l = low->weight() / norm_low;
     double t = target->GetBinContent(i);
-    if (t <= 0.0) continue;
-    if (x >= 0.0) {
-      if (h <= 0.0) continue;
-      t *= std::pow(h / t, abx);
-    } else {
-      if (l <= 0.0) continue;
-      t *= std::pow(t / l, abx);
+    if (t <= 0.0) {
+      target->SetBinContent(i, 0.0);
+      continue;
     }
-    target->SetBinContent(i, t);
+    const double logT = std::log(t);
+    const double logH = (h > 0.0) ? std::log(h) : logT;
+    const double logL = (l > 0.0) ? std::log(l) : logT;
+    const double deltaLog = 0.5 * x *
+                             ((logH - logL) + (logH + logL - 2.0 * logT) * fx);
+    target->SetBinContent(i, std::exp(logT + deltaLog));
   }
 }
 
