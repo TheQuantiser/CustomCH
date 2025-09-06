@@ -106,8 +106,10 @@ int main() {
 
   if (create_asimov) {
     for (auto const& b : lm_bins) {
+      // Include both "shape" and "shapeN" systematics when building the total
+      // background for this bin
       ch::CombineHarvester tmp = std::move(
-          cb.cp().bin({b}).backgrounds().syst_type({"shape"}, false));
+          cb.cp().bin({b}).backgrounds().syst_type({"shape", "shapeN"}, false));
       TH1F tot_bkg = tmp.GetShape();
       // double bkg_rate = tot_bkg.Integral();
       tot_bkg.Scale(tmp.GetObservedRate()/tot_bkg.Integral());

@@ -16,6 +16,10 @@
 namespace ch {
 using json = nlohmann::json;
 
+// The routines in this file inspect shape-based systematics. Both the legacy
+// "shape" type and the log-interpolated "shapeN" type are treated in the same
+// way for these validation checks.
+
 void PrintSystematic(ch::Systematic *syst){
   std::cout<<"Systematic "<<syst->name()<<" for process "<<syst->process()<<" in region "<<syst->bin()<<" :";
 }
@@ -28,7 +32,9 @@ void PrintProc(ch::Process *proc){
 
 void ValidateShapeUncertaintyDirection(CombineHarvester& cb, json& jsobj){
   cb.ForEachSyst([&](ch::Systematic *sys){
-    if(sys->type()=="shape" && ( (sys->value_u() > 1. && sys->value_d() > 1.) || (sys->value_u() < 1. && sys->value_d() < 1.))){
+    if((sys->type()=="shape" || sys->type()=="shapeN") && (
+        (sys->value_u() > 1. && sys->value_d() > 1.) ||
+        (sys->value_u() < 1. && sys->value_d() < 1.))){
       jsobj["uncertVarySameDirect"][sys->name()][sys->bin()][sys->process()]={{"value_u",sys->value_u()},{"value_d",sys->value_d()}};
     }
   });
@@ -36,7 +42,9 @@ void ValidateShapeUncertaintyDirection(CombineHarvester& cb, json& jsobj){
 
 void ValidateShapeUncertaintyDirection(CombineHarvester& cb){
   cb.ForEachSyst([&](ch::Systematic *sys){
-    if(sys->type()=="shape" && ( (sys->value_u() > 1. && sys->value_d() > 1.) || (sys->value_u() < 1. && sys->value_d() < 1.))){
+    if((sys->type()=="shape" || sys->type()=="shapeN") && (
+        (sys->value_u() > 1. && sys->value_d() > 1.) ||
+        (sys->value_u() < 1. && sys->value_d() < 1.))){
       PrintSystematic(sys);
       std::cout<<" Up/Down normalisations go in the same direction: up variation: "<<sys->value_u()<<", down variation: "<<sys->value_d()<<std::endl;
     }
@@ -47,7 +55,8 @@ void ValidateShapeTemplates(CombineHarvester& cb, json& jsobj){
   cb.ForEachSyst([&](ch::Systematic *sys){
   const TH1* hist_u;
   const TH1* hist_d;
-  if(sys->type()=="shape" && ( fabs(sys->value_u() - sys->value_d()) < 0.0000001)){
+  if((sys->type()=="shape" || sys->type()=="shapeN") &&
+     ( fabs(sys->value_u() - sys->value_d()) < 0.0000001)){
       hist_u = sys->shape_u();
       hist_d = sys->shape_d();
       bool is_same=1;
@@ -67,7 +76,8 @@ void ValidateShapeTemplates(CombineHarvester& cb){
   cb.ForEachSyst([&](ch::Systematic *sys){
     const TH1* hist_u;
     const TH1* hist_d;
-    if(sys->type()=="shape" && ( fabs(sys->value_u() - sys->value_d()) < 0.0000001)){
+    if((sys->type()=="shape" || sys->type()=="shapeN") &&
+       ( fabs(sys->value_u() - sys->value_d()) < 0.0000001)){
       hist_u = sys->shape_u();
       hist_d = sys->shape_d();
       bool is_same=1;
@@ -105,7 +115,8 @@ void CheckEmptyShapes(CombineHarvester& cb, json& jsobj){
       if ( MatchingProcess(*sys,*empty_procs.at(i)) ) no_check=1;
     }
     if(!no_check){
-      if(sys->type()=="shape" &&  (sys->value_u()==0. || sys->value_d()==0.)){
+      if((sys->type()=="shape" || sys->type()=="shapeN") &&
+         (sys->value_u()==0. || sys->value_d()==0.)){
         jsobj["emptySystematicShape"][sys->name()][sys->bin()][sys->process()]={{"value_u",sys->value_u()},{"value_d",sys->value_d()}};
       }
     }
@@ -127,7 +138,8 @@ void CheckEmptyShapes(CombineHarvester& cb){
       if ( MatchingProcess(*sys,*empty_procs.at(i)) ) no_check=1;
     }
     if(!no_check){
-      if(sys->type()=="shape" &&  (sys->value_u()==0. || sys->value_d()==0.)){
+      if((sys->type()=="shape" || sys->type()=="shapeN") &&
+         (sys->value_u()==0. || sys->value_d()==0.)){
         PrintSystematic(sys);
         std::cout<<" At least one empty histogram: up variation: "<<sys->value_u()<<" Down variation: "<<sys->value_d()<<std::endl;
       }
@@ -147,7 +159,11 @@ void CheckNormEff(CombineHarvester& cb, double maxNormEff){
     for( unsigned int i=0; i< empty_procs.size(); i++){
       if ( MatchingProcess(*sys,*empty_procs.at(i)) ) no_check=1;
     }
-    if(!no_check && ((sys->type()=="shape" &&  (sys->value_u()-1 > maxNormEff || sys->value_u()-1 < -maxNormEff  || sys->value_d()-1>maxNormEff || sys->value_d()-1< -maxNormEff)) || (sys->type()=="lnN" && (sys->value_u()-1 > maxNormEff || sys->value_u()-1 < - maxNormEff) ))){
+    if(!no_check && (((sys->type()=="shape" || sys->type()=="shapeN") &&
+        (sys->value_u()-1 > maxNormEff || sys->value_u()-1 < -maxNormEff  ||
+         sys->value_d()-1>maxNormEff || sys->value_d()-1< -maxNormEff)) ||
+        (sys->type()=="lnN" && (sys->value_u()-1 > maxNormEff ||
+                                 sys->value_u()-1 < - maxNormEff) ))){
       PrintSystematic(sys);
       std::cout<<"Uncertainty has a large normalisation effect: up variation: "<<sys->value_u()<<" Down variation: "<<sys->value_d()<<std::endl;
     }
@@ -166,7 +182,10 @@ void CheckNormEff(CombineHarvester& cb, double maxNormEff, json& jsobj){
     for( unsigned int i=0; i< empty_procs.size(); i++){
       if ( MatchingProcess(*sys,*empty_procs.at(i)) ) no_check=1;
     }
-    if(!no_check && ((sys->type()=="shape" &&  (std::abs(sys->value_u()-1) > maxNormEff || std::abs(sys->value_d()-1)>maxNormEff)) || (sys->type()=="lnN" && (std::abs(sys->value_u()-1) > maxNormEff) ))){
+    if(!no_check && (((sys->type()=="shape" || sys->type()=="shapeN") &&
+        (std::abs(sys->value_u()-1) > maxNormEff ||
+         std::abs(sys->value_d()-1)>maxNormEff)) ||
+        (sys->type()=="lnN" && (std::abs(sys->value_u()-1) > maxNormEff) ))){
       jsobj["largeNormEff"][sys->name()][sys->bin()][sys->process()]={{"value_u",sys->value_u()},{"value_d",sys->value_d()}};
     }
   });
@@ -211,7 +230,7 @@ void CheckSizeOfShapeEffect(CombineHarvester& cb){
     const TH1* hist_u;
     const TH1* hist_d;
     TH1F hist_nom;
-    if(sys->type()=="shape"){
+    if(sys->type()=="shape" || sys->type()=="shapeN"){
       hist_u = sys->shape_u();
       hist_d = sys->shape_d();
       hist_nom=cb.cp().bin({sys->bin()}).process({sys->process()}).GetShape();
@@ -241,7 +260,7 @@ void CheckSizeOfShapeEffect(CombineHarvester& cb, json& jsobj){
     const TH1* hist_u;
     const TH1* hist_d;
     TH1F hist_nom;
-    if(sys->type()=="shape"){
+    if(sys->type()=="shape" || sys->type()=="shapeN"){
       hist_u = sys->shape_u();
       hist_d = sys->shape_d();
       hist_nom=cb.cp().bin({sys->bin()}).process({sys->process()}).GetShape();
