@@ -54,7 +54,7 @@ The validation of the produced SM cards as compared to the official cards can be
 Run 1 H->hh->bbtautau and A->Zh->lltautau results {#run1HTTHhhAZh}
 =========================
 
-**Files** Run1BSMComb/bin/AZh.cpp, Run1BSMComb/bin/Hhh.cpp, CombineTools/scripts/HhhExample.py
+**Files** Run1BSMComb/bin/AZh.cpp, Run1BSMComb/bin/Hhh.cpp
 
 **Files** Run1BSMComb/bin/MorphingAZh.cpp, Run1BSMComb/bin/MorphingHhh.cpp
 
