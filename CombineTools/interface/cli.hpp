@@ -1,41 +1,37 @@
-#ifndef CombineTools_cli_hpp
-#define CombineTools_cli_hpp
+#ifndef CHRONOSPECTRA_CLI_HPP
+#define CHRONOSPECTRA_CLI_HPP
+
+#include <set>
 #include <string>
-#include <boost/program_options.hpp>
 
-namespace ch {
-
-struct ChronoSpectraOptions {
+struct ChronoSpectraConfig {
   std::string datacard;
   std::string workspace;
-  std::string fitresult;
   std::string output;
+  std::string dataset = "data_obs";
+  std::string fitresult;
+  unsigned samples = 2000;
+  bool postfit = false;
+  bool skipprefit = false;
+  std::string freeze_arg;
   std::string groupBinsArg;
   std::string groupProcsArg;
-  std::string freeze_arg;
-  std::string dataset;
-  std::string systSaveDir;
-  unsigned samples;
-  bool postfit;
-  bool skipprefit;
-  bool skipObs;
-  bool getRateCorr;
-  bool getHistBinCorr;
-  bool sepProcHists;
-  bool sepBinHists;
-  bool sepProcHistBinCorr;
-  bool sepBinHistBinCorr;
-  bool sepBinRateCorr;
-  bool plotShapeSyst;
-  bool logy;
-  bool help;
+  bool skipObs = false;
+  bool getRateCorr = true;
+  bool getHistBinCorr = true;
+  bool sepProcHists = false;
+  bool sepBinHists = false;
+  bool sepProcHistBinCorr = false;
+  bool sepBinHistBinCorr = false;
+  bool sepBinRateCorr = false;
+  bool storeSyst = false;
+  std::string plotSystArg;
+  std::set<std::string> plotSystPatterns;
+  bool plotSystAll = false;
+  std::string systSaveDir = "shapeSystPlots";
+  bool logy = false;
 };
 
-boost::program_options::variables_map
-ParseChronoSpectraOptions(int argc, char** argv,
-                          ChronoSpectraOptions &opts,
-                          boost::program_options::options_description &config);
+ChronoSpectraConfig parseCommandLine(int argc, char *argv[]);
 
-} // namespace ch
-
-#endif
+#endif  // CHRONOSPECTRA_CLI_HPP
