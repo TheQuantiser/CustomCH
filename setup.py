@@ -37,4 +37,5 @@ setup(
         "CombineHarvester.CombineTools.input.xsecs_brs": ["*"],
         "CombineHarvester.CombinePdfs": ["*.so"],
     },
+    include_package_data=True,
 )
