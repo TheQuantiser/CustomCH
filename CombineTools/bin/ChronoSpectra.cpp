@@ -874,6 +874,8 @@ void processAll(
       pr.histBinCorr = true;
     }
     reports.emplace_back(procName, std::move(pr));
+    LOG_INFO << printTimestamp() << "\tProcessed process " << procName
+             << " for bin " << binName << std::endl;
   };
 
   // Lambda: Process all computations for a bin or bin group
@@ -924,6 +926,8 @@ void processAll(
       obsRep.integral = obsHist.Integral();
       obsRep.uncertainty = obsHist.GetBinContent(0);
       processReports.emplace_back(cfg.dataset, std::move(obsRep));
+      LOG_INFO << printTimestamp() << "\tProcessed process " << cfg.dataset
+               << " for bin " << binName << std::endl;
     }
 
     // Process grouped processes
@@ -993,6 +997,8 @@ void processAll(
                << (rep.rateCorr ? "Y" : "N") << std::setw(12)
                << (rep.histBinCorr ? "Y" : "N") << rep.plotPath << std::endl;
     }
+    LOG_INFO << printTimestamp() << "\tFinished processing " << binName
+             << std::endl;
   };
 
   // Track processed bins
