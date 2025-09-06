@@ -4,6 +4,7 @@
 #include <boost/program_options.hpp>
 #include <boost/any.hpp>
 #include <iostream>
+#include <tabulate/table.hpp>
 
 ChronoSpectraConfig parseCommandLine(int argc, char *argv[]) {
   ChronoSpectraConfig cfg;
@@ -107,29 +108,32 @@ ChronoSpectraConfig parseCommandLine(int argc, char *argv[]) {
   }
 
   std::cout << "\n\nUsing option values:" << std::endl;
+  tabulate::Table table;
+  table.add_row({"Option", "Value"});
   for (const auto &option : config.options()) {
     const std::string &name = option->long_name();
-    std::cout << "--" << name << ": ";
+    std::string value_str;
     if (vm.count(name)) {
       try {
         auto value = vm[name].value();
         if (value.type() == typeid(std::string)) {
-          std::cout << boost::any_cast<std::string>(value);
+          value_str = boost::any_cast<std::string>(value);
         } else if (value.type() == typeid(bool)) {
-          std::cout << (boost::any_cast<bool>(value) ? "true" : "false");
+          value_str = boost::any_cast<bool>(value) ? "true" : "false";
         } else if (value.type() == typeid(unsigned)) {
-          std::cout << boost::any_cast<unsigned>(value);
+          value_str = std::to_string(boost::any_cast<unsigned>(value));
         } else {
-          std::cout << "unknown value type";
+          value_str = "unknown value type";
         }
       } catch (const boost::bad_any_cast &) {
-        std::cout << "Error casting value";
+        value_str = "Error casting value";
       }
     } else {
-      std::cout << "not set";
+      value_str = "not set";
     }
-    std::cout << std::endl;
+    table.add_row({"--" + name, value_str});
   }
+  std::cout << table << std::endl;
   std::cout << "\n\n";
 
   return cfg;
