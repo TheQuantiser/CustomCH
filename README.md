@@ -32,6 +32,13 @@ installed package:
 python -m pip install -e .
 ```
 
+To select a specific number of threads for the C++ build, include
+`--config-settings=build-threads=<N>`:
+
+```bash
+python -m pip install -e . --config-settings=build-threads=4
+```
+
 See [docs/StandaloneInstallation.md](docs/StandaloneInstallation.md) for
 more details on dependency setup and optional Conda environments. The
 current recommended tag is `v3.0.0-pre1`.
