@@ -1,27 +1,27 @@
-# - Find the HistFactory library
+# CMake module to locate the HistFactory library
 #
-# This module defines the following variables:
-#   HistFactory_FOUND
-#   HistFactory_INCLUDE_DIRS
-#   HistFactory_LIBRARIES
+# This module defines
+#  HistFactory_FOUND
+#  HistFactory_LIBRARIES
+#  HistFactory_INCLUDE_DIRS
 #
-# It also defines an imported target:
-#   HistFactory::HistFactory
-#
-# The search relies on CMAKE_PREFIX_PATH and standard system prefixes.
+# and defines an imported target
+#  HistFactory::HistFactory
 
 find_path(HistFactory_INCLUDE_DIR
           NAMES RooStats/HistFactory/Measurement.h
-          PATH_SUFFIXES include)
+          HINTS $ENV{ROOTSYS}/include)
 
 find_library(HistFactory_LIBRARY
              NAMES HistFactory
-             PATH_SUFFIXES lib)
+             HINTS $ENV{ROOTSYS}/lib $ENV{ROOTSYS}/lib64)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
-  HistFactory
-  REQUIRED_VARS HistFactory_LIBRARY HistFactory_INCLUDE_DIR)
+    HistFactory
+    DEFAULT_MSG
+    HistFactory_INCLUDE_DIR
+    HistFactory_LIBRARY)
 
 if(HistFactory_FOUND)
   set(HistFactory_LIBRARIES ${HistFactory_LIBRARY})
@@ -33,3 +33,4 @@ if(HistFactory_FOUND)
       INTERFACE_INCLUDE_DIRECTORIES "${HistFactory_INCLUDE_DIR}")
   endif()
 endif()
+

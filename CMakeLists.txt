@@ -17,7 +17,7 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   endif()
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 option(USE_SYSTEM_COMBINEDLIMIT "Use system-installed HiggsAnalysisCombinedLimit" OFF)
 set(COMBINEDLIMIT_TAG "main" CACHE STRING "Git branch or tag of HiggsAnalysis-CombinedLimit to fetch")
@@ -70,7 +70,7 @@ endif()
 
 find_package(Boost REQUIRED COMPONENTS program_options filesystem system)
 find_package(LibXml2 REQUIRED)
-find_package(VDT REQUIRED)
+find_package(vdt REQUIRED)
 find_package(HistFactory REQUIRED)
 
 set(CH_EXTERNAL_INCLUDES
