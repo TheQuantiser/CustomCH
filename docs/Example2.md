@@ -6,17 +6,16 @@ Examples Part II {#intro2}
 
 **File**: CombineTools/bin/Example2.cpp
 
-  In this example we will set up a simplified version of the Higgs to tau tau
-  datacards, while exploring the main features of datacard creation with the
-  CombineHarvester tool. Build the project with CMake (see the
-  [installation instructions](../README.md#installation)) and run the example:
+In this example we will set up a simplified version of the Higgs to tau
+tau datacards, while exploring the main features of datacard creation
+with the CombineHarvester tool. To run the example, first build the
+code with CMake and run the executable from the build directory:
 
-      cmake --build build -j4
-      ./build/bin/Example2
-
-> **Note:** Job-prefix templates for `combineTool.py` recognise the
-> `%(CH_BASE)s` placeholder pointing to the repository root and can be
-> overridden with the `CH_BASE` environment variable.
+```bash
+cmake -S . -B build
+cmake --build build -j4
+./build/CombineTools/Example2
+```
 
 Defining categories and processes {#ex2-p1}
 ===========================================

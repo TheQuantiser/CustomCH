@@ -4,19 +4,16 @@ MSSM Limits with RooMorphingPdf {#MSSMWithMorphing}
 
 Getting Started
 ===============
-Ensure you have a local clone of the [HiggsToTauTau](https://github.com/cms-analysis/HiggsAnalysis-HiggsToTauTau) repository. The [auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries) repository is also required, and must be located at `$CH_BASE/auxiliaries`. The RooMorphingPdf is currently provided in a private branch of the [CombinedLimit](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit) package. You can get this as follows:
+Install the project as described in
+[`StandaloneInstallation.md`](StandaloneInstallation.md). The
+[HiggsToTauTau](https://github.com/cms-analysis/HiggsAnalysis-HiggsToTauTau)
+and
+[auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries)
+repositories are also required and should be checked out alongside
+CombineHarvester.
 
-    cd HiggsAnalysis/CombinedLimit
-    git remote add htt-dev https://github.com/ajgilbert/HiggsAnalysis-CombinedLimit.git
-    git fetch htt-dev
-    git checkout -b slc6-dev htt-dev/slc6-dev
-    scramv1 b -j4
-    cd -
-
-Once this branch is checked-out it will be possible to compile the `CombinePdfs` package that is part of the `CombineHarvester` tool:
-
-    cd HiggsAnalysis/HiggsToTauTau/CombineHarvester/CombinePdfs
-    make
-
-We will build the datacard using the program `bin/MorphingMSSM`. Take a look through the source code in `test/MorphingMSSM.cpp`.
+The RooMorphingPdf and other tools are built automatically as part of
+the CMake build. We will build the datacard using the program
+`bin/MorphingMSSM`. Take a look through the source code in
+`test/MorphingMSSM.cpp`.
 

@@ -26,20 +26,26 @@ As well as histogram-based templates, the production of datacards with arbitrary
 
 Getting started {#getting-started}
 ==================================
-CombineHarvester can now be used as a standalone project.  See the
-[standalone installation guide](StandaloneInstallation.md) for the
-repository checkout and build instructions.  It currently provides two
-sub-packages:
+CombineHarvester is organised into a set of packages, each contained
+within a subdirectory that produces shared libraries and executable
+programs.  The two core packages are:
 
-  * **CombineHarvester/CombineTools**, which contains the CombineHarvester class and other parts of the core framework
-  * **CombineHarvester/CombinePdfs**, which provides tools for building custom RooFit pdfs
+  * **CombineHarvester/CombineTools**, which contains the CombineHarvester
+    class and other parts of the core framework
+  * **CombineHarvester/CombinePdfs**, which provides tools for building
+    custom RooFit pdfs
 
-After building, example programs can be invoked directly, e.g.
+The project is built with CMake and can be compiled without a CMSSW
+release. A minimal build is
 
+```bash
+cmake -S . -B build
+cmake --build build -j$(nproc)
+cmake --install build
 ```
-$CH_BASE/build/bin/Example1
-python3 CombineTools/scripts/Example3.py
-```
+
+See [StandaloneInstallation.md](StandaloneInstallation.md) for
+information on setting up dependencies.
 
 If you are using this framework for the first time we recommend taking a look through some of the examples below which demonstrate the main features:
 
@@ -48,7 +54,10 @@ If you are using this framework for the first time we recommend taking a look th
   * [Examples Part 3](\ref intro3): Creating a counting-experiment datacard and using rateParam directives to float process yields via free parameters while express other yields as functions of these parameters.
   * [Limit setting](\ref limits): Using the `combineTool.py` script to build workspaces, compute asymptotic limits and plot the ouput.
 
-\warning To run many of these examples you must first ensure the [auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries) repository is located at `$CH_BASE/auxiliaries` and up-to-date:
+\warning To run many of these examples you must first ensure the
+[auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries)
+repository is available in a directory called `auxiliaries` next to the
+CombineHarvester source and up-to-date:
 \verbatim
 git clone https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries.git "$CH_BASE/auxiliaries" \endverbatim
 The input root files will be sourced from here.
@@ -80,9 +89,9 @@ Other comments {#note}
     terminate called after throwing an instance of 'std::runtime_error'
       what():
     *******************************************************************************
-      Context: Function ch::GetClonedTH1 at
-        CombineHarvester/CombineTools/src/TFileIO.cc:21
-      Problem: TH1 eleTau_0jet_medium/ggH not found in $CH_BASE/auxiliaries/shapes/htt_et.inputs-sm-7TeV-hcg.root
+    Context: Function ch::GetClonedTH1 at
+      CombineHarvester/CombineTools/src/TFileIO.cc:21
+    Problem: TH1 eleTau_0jet_medium/ggH not found in auxiliaries/shapes/htt_et.inputs-sm-7TeV-hcg.root
     *******************************************************************************
 
 If the cause of such an error message is unclear, or if you believe the error message should not have been produced, please raise an issue here with full details on reproducing the problem: https://github.com/TheQuantiser/CustomCH/issues/new

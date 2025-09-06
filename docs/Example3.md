@@ -6,22 +6,20 @@ Examples Part III {#intro3}
 
 **File**: CombineTools/bin/Example3.cpp
 
-  This examples demonstrates how to create a simple four-bin counting
-  experiment datacard. It is based on the example given on the combine twiki
-  [here](https://twiki.cern.ch/twiki/bin/viewauth/CMS/HiggsWG/SWGuideNonStandardCombineUses#Rate_Parameters).
-  Special `rateParam` directives are added to the datacard to allow the
-  normalisations in three of these four bins to float freely and the fourth
-  will be expressed as a function of the these three parameters. Here we follow
-  the C++ interface example, a similar python version can be found in
-  `CombineTools/scripts/Example3.py`. Build the project with CMake (see the
-  [installation instructions](../README.md#installation)) and run the example:
+This examples demonstrates how to create a simple four-bin counting
+experiment datacard. It is based on the example given on the combine twiki
+[here](https://twiki.cern.ch/twiki/bin/viewauth/CMS/HiggsWG/SWGuideNonStandardCombineUses#Rate_Parameters).
+Special `rateParam` directives are added to the datacard to allow the
+normalisations in three of these four bins to float freely and the fourth
+will be expressed as a function of the these three parameters. Here we
+follow the C++ interface example, a similar python version can be found in
+`CombineTools/scripts/Example3.py`. Build and run the example with:
 
-      cmake --build build -j4
-      ./build/bin/Example3
-
-> **Note:** Job-prefix templates used with `combineTool.py` recognise the
-> `%(CH_BASE)s` placeholder pointing to the repository root and can be
-> overridden with the `CH_BASE` environment variable.
+```bash
+cmake -S . -B build
+cmake --build build -j4
+./build/CombineTools/Example3
+```
 
 We start by defining four categories: A, B, C and D in the normal way. Contrary to the previous shape-based examples, with a counting experiment we have to specify all of the observed and expected yields directly. To start with we'll define a map containing the observed yields in each category.
 
