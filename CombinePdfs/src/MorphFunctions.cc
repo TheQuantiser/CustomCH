@@ -75,11 +75,12 @@ std::string BuildRooMorphing(RooWorkspace& ws, CombineHarvester& cb,
 
   // ss = "shape systematic"
   // Make a list of the names of shape systematics affecting this process
+  // ("shape" and "shapeN" types)
   vector<string> ss_vec =
-      Set2Vec(cb_bp.cp().syst_type({"shape"}).syst_name_set());
+      Set2Vec(cb_bp.cp().syst_type({"shape", "shapeN"}).syst_name_set());
   // Now check if all shape systematics are present for all mass points
   for (auto const& s : m_str_vec) {
-    if (cb_bp.cp().syst_type({"shape"}).mass({s}).syst_name_set().size() !=
+    if (cb_bp.cp().syst_type({"shape", "shapeN"}).mass({s}).syst_name_set().size() !=
         ss_vec.size()) {
       throw std::runtime_error(FNERROR(
           "Some mass points do not have the full set of shape systematics, "

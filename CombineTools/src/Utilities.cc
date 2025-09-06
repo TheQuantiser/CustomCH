@@ -133,15 +133,16 @@ TGraph TGraphFromTable(std::string filename, std::string const& x_column, std::s
   unsigned x_col(x_it - fields.begin());
   unsigned y_col(y_it - fields.begin());
   TGraph res(lines.size() - 1);
-  for (unsigned i = 1; i < lines.size(); ++i) {
+  unsigned point = 0;
+  for (auto const& line : boost::make_iterator_range(lines.begin() + 1, lines.end())) {
     std::vector<std::string> words;
-    boost::split(words, lines[i], boost::is_any_of("\t "),
+    boost::split(words, line, boost::is_any_of("\t "),
                  boost::token_compress_on);
     if (words.size() != fields.size()) {
-      FNLOG(std::cout) << "Skipped this line:\n" << lines[i] << "\n";
+      FNLOG(std::cout) << "Skipped this line:\n" << line << "\n";
       continue;
     }
-    res.SetPoint(i, boost::lexical_cast<double>(words.at(x_col)),
+    res.SetPoint(point++, boost::lexical_cast<double>(words.at(x_col)),
                  boost::lexical_cast<double>(words.at(y_col)));
   }
   return res;
