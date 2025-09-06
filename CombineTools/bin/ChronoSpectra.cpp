@@ -188,8 +188,8 @@ ChronoSpectra --help \
 #include "CombineHarvester/CombineTools/interface/ParseCombineWorkspace.h"
 #include "CombineHarvester/CombineTools/interface/TFileIO.h"
 #include "CombineHarvester/CombineTools/interface/cli.hpp"
-#include "TROOT.h"
 #include "RooMsgService.h"
+#include "TROOT.h"
 #include <TCanvas.h>
 #include <TError.h>
 #include <TGaxis.h>
@@ -753,13 +753,21 @@ void writeHistogramsToFile(
   LOG_INFO << printTimestamp()
            << " Writing histograms to file: " << outfile.GetName() << std::endl;
 
+  const int path_width = 50;
+  const int val_width = 15;
+  LOG_INFO << "  " << std::left << std::setw(path_width) << "Histogram"
+           << std::right << std::setw(val_width) << "Integral"
+           << std::setw(val_width) << "Unc" << std::endl;
+  LOG_INFO << "  " << std::string(path_width + 2 * val_width, '-') << std::endl;
+
   for (auto &[binName, procMap] : histograms) {
     for (auto &[procName, histogram] : procMap) {
       std::string path = prefix + "/" + binName + "/" + procName;
       histogram.SetTitle(procName.c_str());
-      LOG_INFO << printTimestamp() << "\t--> " << std::setw(50) << std::left
-               << path << " = " << histogram.Integral() << " ± "
-               << histogram.GetBinContent(0) << std::endl;
+      LOG_INFO << "  " << std::left << std::setw(path_width) << path
+               << std::right << std::setw(val_width) << histogram.Integral()
+               << std::setw(val_width) << histogram.GetBinContent(0)
+               << std::endl;
       ch::WriteToTFile(&histogram, &outfile, path);
     }
   }
