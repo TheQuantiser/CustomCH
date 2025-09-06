@@ -164,30 +164,27 @@ struct TablePrinter {
     return total;
   }
   void header(const std::vector<std::string> &cols) const {
-    LOG_INFO << "  ";
+    std::ostringstream line;
+    line << "  ";
     for (size_t i = 0; i < cols.size(); ++i) {
-      if (i == 0)
-        LOG_INFO << std::left;
-      else
-        LOG_INFO << std::right;
+      line << (i == 0 ? std::left : std::right);
       if (widths[i] > 0)
-        LOG_INFO << std::setw(widths[i]);
-      LOG_INFO << cols[i];
+        line << std::setw(widths[i]);
+      line << cols[i];
     }
-    LOG_INFO << std::endl;
+    LOG_INFO << line.str() << std::endl;
     LOG_INFO << "  " << std::string(totalWidth(), '-') << std::endl;
   }
   void row(const std::vector<std::string> &cols) const {
-    LOG_INFO << "  ";
+    std::ostringstream line;
+    line << "  ";
     for (size_t i = 0; i < cols.size(); ++i) {
-      if (i == 0)
-        LOG_INFO << std::left;
-      else
-        LOG_INFO << std::right;
+      line << (i == 0 ? std::left : std::right);
       if (widths[i] > 0)
-        LOG_INFO << std::setw(widths[i]);
-      LOG_INFO << cols[i];
+        line << std::setw(widths[i]);
+      line << cols[i];
     }
+    LOG_INFO << line.str() << std::endl;
   }
 };
 
