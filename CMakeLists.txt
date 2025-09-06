@@ -91,6 +91,7 @@ set(CH_EXTERNAL_LIBS
   HistFactory::HistFactory
 )
 
+
 add_subdirectory(CombineTools)
 add_subdirectory(CombinePdfs)
 
@@ -116,4 +117,3 @@ install(TARGETS CombineHarvester EXPORT CombineHarvesterTargets)
 install(EXPORT CombineHarvesterTargets
         FILE CombineHarvesterTargets.cmake
         NAMESPACE CombineHarvester::
-        DESTINATION lib/cmake/CombineHarvester)
