@@ -37,4 +37,5 @@ install(TARGETS CombineTools ${COMBINE_TOOLS_BINARIES}
   EXPORT CombineHarvesterTargets
   RUNTIME DESTINATION CombineHarvester/CombineTools
   LIBRARY DESTINATION CombineHarvester/CombineTools
-  ARCHIVE DESTINATION CombineHarvester/CombineTools)
+  ARCHIVE DESTINATION CombineHarvester/CombineTools
+  INCLUDES DESTINATION include)

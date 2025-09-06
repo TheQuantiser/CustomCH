@@ -32,4 +32,5 @@ install(TARGETS CombinePdfs ${COMBINE_PDFS_BINARIES}
   EXPORT CombineHarvesterTargets
   RUNTIME DESTINATION CombineHarvester/CombinePdfs
   LIBRARY DESTINATION CombineHarvester/CombinePdfs
-  ARCHIVE DESTINATION CombineHarvester/CombinePdfs)
+  ARCHIVE DESTINATION CombineHarvester/CombinePdfs
+  INCLUDES DESTINATION include)

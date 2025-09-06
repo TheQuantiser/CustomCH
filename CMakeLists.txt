@@ -119,9 +119,9 @@ endif()
           NAMESPACE CombineHarvester::
           DESTINATION lib/cmake/CombineHarvester)
 
-  install(DIRECTORY CombineTools/interface/
+  install(DIRECTORY CombineTools/interface
           DESTINATION include/CombineHarvester/CombineTools
           FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
-  install(DIRECTORY CombinePdfs/interface/
+  install(DIRECTORY CombinePdfs/interface
           DESTINATION include/CombineHarvester/CombinePdfs
           FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
