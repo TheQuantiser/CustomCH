@@ -1,14 +1,15 @@
 #include <string>
 #include <iostream>
 #include "CombineHarvester/CombineTools/interface/CombineHarvester.h"
+#include "CombineHarvester/CombineTools/interface/PathTools.h"
 
 using namespace std;
 
 int main() {
 
   //! [part1]
-  // Use the CMSSW_BASE environment variable to get the full path to the auxiliaries folder
-  string in_dir = string(getenv("CMSSW_BASE")) + "/src/auxiliaries/datacards/sm/htt_mt/";
+  // Use PathTools to get the full path to the auxiliaries folder
+  string in_dir = ch::paths::auxiliaries() + "datacards/sm/htt_mt/";
 
   // Create a new CombineHarvester instance
   ch::CombineHarvester cmb1;
