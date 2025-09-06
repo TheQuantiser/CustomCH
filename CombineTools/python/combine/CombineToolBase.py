@@ -14,9 +14,16 @@ def _build_job_prefix(ch_base):
     return """#!/bin/sh
 ulimit -s unlimited
 set -e
-export CH_BASE={ch_base}
-cd {{pwd}}
-""".format(ch_base=ch_base, pwd=os.environ.get('PWD', os.getcwd()))
+cd %(CH_BASE)s
+export SCRAM_ARCH=%(SCRAM_ARCH)s
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+eval `scramv1 runtime -sh`
+cd %(PWD)s
+""" % ({
+    'CH_BASE': os.environ['CH_BASE'],
+    'SCRAM_ARCH': os.environ['SCRAM_ARCH'],
+    'PWD': os.environ['PWD']
+})
 
 CONDOR_TEMPLATE = """executable = %(EXE)s
 arguments = $(ProcId)
@@ -35,11 +42,8 @@ queue %(NUMBER)s
 
 """
 
-
-
 def run_command(dry_run, command, pre_cmd='', combine_exec='combine'):
-    if command.startswith('combine'):
-        command = command.replace('combine', combine_exec, 1)
+    if command.startswith(combine_exec):
         command = pre_cmd + command
     if not dry_run:
         print('>> ' + command)
@@ -65,10 +69,7 @@ class CombineToolBase:
         self.dry_run = False
         self.bopts = ''  # batch submission options
         self.pre_cmd = ''
-        self.combine = None
         self.combine_exec = 'combine'
-        self.ch_base = os.environ.get('CH_BASE', ch.paths.base())
-        self.job_prefix = _build_job_prefix(self.ch_base)
 
     def attach_job_args(self, group):
         group.add_argument('--job-mode', default=self.job_mode, choices=[
@@ -95,8 +96,8 @@ class CombineToolBase:
                            help='Prefix the call to combine with this string')
         group.add_argument('--post-job-cmd', default='',
                            help='Postfix cmd for combine jobs [condor]')
-        group.add_argument('--combine', dest='combine',
-                           help='Path to the combine executable to use')
+        group.add_argument('--combine', default=self.combine_exec,
+                           help='Path to combine executable')
 
     def attach_intercept_args(self, group):
         pass
@@ -119,14 +120,7 @@ class CombineToolBase:
         self.cores = self.args.cores
         self.pre_cmd = self.args.pre_cmd
         self.post_job_cmd = self.args.post_job_cmd
-        self.combine = self.args.combine
-        found = shutil.which('combine')
-        if self.combine:
-            self.combine_exec = self.combine
-        elif found:
-            self.combine_exec = 'combine'
-            self.combine = found
-        self.job_prefix = _build_job_prefix(self.ch_base)
+        self.combine_exec = self.args.combine
 
     def put_back_arg(self, arg_name, target_name):
         if hasattr(self.args, arg_name):
@@ -153,12 +147,11 @@ class CombineToolBase:
             for i, command in enumerate(commands):
                 tee = 'tee' if i == 0 else 'tee -a'
                 log_part = '\n'
-                if do_log: log_part = ' 2>&1 | %s ' % tee + logname + log_part
-                if command.startswith('combine') or command.startswith('pushd'):
-                    new_cmd = command
-                    if command.startswith('combine'):
-                        new_cmd = command.replace('combine', self.combine_exec, 1)
-                    text_file.write(self.pre_cmd + 'eval ' + new_cmd + log_part)
+                if do_log:
+                    log_part = ' 2>&1 | %s ' % tee + logname + log_part
+                if command.startswith(self.combine_exec) or command.startswith('pushd'):
+                    text_file.write(
+                        self.pre_cmd + 'eval ' + command + log_part)
                 else:
                     text_file.write(command)
             text_file.write('\n'+self.post_job_cmd+'\n')
@@ -172,7 +165,7 @@ class CombineToolBase:
         # Put the method back in because we always take it out
         self.put_back_arg('method', '-M')
         print(self.passthru)
-        command = 'combine ' + ' '.join(self.passthru)
+        command = self.combine_exec + ' ' + ' '.join(self.passthru)
         self.job_queue.append(command)
         self.flush_queue()
 
@@ -199,16 +192,15 @@ class CombineToolBase:
         if self.job_mode in ['script', 'lxbatch', 'SGE', 'slurm']:
             if self.prefix_file != '':
                 if self.prefix_file.endswith('.txt'):
-                    job_prefix_file = open(self.prefix_file, 'r')
-                else:
-                    job_pkg = 'CombineHarvester.CombineTools.input.job_prefixes'
-                    path = resources.files(job_pkg).joinpath(f"job_prefix_{self.prefix_file}.txt")
-                    job_prefix_file = path.open('r')
-                env = {
-                    'PWD': os.environ.get('PWD', os.getcwd()),
-                    'CH_BASE': self.ch_base
-                }
-                self.job_prefix = job_prefix_file.read() % env
+                    job_prefix_file = open(self.prefix_file,'r')
+                else :
+                    job_prefix_file = open(os.environ['CH_BASE']+"/CombineTools/input/job_prefixes/job_prefix_"+self.prefix_file+".txt",'r')
+                global JOB_PREFIX
+                JOB_PREFIX=job_prefix_file.read() %({
+                  'CH_BASE': os.environ['CH_BASE'],
+                  'SCRAM_ARCH': os.environ['SCRAM_ARCH'],
+                  'PWD': os.environ['PWD']
+                })
                 job_prefix_file.close()
         if self.job_mode in ['script', 'lxbatch', 'SGE']:
             for i, j in enumerate(range(0, len(self.job_queue), self.merge)):
