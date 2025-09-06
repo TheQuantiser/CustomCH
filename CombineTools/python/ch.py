@@ -41,7 +41,8 @@ def _load_library() -> None:
                             exists = path.exists()
                     if exists:
                         try:
-                            cppyy.load_reflection_info(str(path.resolve()))
+                            cppyy.add_library_path(str(path.parent))
+                            cppyy.load_library(path.name)
                         except OSError as err:
                             raise OSError(
                                 f"Failed to load {path}. Rebuild the project or set CH_LIBRARY_PATH"
