@@ -29,7 +29,6 @@ packages = [
     "CombineHarvester.CombineTools.input.examples",
     "CombineHarvester.CombineTools.input.job_prefixes",
     "CombineHarvester.CombineTools.input.xsecs_brs",
-    "CombineHarvester.CombinePdfs",
 ]
 
 [tool.setuptools.package-dir]
@@ -42,7 +41,6 @@ packages = [
 "CombineHarvester.CombineTools.input.examples" = "CombineHarvester/CombineTools/input/examples"
 "CombineHarvester.CombineTools.input.job_prefixes" = "CombineHarvester/CombineTools/input/job_prefixes"
 "CombineHarvester.CombineTools.input.xsecs_brs" = "CombineHarvester/CombineTools/input/xsecs_brs"
-"CombineHarvester.CombinePdfs" = "CombineHarvester/CombinePdfs/python"
 
 [tool.setuptools.package-data]
 "CombineHarvester.CombineTools" = ["*.so"]
@@ -51,5 +49,4 @@ packages = [
 "CombineHarvester.CombineTools.input.examples" = ["*"]
 "CombineHarvester.CombineTools.input.job_prefixes" = ["*"]
 "CombineHarvester.CombineTools.input.xsecs_brs" = ["*"]
-"CombineHarvester.CombinePdfs" = ["*.so"]
 
