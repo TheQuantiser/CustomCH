@@ -1,45 +1,30 @@
-from skbuild import setup
+import subprocess
+import sys
+import shutil
+from pathlib import Path
 
-# Locations of packages providing configuration and data inputs
-input_packages = {
-    "CombineHarvester.CombineTools.input": "CombineTools/input",
-    "CombineHarvester.CombineTools.input.examples": "CombineTools/input/examples",
-    "CombineHarvester.CombineTools.input.job_prefixes": "CombineTools/input/job_prefixes",
-    "CombineHarvester.CombineTools.input.xsecs_brs": "CombineTools/input/xsecs_brs",
-}
+from setuptools import setup
+from setuptools.command.build_ext import build_ext
 
-base_packages = [
-    "CombineHarvester",
-    "CombineHarvester.CombineTools",
-    "CombineHarvester.CombineTools.combine",
-    "CombineHarvester.CombineTools.systematics",
-    "CombineHarvester.CombineTools.scripts",
-]
 
-packages = base_packages + list(input_packages)
+class CMakeBuild(build_ext):
+    def run(self):
+        super().run()
+        build_temp = Path(self.build_temp)
+        build_temp.mkdir(parents=True, exist_ok=True)
+        source_dir = Path(__file__).resolve().parent
+        subprocess.check_call(["cmake", "-S", str(source_dir), "-B", str(build_temp)])
+        subprocess.check_call(["cmake", "--build", str(build_temp), "--target", "CombineTools", "CombinePdfs"])
+        suffix = ".dll" if sys.platform == "win32" else (".dylib" if sys.platform == "darwin" else ".so")
+        dest_tools = Path(self.build_lib) / "CombineHarvester" / "CombineTools"
+        dest_pdfs = Path(self.build_lib) / "CombineHarvester" / "CombinePdfs"
+        dest_tools.mkdir(parents=True, exist_ok=True)
+        dest_pdfs.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(build_temp / "CombineTools" / f"libCombineTools{suffix}",
+                     dest_tools / f"libCombineHarvesterCombineTools{suffix}")
+        shutil.copy2(build_temp / "CombinePdfs" / f"libCombinePdfs{suffix}",
+                     dest_pdfs / f"libCombineHarvesterCombinePdfs{suffix}")
 
-package_dir = {
-    "CombineHarvester": "CombineHarvester",
-    "CombineHarvester.CombineTools": "CombineTools/python",
-    "CombineHarvester.CombineTools.combine": "CombineTools/python/combine",
-    "CombineHarvester.CombineTools.systematics": "CombineTools/python/systematics",
-    "CombineHarvester.CombineTools.scripts": "CombineTools/scripts",
-    **input_packages,
-}
 
-package_data = {
-    "CombineHarvester.CombineTools": ["*.so"],
-    "CombineHarvester.CombineTools.scripts": ["*"],
-    **{pkg: ["*"] for pkg in input_packages},
-}
-
-setup(
-    name="combineharvester",
-    version="0.1.0",
-    description="CMS CombineHarvester tools",
-    packages=packages,
-    package_dir=package_dir,
-    package_data=package_data,
-    include_package_data=True,
-)
+setup(cmdclass={"build_ext": CMakeBuild})
 
