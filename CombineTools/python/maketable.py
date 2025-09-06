@@ -1,9 +1,8 @@
-from __future__ import absolute_import
+#!/usr/bin/env python3
 import CombineHarvester.CombineTools.plotting as plot
 import ROOT as R
 from array import array
 import json
-from six.moves import range
 
 def Tablefrom1DGraph(rootfile, filename):
     graph = [R.TGraph() for i in range(6)]
@@ -86,3 +85,20 @@ def TablefromJson(jsonfile, filename):
         f.write("\n")
         i+=1
     f.close()
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Convert combine output to a text table.")
+    parser.add_argument("input", help="Input file (ROOT or JSON)")
+    parser.add_argument("output", help="Output text file")
+    args = parser.parse_args()
+    if args.input.endswith('.json'):
+        TablefromJson(args.input, args.output)
+    else:
+        Tablefrom1DGraph(args.input, args.output)
+
+
+if __name__ == "__main__":
+    main()

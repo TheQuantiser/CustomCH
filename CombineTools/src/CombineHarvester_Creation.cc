@@ -60,18 +60,18 @@ void CombineHarvester::AddProcesses(
   };
   auto comb = ch::GenerateCombinations(lengths);
   for (auto const& c : comb) {
-    for (unsigned i = 0; i < procs.size(); ++i) {
-      auto proc = std::make_shared<Process>();
-      proc->set_mass(mass[c[0]]);
-      proc->set_analysis(analysis[c[1]]);
-      proc->set_era(era[c[2]]);
-      proc->set_channel(channel[c[3]]);
-      proc->set_bin_id(bin[c[4]].first);
-      proc->set_bin(bin[c[4]].second);
-      proc->set_process(procs[i]);
-      proc->set_signal(signal);
-      procs_.push_back(proc);
-    }
+  for (auto const& proc_name : procs) {
+    auto proc = std::make_shared<Process>();
+    proc->set_mass(mass[c[0]]);
+    proc->set_analysis(analysis[c[1]]);
+    proc->set_era(era[c[2]]);
+    proc->set_channel(channel[c[3]]);
+    proc->set_bin_id(bin[c[4]].first);
+    proc->set_bin(bin[c[4]].second);
+    proc->set_process(proc_name);
+    proc->set_signal(signal);
+    procs_.push_back(proc);
+  }
   }
 }
 
@@ -91,7 +91,7 @@ void CombineHarvester::AddSystFromProc(Process const& proc,
   boost::replace_all(subbed_name, "$CHANNEL", proc.channel());
   boost::replace_all(subbed_name, "$ANALYSIS", proc.analysis());
   std::map<std::string, std::string> attrs = proc.all_attributes();
-  for ( const auto it : attrs) {
+  for (auto const& it : attrs) {
     boost::replace_all(subbed_name, "$ATTR(" + it.first + ")", proc.attribute(it.first));
   }
   auto sys = std::make_shared<Systematic>();
@@ -103,7 +103,7 @@ void CombineHarvester::AddSystFromProc(Process const& proc,
     sys->set_value_u(val_u);
     sys->set_value_d(val_d);
     CreateParameterIfEmpty(sys->name());
-  } else if (type == "shape" || type == "shapeN2" || type == "shapeU") {
+  } else if (type == "shape" || type == "shapeN" || type == "shapeN2" || type == "shapeU") {
     sys->set_asymm(true);
     sys->set_value_u(1.0);
     sys->set_value_d(1.0);
@@ -150,10 +150,10 @@ void CombineHarvester::AddSystVar(std::string const& name,
 
 void CombineHarvester::RenameSystematic(CombineHarvester &target, std::string const& old_name,
                                         std::string const& new_name) {
-  for (unsigned i = 0; i < systs_.size(); ++i) {
-    if (systs_[i]->name() == old_name) {
-      systs_[i]->set_name(new_name);
-      target.CreateParameterIfEmpty(systs_[i]->name());
+  for (auto const& s : systs_) {
+    if (s->name() == old_name) {
+      s->set_name(new_name);
+      target.CreateParameterIfEmpty(s->name());
     }
   }
 }
@@ -170,20 +170,20 @@ void CombineHarvester::ExtractShapes(std::string const& file,
 
   // Note that these LoadShapes calls will fail if we encounter
   // any object that already has shapes
-  for (unsigned  i = 0; i < obs_.size(); ++i) {
-    if (obs_[i]->shape() || obs_[i]->data()) continue;
-    LoadShapes(obs_[i].get(), mapping);
+  for (auto & obs : obs_) {
+    if (obs->shape() || obs->data()) continue;
+    LoadShapes(obs.get(), mapping);
   }
-  for (unsigned  i = 0; i < procs_.size(); ++i) {
-    if (procs_[i]->shape() || procs_[i]->pdf()) continue;
-    LoadShapes(procs_[i].get(), mapping);
+  for (auto & proc : procs_) {
+    if (proc->shape() || proc->pdf()) continue;
+    LoadShapes(proc.get(), mapping);
   }
   if (syst_rule == "") return;
-  for (unsigned  i = 0; i < systs_.size(); ++i) {
-    if (systs_[i]->type() != "shape" && systs_[i]->type() != "shapeN2" &&
-        systs_[i]->type() != "shapeU")
+  for (auto & sys : systs_) {
+    if (sys->type() != "shape" && sys->type() != "shapeN" && sys->type() != "shapeN2" &&
+        sys->type() != "shapeU")
       continue;
-    LoadShapes(systs_[i].get(), mapping);
+    LoadShapes(sys.get(), mapping);
   }
 }
 

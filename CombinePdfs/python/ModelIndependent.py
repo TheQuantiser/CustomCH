@@ -1,11 +1,9 @@
-from __future__ import absolute_import
-from __future__ import print_function
+#!/usr/bin/env python3
 from HiggsAnalysis.CombinedLimit.PhysicsModel import *
 import os
 import ROOT
 import math
 import itertools
-import six
 
 class BRChargedHiggs(PhysicsModel):
     def __init__(self):
@@ -27,7 +25,7 @@ class BRChargedHiggs(PhysicsModel):
         # self.modelBuilder.out.Print()
 
     def getYieldScale(self,bin,process):
-        for prefix, model in six.iteritems(self.processScaling):
+        for prefix, model in self.processScaling.items():
             if process == prefix:
                 print('Scaling %s/%s as %s' % (bin, process, 'Scaling_'+model))
                 return 'Scaling_'+model
@@ -114,7 +112,7 @@ class FloatingMSSMXSHiggs(MSSMLikeHiggsModel):
         ## the values are given by the value in brakets. In principle three values can be passed on: value, lower bound and upper
         ## bound.
         #
-        #mssm_scan = mssm_xsec_tools("{CMSSW_BASE}/src/{PATH}".format(CMSSW_BASE=os.environ['CMSSW_BASE'], PATH="HiggsAnalysis/HiggsToTauTau/data/out.mhmax-mu+200-7TeV-nnlo.root"))
+        #mssm_scan = mssm_xsec_tools("{CH_BASE}/{PATH}".format(CH_BASE=os.environ['CH_BASE'], PATH="HiggsAnalysis/HiggsToTauTau/data/out.mhmax-mu+200-7TeV-nnlo.root"))
         #mssm_xsec = mssm_scan.query(self.options.mass, float(self.tanb))
         #self.modelBuilder.doVar("bbH_xsec[%g]" % (mssm_xsec['higgses']['A']['xsec']['santander']*mssm_xsec['higgses']['A']['BR']))
         #self.modelBuilder.doVar("ggH_xsec[%g]" % (mssm_xsec['higgses']['A']['xsec']['ggF'      ]*mssm_xsec['higgses']['A']['BR']))

@@ -509,7 +509,7 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
         }
         sys->set_name(words[i][0]);
         std::string type = words[i][1];
-        if (!contains(std::vector<std::string> {"shape", "shape?", "shapeN2", "shapeU", "lnN", "lnU"},
+        if (!contains(std::vector<std::string> {"shape", "shape?", "shapeN", "shapeN2", "shapeU", "lnN", "lnU"},
                       type)) {
           throw std::runtime_error(
             FNERROR("Systematic type " + type + " not supported"));
@@ -533,7 +533,7 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
           sys->set_value_u(boost::lexical_cast<double>(words[i][p]));
           sys->set_asymm(false);
         }
-        if (sys->type() == "shape" || sys->type() == "shapeN2" ||
+        if (sys->type() == "shape" || sys->type() == "shapeN" || sys->type() == "shapeN2" ||
             sys->type() == "shapeU") {
           sys->set_scale(boost::lexical_cast<double>(words[i][p]));
           LoadShapes(sys.get(), hist_mapping);
@@ -554,7 +554,7 @@ int CombineHarvester::ParseDatacard(std::string const& filename,
             sys->set_scale(boost::lexical_cast<double>(words[i][p]));
           }
         }
-        if (sys->type() == "shape" || sys->type() == "shapeN2" ||
+        if (sys->type() == "shape" || sys->type() == "shapeN" || sys->type() == "shapeN2" ||
             sys->type() == "shapeU")
           sys->set_asymm(true);
 
@@ -1105,13 +1105,13 @@ void CombineHarvester::WriteDatacard(std::string const& name,
     bool seen_lnN = false;
     bool seen_lnU = false;
     bool seen_shape = false;
+    bool seen_shapeN = false;
     bool seen_shapeN2 = false;
     bool seen_shapeU = false;
     if (param_set.count(sys)) continue;
     for (unsigned p = 0; p < procs_.size(); ++p) {
       line[p + 2] = "-";
-      for (unsigned n = 0; n < proc_sys_map[p].size(); ++n) {
-        ch::Systematic const* ptr = proc_sys_map[p][n];
+      for (auto const* ptr : proc_sys_map[p]) {
         // Only interested into Systematics with name "sys"
         if (ptr->name() != sys) continue;
         std::string tp = ptr->type();
@@ -1124,8 +1124,9 @@ void CombineHarvester::WriteDatacard(std::string const& name,
             : (format("%g") % ptr->value_u()).str();
           break;
         }
-        if (tp == "shape" || tp == "shapeN2" || tp == "shapeU") {
+        if (tp == "shape" || tp == "shapeN" || tp == "shapeN2" || tp == "shapeU") {
           if (tp == "shape") seen_shape = true;
+          if (tp == "shapeN") seen_shapeN = true;
           if (tp == "shapeN2") seen_shapeN2 = true;
           if (tp == "shapeU") seen_shapeU = true;
           line[p + 2] = (format("%g") % ptr->scale()).str();
@@ -1157,6 +1158,8 @@ void CombineHarvester::WriteDatacard(std::string const& name,
     }
     if (seen_shapeN2) {
       line[1] = "shapeN2";
+    } else if (seen_shapeN) {
+      line[1] = "shapeN";
     } else if (seen_shapeU) {
       line[1] = "shapeU";
     } else if (seen_lnU) {
