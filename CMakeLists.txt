@@ -73,6 +73,11 @@ find_package(LibXml2 REQUIRED)
 find_package(vdt REQUIRED)
 find_package(HistFactory REQUIRED)
 
+# Header-only tabulate library
+add_library(tabulate INTERFACE)
+target_include_directories(tabulate INTERFACE
+  ${CMAKE_CURRENT_SOURCE_DIR}/extern/tabulate/include)
+
 set(CH_EXTERNAL_INCLUDES
   ${ROOT_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
@@ -89,6 +94,7 @@ set(CH_EXTERNAL_LIBS
   ${LIBXML2_LIBRARIES}
   vdt::vdt
   HistFactory::HistFactory
+  tabulate
 )
 
 add_subdirectory(CombineTools)
