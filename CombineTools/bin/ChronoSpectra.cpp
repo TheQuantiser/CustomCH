@@ -673,9 +673,9 @@ void plotShapeSystVariations(const SystHists &hists,
 
   double xMin = rel_diff_up.GetXaxis()->GetXmin();
   double xMax = rel_diff_up.GetXaxis()->GetXmax();
-  TLine line(xMin, 0.0, xMax, 0.0);
-  line.SetLineColor(kBlack);
-  line.SetLineWidth(6);
+  TLine zeroLine(xMin, 0.0, xMax, 0.0);
+  zeroLine.SetLineColor(kBlack);
+  zeroLine.SetLineWidth(6);
 
   auto [rMin, rMax] = GetHistMinMax({&rel_diff_up, &rel_diff_down});
   double rOffset = std::abs(rMax - rMin) * 0.2;
@@ -692,29 +692,26 @@ void plotShapeSystVariations(const SystHists &hists,
   rel_diff_up.SetMaximum(rMax);
 
   rel_diff_up.Draw("hist");
-  line.Draw();
+  zeroLine.Draw();
   rel_diff_down.Draw("hist same");
   pad1.RedrawAxis();
   pad1.Update();
   pad1.Modified();
 
-  static tabulate::Table savedPlots;
   static bool headerPrinted = false;
   std::string outFile = cfg.systSaveDir + "/" + plotName + ".png";
 
   canvas.SaveAs(outFile.c_str());
 
   if (!headerPrinted) {
-    savedPlots.add_row({"Saved plots"});
+    tabulate::Table header;
+    header.add_row({"Saved plots"});
+    LOG_INFO << header << "\n";
     headerPrinted = true;
   }
-  savedPlots.add_row({outFile});
-  std::stringstream row_stream;
-  row_stream << savedPlots.row(savedPlots.size() - 1);
-  std::string line;
-  while (std::getline(row_stream, line)) {
-    LOG_INFO << line << "\n";
-  }
+  tabulate::Table row;
+  row.add_row({outFile});
+  LOG_INFO << row << "\n";
 }
 
 void StoreSystematics(ch::CombineHarvester &cmb, const std::string &bin,
