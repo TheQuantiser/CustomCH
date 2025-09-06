@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.15)
 project(CombineHarvester)
 
 # Ensure we build against the same C++ standard as ROOT to avoid
@@ -114,6 +114,7 @@ target_link_libraries(CombineHarvester INTERFACE
   HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
 
 if(NOT USE_SYSTEM_COMBINEDLIMIT)
+  install(TARGETS HiggsAnalysisCombinedLimit EXPORT CombineHarvesterTargets)
   install(DIRECTORY ${HiggsAnalysisCombinedLimit_SOURCE_DIR}/interface/
           DESTINATION include/HiggsAnalysis/CombinedLimit
           FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
