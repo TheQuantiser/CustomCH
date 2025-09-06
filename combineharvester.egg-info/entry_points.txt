@@ -1,3 +1,0 @@
-[console_scripts]
-ch-maketable = CombineHarvester.CombineTools.maketable:main
-pdg-round = CombineHarvester.CombineTools.pdgRounding:main
