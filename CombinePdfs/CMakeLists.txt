@@ -1,36 +1,35 @@
-cmake_minimum_required(VERSION 3.15)
+file(GLOB COMBINE_PDFS_SRC src/*.cc)
 
-file(GLOB source_files src/*.cc)
-file(GLOB header_files interface/*.h interface/*.hpp interface/*.hh)
+get_target_property(_CL_INC HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit INTERFACE_INCLUDE_DIRECTORIES)
 
-root_generate_dictionary(G__CombinePdfs ${header_files} LINKDEF src/classes_def.xml)
+# Build a shared library so that ROOT dependencies are linked once.
+add_library(CombinePdfs SHARED ${COMBINE_PDFS_SRC})
 
-add_library(CombinePdfs SHARED
-    ${source_files}
-    ${CMAKE_CURRENT_BINARY_DIR}/G__CombinePdfs.cxx)
+# Allow includes of the form
+#   "CombineHarvester/CombineTools/interface/..."
+# by exposing the repository root during the build.
+target_include_directories(CombinePdfs PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/interface>
+  $<INSTALL_INTERFACE:include>
+  ${CH_EXTERNAL_INCLUDES}
+  ${ROOT_INCLUDE_DIRS}
+  ${_CL_INC}
+)
+target_link_libraries(CombinePdfs PUBLIC CombineTools ${CH_EXTERNAL_LIBS} HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
+set_target_properties(CombinePdfs PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-set_target_properties(CombinePdfs PROPERTIES OUTPUT_NAME CombinePdfs)
-
-target_include_directories(CombinePdfs
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/interface>
-        $<INSTALL_INTERFACE:include/CombineHarvester/CombinePdfs>
-    PRIVATE ${ROOT_INCLUDE_DIRS})
-
-target_link_libraries(CombinePdfs
-    PUBLIC CombineTools ROOT::Core ROOT::Hist ROOT::Tree ROOT::MathCore ROOT::RooFitCore ROOT::RooFit ROOT::RooStats)
-
-install(TARGETS CombinePdfs EXPORT CombineHarvesterTargets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-install(DIRECTORY interface/
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CombineHarvester/CombinePdfs)
-
-file(GLOB BIN_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} bin/*.cpp)
-foreach(src ${BIN_SOURCES})
-    get_filename_component(name ${src} NAME_WE)
-    add_executable(${name} ${src})
-    target_link_libraries(${name} PRIVATE CombinePdfs)
-    install(TARGETS ${name} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+file(GLOB COMBINE_PDFS_BINS bin/*.cpp)
+set(COMBINE_PDFS_BINARIES)
+foreach(src ${COMBINE_PDFS_BINS})
+  get_filename_component(name ${src} NAME_WE)
+  add_executable(${name} ${src})
+  target_link_libraries(${name} PRIVATE CombinePdfs ${CH_EXTERNAL_LIBS} HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
+  list(APPEND COMBINE_PDFS_BINARIES ${name})
 endforeach()
 
+install(TARGETS CombinePdfs ${COMBINE_PDFS_BINARIES}
+  EXPORT CombineHarvesterTargets
+  RUNTIME DESTINATION CombineHarvester/CombinePdfs
+  LIBRARY DESTINATION CombineHarvester/CombinePdfs
+  ARCHIVE DESTINATION CombineHarvester/CombinePdfs)
