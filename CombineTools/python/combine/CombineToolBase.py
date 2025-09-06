@@ -4,7 +4,6 @@ import stat
 import shutil
 from functools import partial
 from multiprocessing import Pool
-from importlib import resources
 import CombineHarvester.CombineTools.ch as ch
 
 DRY_RUN = False
