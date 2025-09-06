@@ -22,6 +22,16 @@ cmake --install build
 This installs the command-line tools into the `bin` directory of the
 selected prefix.
 
+## Python package
+
+The Python bindings can be installed in editable mode. This will invoke
+the CMake build to compile the C++ libraries and copy them into the
+installed package:
+
+```bash
+python -m pip install -e .
+```
+
 See [docs/StandaloneInstallation.md](docs/StandaloneInstallation.md) for
 more details on dependency setup and optional Conda environments. The
 current recommended tag is `v3.0.0-pre1`.
