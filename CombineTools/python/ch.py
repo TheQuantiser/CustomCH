@@ -42,7 +42,19 @@ def _load_library() -> None:
                     if exists:
                         try:
                             cppyy.add_library_path(str(path.parent))
-                            cppyy.load_library(path.name)
+                            try:
+                                cppyy.load_library(path.name)
+                            except Exception:
+                                # Some cppyy versions no longer expose the CppyyLegacy
+                                # namespace used internally by load_library. Fallback to
+                                # ROOT's system loader in that case.
+                                try:
+                                    if cppyy.gbl.gSystem.Load(str(path)) != 0:
+                                        raise OSError
+                                except Exception as err:
+                                    raise OSError(
+                                        f"Failed to load {path}. Rebuild the project or set CH_LIBRARY_PATH"
+                                    ) from err
                         except OSError as err:
                             raise OSError(
                                 f"Failed to load {path}. Rebuild the project or set CH_LIBRARY_PATH"
