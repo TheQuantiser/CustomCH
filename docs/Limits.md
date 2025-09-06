@@ -16,15 +16,10 @@ First we will compute limits vs mH in the legacy SM Higgs analysis (HIG-13-004).
  5. Using these json files to create plots of the limits
 
 ## Creating the datacards {#limits-creating-the-datacards}
-Go to the `CombineTools` directory and create the datacards using the
-`SMLegacyExample.py` script:
-
-```bash
-cd CombineTools
-python scripts/SMLegacyExample.py
-```
-
-This will create a familiar structure of datacards in `output/sm_cards`, with one subdirectory containing the datacards for all channels and categories (`cmb`) and subdirectories containing just the cards for specific channels (e.g. `tt`). Within each of these directories the cards are organised into further subdirectories corresponding to the mass of the signal.
+Datacards for this example should be produced in the `output/sm_cards` directory
+using your preferred workflow for the legacy SM Higgs analysis. Each channel and
+category (`cmb`, `tt`, etc.) should appear as a subdirectory, with further
+subdirectories corresponding to the mass of the signal.
 
 ## Building the workspaces {#limits-building-the-workspaces}
 We will focus on computing the limits for each channel separately, but before we get to this we need to turn the datacards into binary RooFit workspaces. This means combining the cards from each category into a single text datacard with `combineCards.py`, then running `text2workspace.py` to convert this single card into a workspace.
