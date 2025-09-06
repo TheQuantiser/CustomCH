@@ -31,8 +31,8 @@ class CMakeBuild(build_ext):
         lib_name = f"libCombineHarvesterCombineTools{suffix}"
         built_lib = build_temp / "CombineTools" / lib_name
 
-        # Copy into the package source for editable installs
-        pkg_dir = source_dir / "CombineTools" / "python"
+        # Copy into the hidden staging area for editable installs
+        pkg_dir = source_dir / ".python" / "CombineHarvester" / "CombineTools"
         pkg_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy2(built_lib, pkg_dir / lib_name)
 
