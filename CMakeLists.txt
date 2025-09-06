@@ -114,6 +114,7 @@ target_link_libraries(CombineHarvester INTERFACE
   HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
 
 if(NOT USE_SYSTEM_COMBINEDLIMIT)
+  install(TARGETS HiggsAnalysisCombinedLimit EXPORT CombineHarvesterTargets)
   install(DIRECTORY ${HiggsAnalysisCombinedLimit_SOURCE_DIR}/interface/
           DESTINATION include/HiggsAnalysis/CombinedLimit
           FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")

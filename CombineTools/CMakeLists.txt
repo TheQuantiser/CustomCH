@@ -1,6 +1,9 @@
 file(GLOB COMBINE_TOOLS_SRC CONFIGURE_DEPENDS src/*.cc src/*.cpp)
 
 get_target_property(_CL_INC HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit INTERFACE_INCLUDE_DIRECTORIES)
+if(NOT _CL_INC AND DEFINED HiggsAnalysisCombinedLimit_SOURCE_DIR)
+  set(_CL_INC "${HiggsAnalysisCombinedLimit_SOURCE_DIR}/interface")
+endif()
 
 # Build a shared library so that ROOT and CombinedLimit
 # dependencies are linked once and reused by all executables.
