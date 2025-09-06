@@ -93,11 +93,12 @@ void CMSHistFuncFactory::RunSingleProc(CombineHarvester& cb, RooWorkspace& ws,
 
   // ss = "shape systematic"
   // Make a list of the names of shape systematics affecting this process
+  // (including "shapeN" and "shapeU" variations)
   vector<string> ss_vec =
-      Set2Vec(cbp.cp().syst_type({"shape", "shapeU"}).syst_name_set());
+      Set2Vec(cbp.cp().syst_type({"shape", "shapeN", "shapeU"}).syst_name_set());
   // Now check if all shape systematics are present for all mass points
   for (auto const& s : m_str_vec) {
-    if (cbp.cp().syst_type({"shape", "shapeU"}).mass({s}).syst_name_set().size() !=
+    if (cbp.cp().syst_type({"shape", "shapeN", "shapeU"}).mass({s}).syst_name_set().size() !=
         ss_vec.size()) {
       throw std::runtime_error(FNERROR(
           "Some mass points do not have the full set of shape systematics, "
