@@ -30,7 +30,7 @@ endforeach()
 
 install(TARGETS CombinePdfs ${COMBINE_PDFS_BINARIES}
   EXPORT CombineHarvesterTargets
-  RUNTIME DESTINATION CombineHarvester/CombinePdfs
-  LIBRARY DESTINATION CombineHarvester/CombinePdfs
-  ARCHIVE DESTINATION CombineHarvester/CombinePdfs
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
   INCLUDES DESTINATION include)
