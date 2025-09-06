@@ -14,7 +14,6 @@ base_packages = [
     "CombineHarvester.CombineTools.combine",
     "CombineHarvester.CombineTools.systematics",
     "CombineHarvester.CombineTools.scripts",
-    "CombineHarvester.CombinePdfs",
 ]
 
 packages = base_packages + list(input_packages)
@@ -25,14 +24,12 @@ package_dir = {
     "CombineHarvester.CombineTools.combine": "CombineTools/python/combine",
     "CombineHarvester.CombineTools.systematics": "CombineTools/python/systematics",
     "CombineHarvester.CombineTools.scripts": "CombineTools/scripts",
-    "CombineHarvester.CombinePdfs": "CombinePdfs/python",
     **input_packages,
 }
 
 package_data = {
     "CombineHarvester.CombineTools": ["*.so"],
     "CombineHarvester.CombineTools.scripts": ["*"],
-    "CombineHarvester.CombinePdfs": ["*.so"],
     **{pkg: ["*"] for pkg in input_packages},
 }
 

@@ -2,13 +2,11 @@ Build System {#build}
 =====================
 
 CombineHarvester uses [CMake](https://cmake.org/) as its build system.
-The repository is organised into a set of packages, each contained
-within a subdirectory that produces shared libraries and executable
-programs.  The two core packages are `CombineHarvester/CombineTools`,
-which contains the main framework and example programs, and
-`CombineHarvester/CombinePdfs` which contains tools for building custom
-RooFit PDFs.  Additional analysis-specific packages can be added in the
-future.
+The repository is organised into packages, each contained within a
+subdirectory that produces shared libraries and executable programs. The
+core package `CombineHarvester/CombineTools` contains the main framework
+and example programs. Additional analysis-specific packages can be added
+in the future.
 
 To configure and build the project run:
 
