@@ -7,6 +7,8 @@ Full documentation: http://cms-analysis.github.io/CombineHarvester
 CombineHarvester can be built as a standalone project using CMake. The
 build system will automatically fetch the required
 `HiggsAnalysis/CombinedLimit` dependency if it is not already present.
+On networks where outbound access is blocked the dependency must be
+cloned manually or provided via the `USE_SYSTEM_COMBINEDLIMIT` option.
 A minimal build looks like:
 
 ```bash
@@ -16,6 +18,9 @@ cmake -S . -B build
 cmake --build build -j$(nproc)
 cmake --install build
 ```
+
+This installs the command-line tools into the `bin` directory of the
+selected prefix.
 
 See [docs/StandaloneInstallation.md](docs/StandaloneInstallation.md) for
 more details on dependency setup and optional Conda environments. The
