@@ -9,12 +9,16 @@ from __future__ import absolute_import
 from __future__ import print_function
 import itertools
 from os import environ
+from importlib import resources
+import sys
 
 # Prevent cppyy's check for the PCH
 environ['CLING_STANDARD_PCH'] = 'none'
 import cppyy
 
-cppyy.load_reflection_info("libCombineHarvesterCombineTools")
+suffix = ".dll" if sys.platform == "win32" else (".dylib" if sys.platform == "darwin" else ".so")
+lib_path = resources.files(__package__) / f"libCombineHarvesterCombineTools{suffix}"
+cppyy.load_reflection_info(str(lib_path))
 AutoRebin = cppyy.gbl.ch.AutoRebin
 BinByBinFactory = cppyy.gbl.ch.BinByBinFactory
 CardWriter = cppyy.gbl.ch.CardWriter

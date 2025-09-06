@@ -25,7 +25,10 @@ target_include_directories(CombineTools
     ${_CL_INC}
 )
 target_link_libraries(CombineTools PUBLIC ${CH_EXTERNAL_LIBS} HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
-set_target_properties(CombineTools PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(CombineTools PROPERTIES
+  POSITION_INDEPENDENT_CODE ON
+  OUTPUT_NAME CombineHarvesterCombineTools
+)
 
 file(GLOB COMBINE_TOOLS_BINS CONFIGURE_DEPENDS bin/*.cpp)
 set(COMBINE_TOOLS_BINARIES)
