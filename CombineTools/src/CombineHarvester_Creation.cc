@@ -1,37 +1,32 @@
+#include "CombineHarvester/CombineTools/interface/BinByBin.h"
 #include "CombineHarvester/CombineTools/interface/CombineHarvester.h"
-#include <vector>
-#include <map>
-#include <string>
-#include <iomanip>
-#include <iostream>
-#include <utility>
-#include <algorithm>
-#include "TDirectory.h"
-#include "TH1.h"
+#include "CombineHarvester/CombineTools/interface/Logging.h"
 #include "CombineHarvester/CombineTools/interface/Observation.h"
+#include "CombineHarvester/CombineTools/interface/Parameter.h"
 #include "CombineHarvester/CombineTools/interface/Process.h"
 #include "CombineHarvester/CombineTools/interface/Systematic.h"
-#include "CombineHarvester/CombineTools/interface/Parameter.h"
 #include "CombineHarvester/CombineTools/interface/Utilities.h"
-#include "CombineHarvester/CombineTools/interface/Logging.h"
-#include "CombineHarvester/CombineTools/interface/BinByBin.h"
+#include "TDirectory.h"
+#include "TH1.h"
+#include <algorithm>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace ch {
-void CombineHarvester::AddObservations(
-  std::vector<std::string> mass,
-  std::vector<std::string> analysis,
-  std::vector<std::string> era,
-  std::vector<std::string> channel,
-  ch::Categories bin) {
+void CombineHarvester::AddObservations(std::vector<std::string> mass,
+                                       std::vector<std::string> analysis,
+                                       std::vector<std::string> era,
+                                       std::vector<std::string> channel,
+                                       ch::Categories bin) {
   std::vector<unsigned> lengths = {
-    unsigned(mass.size()),
-    unsigned(analysis.size()),
-    unsigned(era.size()),
-    unsigned(channel.size()),
-    unsigned(bin.size())
-  };
+      unsigned(mass.size()), unsigned(analysis.size()), unsigned(era.size()),
+      unsigned(channel.size()), unsigned(bin.size())};
   auto comb = ch::GenerateCombinations(lengths);
-  for (auto const& c : comb) {
+  for (auto const &c : comb) {
     auto obs = std::make_shared<Observation>();
     obs->set_mass(mass[c[0]]);
     obs->set_analysis(analysis[c[1]]);
@@ -43,23 +38,17 @@ void CombineHarvester::AddObservations(
   }
 }
 
-void CombineHarvester::AddProcesses(
-  std::vector<std::string> mass,
-  std::vector<std::string> analysis,
-  std::vector<std::string> era,
-  std::vector<std::string> channel,
-  std::vector<std::string> procs,
-  ch::Categories bin,
-  bool signal) {
+void CombineHarvester::AddProcesses(std::vector<std::string> mass,
+                                    std::vector<std::string> analysis,
+                                    std::vector<std::string> era,
+                                    std::vector<std::string> channel,
+                                    std::vector<std::string> procs,
+                                    ch::Categories bin, bool signal) {
   std::vector<unsigned> lengths = {
-    unsigned(mass.size()),
-    unsigned(analysis.size()),
-    unsigned(era.size()),
-    unsigned(channel.size()),
-    unsigned(bin.size())
-  };
+      unsigned(mass.size()), unsigned(analysis.size()), unsigned(era.size()),
+      unsigned(channel.size()), unsigned(bin.size())};
   auto comb = ch::GenerateCombinations(lengths);
-  for (auto const& c : comb) {
+  for (auto const &c : comb) {
     for (unsigned i = 0; i < procs.size(); ++i) {
       auto proc = std::make_shared<Process>();
       proc->set_mass(mass[c[0]]);
@@ -75,12 +64,12 @@ void CombineHarvester::AddProcesses(
   }
 }
 
-void CombineHarvester::AddSystFromProc(Process const& proc,
-                                       std::string const& name,
-                                       std::string const& type, bool asymm,
+void CombineHarvester::AddSystFromProc(Process const &proc,
+                                       std::string const &name,
+                                       std::string const &type, bool asymm,
                                        double val_u, double val_d,
-                                       std::string const& formula,
-                                       std::string const& args) {
+                                       std::string const &formula,
+                                       std::string const &args) {
   std::string subbed_name = name;
   boost::replace_all(subbed_name, "$BINID",
                      boost::lexical_cast<std::string>(proc.bin_id()));
@@ -91,8 +80,9 @@ void CombineHarvester::AddSystFromProc(Process const& proc,
   boost::replace_all(subbed_name, "$CHANNEL", proc.channel());
   boost::replace_all(subbed_name, "$ANALYSIS", proc.analysis());
   std::map<std::string, std::string> attrs = proc.all_attributes();
-  for ( const auto it : attrs) {
-    boost::replace_all(subbed_name, "$ATTR(" + it.first + ")", proc.attribute(it.first));
+  for (const auto it : attrs) {
+    boost::replace_all(subbed_name, "$ATTR(" + it.first + ")",
+                       proc.attribute(it.first));
   }
   auto sys = std::make_shared<Systematic>();
   ch::SetProperties(sys.get(), &proc);
@@ -103,7 +93,8 @@ void CombineHarvester::AddSystFromProc(Process const& proc,
     sys->set_value_u(val_u);
     sys->set_value_d(val_d);
     CreateParameterIfEmpty(sys->name());
-  } else if (type == "shape" || type == "shapeN2" || type == "shapeU") {
+  } else if (type == "shape" || type == "shapeN" || type == "shapeN2" ||
+             type == "shapeU") {
     sys->set_asymm(true);
     sys->set_value_u(1.0);
     sys->set_value_d(1.0);
@@ -123,8 +114,9 @@ void CombineHarvester::AddSystFromProc(Process const& proc,
       boost::replace_all(subbed_args, "$ERA", proc.era());
       boost::replace_all(subbed_args, "$CHANNEL", proc.channel());
       boost::replace_all(subbed_args, "$ANALYSIS", proc.analysis());
-      for ( const auto it : attrs) {
-        boost::replace_all(subbed_args, "$ATTR(" + it.first + ")", proc.attribute(it.first));
+      for (const auto it : attrs) {
+        boost::replace_all(subbed_args, "$ATTR(" + it.first + ")",
+                           proc.attribute(it.first));
       }
       SetupRateParamFunc(subbed_name, formula, subbed_args);
     }
@@ -136,9 +128,9 @@ void CombineHarvester::AddSystFromProc(Process const& proc,
   systs_.push_back(sys);
 }
 
-void CombineHarvester::AddSystVar(std::string const& name,
-                                  double val, double err) {
-  Parameter * param = SetupRateParamVar(name, val);
+void CombineHarvester::AddSystVar(std::string const &name, double val,
+                                  double err) {
+  Parameter *param = SetupRateParamVar(name, val);
   param->set_val(val);
   param->set_err_u(+1.0 * err);
   param->set_err_d(-1.0 * err);
@@ -148,8 +140,9 @@ void CombineHarvester::AddSystVar(std::string const& name,
   systs_.push_back(sys);
 }
 
-void CombineHarvester::RenameSystematic(CombineHarvester &target, std::string const& old_name,
-                                        std::string const& new_name) {
+void CombineHarvester::RenameSystematic(CombineHarvester &target,
+                                        std::string const &old_name,
+                                        std::string const &new_name) {
   for (unsigned i = 0; i < systs_.size(); ++i) {
     if (systs_[i]->name() == old_name) {
       systs_[i]->set_name(new_name);
@@ -158,9 +151,9 @@ void CombineHarvester::RenameSystematic(CombineHarvester &target, std::string co
   }
 }
 
-void CombineHarvester::ExtractShapes(std::string const& file,
-                                     std::string const& rule,
-                                     std::string const& syst_rule) {
+void CombineHarvester::ExtractShapes(std::string const &file,
+                                     std::string const &rule,
+                                     std::string const &syst_rule) {
   std::vector<HistMapping> mapping(1);
   mapping[0].process = "*";
   mapping[0].category = "*";
@@ -170,40 +163,44 @@ void CombineHarvester::ExtractShapes(std::string const& file,
 
   // Note that these LoadShapes calls will fail if we encounter
   // any object that already has shapes
-  for (unsigned  i = 0; i < obs_.size(); ++i) {
-    if (obs_[i]->shape() || obs_[i]->data()) continue;
+  for (unsigned i = 0; i < obs_.size(); ++i) {
+    if (obs_[i]->shape() || obs_[i]->data())
+      continue;
     LoadShapes(obs_[i].get(), mapping);
   }
-  for (unsigned  i = 0; i < procs_.size(); ++i) {
-    if (procs_[i]->shape() || procs_[i]->pdf()) continue;
+  for (unsigned i = 0; i < procs_.size(); ++i) {
+    if (procs_[i]->shape() || procs_[i]->pdf())
+      continue;
     LoadShapes(procs_[i].get(), mapping);
   }
-  if (syst_rule == "") return;
-  for (unsigned  i = 0; i < systs_.size(); ++i) {
-    if (systs_[i]->type() != "shape" && systs_[i]->type() != "shapeN2" &&
-        systs_[i]->type() != "shapeU")
+  if (syst_rule == "")
+    return;
+  for (unsigned i = 0; i < systs_.size(); ++i) {
+    if (systs_[i]->type() != "shape" && systs_[i]->type() != "shapeN" &&
+        systs_[i]->type() != "shapeN2" && systs_[i]->type() != "shapeU")
       continue;
     LoadShapes(systs_[i].get(), mapping);
   }
 }
 
-void CombineHarvester::AddWorkspace(RooWorkspace const& ws,
-                                    bool can_rename) {
+void CombineHarvester::AddWorkspace(RooWorkspace const &ws, bool can_rename) {
   SetupWorkspace(ws, can_rename);
 }
 
-void CombineHarvester::ExtractPdfs(CombineHarvester& target,
-                                   std::string const& ws_name,
-                                   std::string const& rule,
+void CombineHarvester::ExtractPdfs(CombineHarvester &target,
+                                   std::string const &ws_name,
+                                   std::string const &rule,
                                    std::string norm_rule) {
   std::vector<HistMapping> mapping(1);
   mapping[0].process = "*";
   mapping[0].category = "*";
   mapping[0].pattern = ws_name + ":" + rule;
-  if (norm_rule != "") mapping[0].syst_pattern = ws_name + ":" + norm_rule;
-  if (!wspaces_.count(ws_name)) return;
+  if (norm_rule != "")
+    mapping[0].syst_pattern = ws_name + ":" + norm_rule;
+  if (!wspaces_.count(ws_name))
+    return;
   mapping[0].ws = wspaces_.at(ws_name);
-  for (unsigned  i = 0; i < procs_.size(); ++i) {
+  for (unsigned i = 0; i < procs_.size(); ++i) {
     if (!procs_[i]->pdf()) {
       target.LoadShapes(procs_[i].get(), mapping);
     }
@@ -216,9 +213,10 @@ void CombineHarvester::ExtractData(std::string const &ws_name,
   mapping[0].process = "*";
   mapping[0].category = "*";
   mapping[0].pattern = ws_name + ":" + rule;
-  if (!wspaces_.count(ws_name)) return;
+  if (!wspaces_.count(ws_name))
+    return;
   mapping[0].ws = wspaces_.at(ws_name);
-  for (unsigned  i = 0; i < obs_.size(); ++i) {
+  for (unsigned i = 0; i < obs_.size(); ++i) {
     if (!obs_[i]->data()) {
       LoadShapes(obs_[i].get(), mapping);
     }
@@ -233,9 +231,9 @@ void CombineHarvester::AddBinByBin(double threshold, bool fixed_norm,
 void CombineHarvester::AddBinByBin(double threshold, bool fixed_norm,
                                    CombineHarvester *other) {
   auto bbb_factory = ch::BinByBinFactory()
-                     .SetAddThreshold(threshold)
-                     .SetFixNorm(fixed_norm)
-                     .SetVerbosity(verbosity_);
+                         .SetAddThreshold(threshold)
+                         .SetFixNorm(fixed_norm)
+                         .SetVerbosity(verbosity_);
   bbb_factory.AddBinByBin(*this, *other);
 }
 
@@ -250,21 +248,21 @@ void CombineHarvester::CreateParameterIfEmpty(std::string const &name) {
 void CombineHarvester::MergeBinErrors(double bbb_threshold,
                                       double merge_threshold) {
   auto bbb_factory = ch::BinByBinFactory()
-                     .SetAddThreshold(bbb_threshold)
-                     .SetMergeThreshold(merge_threshold)
-                     .SetVerbosity(verbosity_);
+                         .SetAddThreshold(bbb_threshold)
+                         .SetMergeThreshold(merge_threshold)
+                         .SetVerbosity(verbosity_);
   bbb_factory.MergeBinErrors(*this);
 }
 
-void CombineHarvester::InsertObservation(ch::Observation const& obs) {
+void CombineHarvester::InsertObservation(ch::Observation const &obs) {
   obs_.push_back(std::make_shared<ch::Observation>(obs));
 }
 
-void CombineHarvester::InsertProcess(ch::Process const& proc) {
+void CombineHarvester::InsertProcess(ch::Process const &proc) {
   procs_.push_back(std::make_shared<ch::Process>(proc));
 }
 
-void CombineHarvester::InsertSystematic(ch::Systematic const& sys) {
+void CombineHarvester::InsertSystematic(ch::Systematic const &sys) {
   systs_.push_back(std::make_shared<ch::Systematic>(sys));
 }
-}
+} // namespace ch
