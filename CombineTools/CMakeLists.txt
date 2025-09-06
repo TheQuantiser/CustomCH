@@ -9,6 +9,8 @@ endif()
 # dependencies are linked once and reused by all executables.
 add_library(CombineTools SHARED ${COMBINE_TOOLS_SRC})
 
+target_compile_definitions(CombineTools PRIVATE _POSIX_C_SOURCE=200809L)
+
 # Many sources include headers via the historic
 #   "CombineHarvester/CombineTools/interface/..." path.
 # Expose the repository root during the build so this
