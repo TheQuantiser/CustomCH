@@ -1,19 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import absolute_import
-from __future__ import print_function
 import CombineHarvester.CombineTools.ch as ch
 import CombineHarvester.CombineTools.systematics.SMLegacy as SMLegacySysts
 import ROOT as R
 import glob
 import os
+from importlib import resources
 
 cb = ch.CombineHarvester()
 
-auxiliaries  = os.environ['CMSSW_BASE'] + '/src/auxiliaries/'
-aux_shapes   = auxiliaries +'shapes/'
-aux_pruning  = auxiliaries +'pruning/'
-input_dir    = os.environ['CMSSW_BASE'] + '/src/CombineHarvester/CombineTools/input';
+auxiliaries = os.environ.get('CH_AUXILIARIES', ch.paths.auxiliaries())
+aux_shapes = os.path.join(auxiliaries, 'shapes') + '/'
+aux_pruning = os.path.join(auxiliaries, 'pruning') + '/'
+input_dir = resources.files('CombineHarvester.CombineTools.input')
 
 chns = ['et', 'mt', 'em', 'ee', 'mm', 'tt']
 

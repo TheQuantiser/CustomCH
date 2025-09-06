@@ -4,7 +4,7 @@ MSSM Limits with RooMorphingPdf {#MSSMWithMorphing}
 
 Getting Started
 ===============
-Ensure you are setting up in a recommended CMSSW release on an SLC6 machine (see [here](https://twiki.cern.ch/twiki/bin/viewauth/CMS/SWGuideHiggsAnalysisCombinedLimit#SLC6_release)). Make sure your local copy of the [HiggsToTauTau](https://github.com/cms-analysis/HiggsAnalysis-HiggsToTauTau) repository is up-to-date. The [auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries) repository is also required, and must be located at `$CMSSW_BASE/src/auxiliaries`. The RooMorphingPdf is currently provided in a private branch of the [CombinedLimit](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit) package. You can get this as follows:
+Ensure you have a local clone of the [HiggsToTauTau](https://github.com/cms-analysis/HiggsAnalysis-HiggsToTauTau) repository. The [auxiliaries](https://github.com/roger-wolf/HiggsAnalysis-HiggsToTauTau-auxiliaries) repository is also required, and must be located at `$CH_BASE/auxiliaries`. The RooMorphingPdf is currently provided in a private branch of the [CombinedLimit](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit) package. You can get this as follows:
 
     cd HiggsAnalysis/CombinedLimit
     git remote add htt-dev https://github.com/ajgilbert/HiggsAnalysis-CombinedLimit.git

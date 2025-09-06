@@ -93,11 +93,12 @@ void CMSHistFuncFactory::RunSingleProc(CombineHarvester& cb, RooWorkspace& ws,
 
   // ss = "shape systematic"
   // Make a list of the names of shape systematics affecting this process
+  // (including "shapeN" and "shapeU" variations)
   vector<string> ss_vec =
-      Set2Vec(cbp.cp().syst_type({"shape", "shapeU"}).syst_name_set());
+      Set2Vec(cbp.cp().syst_type({"shape", "shapeN", "shapeU"}).syst_name_set());
   // Now check if all shape systematics are present for all mass points
   for (auto const& s : m_str_vec) {
-    if (cbp.cp().syst_type({"shape", "shapeU"}).mass({s}).syst_name_set().size() !=
+    if (cbp.cp().syst_type({"shape", "shapeN", "shapeU"}).mass({s}).syst_name_set().size() !=
         ss_vec.size()) {
       throw std::runtime_error(FNERROR(
           "Some mass points do not have the full set of shape systematics, "
@@ -630,7 +631,7 @@ void CMSHistFuncFactory::RunSingleProc(CombineHarvester& cb, RooWorkspace& ws,
     // remain in the datacard and be added by text2workspace
     cb.FilterSysts([&](ch::Systematic const* n) {
       return (n->bin() == bin && n->process() == process) &&
-             ((n->mass() != mass_min) || (n->type() == "shape" || n->type() == "shapeU") ||
+            ((n->mass() != mass_min) || (n->type() == "shape" || n->type() == "shapeN" || n->type() == "shapeU") ||
               (lms_set.count(n->name())));
     });
     // With the remaining Process entry (should only be one if we did this right),
