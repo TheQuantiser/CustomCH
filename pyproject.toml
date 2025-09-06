@@ -20,7 +20,6 @@ ch-maketable = "CombineHarvester.CombineTools.maketable:main"
 
 [tool.setuptools]
 packages = [
-    "CombineHarvester",
     "CombineHarvester.CombineTools",
     "CombineHarvester.CombineTools.combine",
     "CombineHarvester.CombineTools.systematics",
@@ -32,15 +31,14 @@ packages = [
 ]
 
 [tool.setuptools.package-dir]
-"CombineHarvester" = "CombineHarvester"
-"CombineHarvester.CombineTools" = "CombineHarvester/CombineTools/python"
-"CombineHarvester.CombineTools.combine" = "CombineHarvester/CombineTools/python/combine"
-"CombineHarvester.CombineTools.systematics" = "CombineHarvester/CombineTools/python/systematics"
-"CombineHarvester.CombineTools.scripts" = "CombineHarvester/CombineTools/scripts"
-"CombineHarvester.CombineTools.input" = "CombineHarvester/CombineTools/input"
-"CombineHarvester.CombineTools.input.examples" = "CombineHarvester/CombineTools/input/examples"
-"CombineHarvester.CombineTools.input.job_prefixes" = "CombineHarvester/CombineTools/input/job_prefixes"
-"CombineHarvester.CombineTools.input.xsecs_brs" = "CombineHarvester/CombineTools/input/xsecs_brs"
+"CombineHarvester.CombineTools" = "CombineTools/python"
+"CombineHarvester.CombineTools.combine" = "CombineTools/python/combine"
+"CombineHarvester.CombineTools.systematics" = "CombineTools/python/systematics"
+"CombineHarvester.CombineTools.scripts" = "CombineTools/scripts"
+"CombineHarvester.CombineTools.input" = "CombineTools/input"
+"CombineHarvester.CombineTools.input.examples" = "CombineTools/input/examples"
+"CombineHarvester.CombineTools.input.job_prefixes" = "CombineTools/input/job_prefixes"
+"CombineHarvester.CombineTools.input.xsecs_brs" = "CombineTools/input/xsecs_brs"
 
 [tool.setuptools.package-data]
 "CombineHarvester.CombineTools" = ["*.so"]
