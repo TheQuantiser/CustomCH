@@ -52,5 +52,6 @@ include-package-data = true
 "CombineHarvester.CombineTools.input.xsecs_brs" = ["*"]
 
 [tool.scikit-build]
-cmake.install-dir = ""
+wheel.install-dir = ""
+cmake.minimum-version = "3.15"
 
