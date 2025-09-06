@@ -20,6 +20,7 @@
 #include "RooFormulaVar.h"
 #include "RooCategory.h"
 #include "RooConstVar.h"
+#include "RooFIter.h"
 
 #include "CombineHarvester/CombineTools/interface/Observation.h"
 #include "CombineHarvester/CombineTools/interface/Process.h"
@@ -611,13 +612,17 @@ void CombineHarvester::FillHistMappings(std::vector<HistMapping> & mappings) {
       data_ws_map[d] = iter.second.get();
     }
     RooArgSet vars = iter.second->allPdfs();
-    for (RooAbsArg *v : vars) {
+    RooFIter v_it = vars.fwdIterator();
+    RooAbsArg *v = nullptr;
+    while ((v = v_it.next())) {
       RooAbsPdf *y = dynamic_cast<RooAbsPdf*>(v);
 
       if (y) pdf_ws_map[iter.second->pdf(y->GetName())] = iter.second.get();
     }
     RooArgSet fvars = iter.second->allFunctions();
-    for (RooAbsArg *fv : fvars) {
+    RooFIter fv_it = fvars.fwdIterator();
+    RooAbsArg *fv = nullptr;
+    while ((fv = fv_it.next())) {
       RooAbsReal *y = dynamic_cast<RooAbsReal*>(fv);
       if (y) pdf_ws_map[iter.second->function(y->GetName())] = iter.second.get();
     }
@@ -873,7 +878,9 @@ void CombineHarvester::WriteDatacard(std::string const& name,
         norm_par_list.add(ParametersByName(proc->norm(), &tmp_set));
       }
     }
-    for (RooAbsArg *par_list_var : par_list) {
+    RooFIter pl_it = par_list.fwdIterator();
+    RooAbsArg *par_list_var = nullptr;
+    while ((par_list_var = pl_it.next())) {
       if (dynamic_cast<RooRealVar*>(par_list_var)) {
         all_dependents_pars.insert(par_list_var->GetName());
       }
@@ -889,7 +896,9 @@ void CombineHarvester::WriteDatacard(std::string const& name,
 
     }
     if (proc->norm()) {
-      for (RooAbsArg *nm_list_var : norm_par_list) {
+      RooFIter nm_it = norm_par_list.fwdIterator();
+      RooAbsArg *nm_list_var = nullptr;
+      while ((nm_list_var = nm_it.next())) {
         if (dynamic_cast<RooRealVar*>(nm_list_var)) {
           all_dependents_pars.insert(nm_list_var->GetName());
         }
@@ -1274,7 +1283,9 @@ void CombineHarvester::WriteDatacard(std::string const& name,
   if (wspaces_.count("_rateParams")) {
     RooWorkspace *rp_ws = wspaces_.at("_rateParams").get();
     RooArgSet vars = rp_ws->allVars();
-    for (RooAbsArg *v : vars) {
+    RooFIter v_it = vars.fwdIterator();
+    RooAbsArg *v = nullptr;
+    while ((v = v_it.next())) {
       RooRealVar *y = dynamic_cast<RooRealVar*>(v);
       if (y && y->getAttribute("extArg") && all_fn_param_args.count(std::string(y->GetName()))) {
         if (!params_.count(y->GetName()) &&  y->getStringAttribute("wspSource")) {
@@ -1302,7 +1313,9 @@ void CombineHarvester::WriteDatacard(std::string const& name,
 
     }
     RooArgSet funcs = rp_ws->allFunctions();
-    for (RooAbsArg *v : funcs) {
+    RooFIter f_it = funcs.fwdIterator();
+    RooAbsArg *v = nullptr;
+    while ((v = f_it.next())) {
       RooAbsReal *y = dynamic_cast<RooAbsReal*>(v);
       if (y && y->getAttribute("extArg") && y->getStringAttribute("wspSource") && all_fn_param_args.count(std::string(y->GetName()))) {
         txt_file << format("%-" + sys_str_short +
@@ -1317,7 +1330,9 @@ void CombineHarvester::WriteDatacard(std::string const& name,
   std::set<std::string> ws_vars;
   for (auto iter : wspaces_) {
     RooArgSet vars = iter.second->allVars();
-    for (RooAbsArg *v : vars) {
+    RooFIter ws_it = vars.fwdIterator();
+    RooAbsArg *v = nullptr;
+    while ((v = ws_it.next())) {
       RooRealVar *y = dynamic_cast<RooRealVar*>(v);
       if (y) ws_vars.insert(y->GetName());
     }

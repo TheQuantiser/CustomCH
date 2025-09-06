@@ -5,6 +5,7 @@
 #include <vector>
 #include <list>
 #include "RooFormulaVar.h"
+#include "RooFIter.h"
 #include "CombineHarvester/CombineTools/interface/Observation.h"
 #include "CombineHarvester/CombineTools/interface/Process.h"
 #include "CombineHarvester/CombineTools/interface/Systematic.h"
@@ -732,7 +733,9 @@ std::shared_ptr<RooWorkspace> CombineHarvester::SetupWorkspace(
 }
 
 void CombineHarvester::ImportParameters(RooArgSet *vars) {
-  for (RooAbsArg *x : *vars) {
+  RooFIter it = vars->fwdIterator();
+  RooAbsArg *x = nullptr;
+  while ((x = it.next())) {
     RooRealVar *y = dynamic_cast<RooRealVar*>(x);
     if (y) {
       if (!params_.count(y->GetName())) {

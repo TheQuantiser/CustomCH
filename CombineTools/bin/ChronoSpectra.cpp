@@ -59,25 +59,8 @@
  ChronoSpectra builds on its foundation to offer more organized outputs,
  structured analysis options, and improved usability.
 
- ==========================
- Installation instructions:
- ==========================
-    cmssw-el9
-    cmsrel CMSSW_14_1_0_pre4
-    cd CMSSW_14_1_0_pre4/src
-    cmsenv
-    git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
-    cd <ch::paths::base()>/src/HiggsAnalysis/CombinedLimit
-    git fetch origin
-    git checkout v10.0.2
-    cd <ch::paths::base()>/src/
-    git clone https://github.com/TheQuantiser/CombineHarvester.git
-    scram b -j$(nproc)
-    cmsenv
-
- ---------
- Features:
- ---------
+Features:
+---------
  1. Pre-fit & Post-fit Histograms
     - Pre-fit: Reflects the model before parameter optimization.
     - Post-fit: Incorporates adjustments from a provided RooFitResult.

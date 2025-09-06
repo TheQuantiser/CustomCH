@@ -11,6 +11,7 @@
 #include "RooDataHist.h"
 #include "RooAbsReal.h"
 #include "RooAbsData.h"
+#include "RooFIter.h"
 #include "CombineHarvester/CombineTools/interface/CombineHarvester.h"
 
 namespace ch {
