@@ -17,31 +17,41 @@ import cppyy
 
 
 def _load_library() -> None:
-    libname = "libCombineHarvesterCombineTools"
+    libnames = ["libCombineHarvesterCombineTools", "libCombineTools"]
     search_dir = os.environ.get("CH_LIBRARY_PATH")
-    bases = [Path(search_dir)] if search_dir else [files(__package__)]
+    bases = []
+    if search_dir:
+        bases.append(Path(search_dir))
+    bases.append(files(__package__))
+    for parent in Path(__file__).resolve().parents:
+        build_dir = parent / "build" / "CombineTools"
+        if build_dir.exists():
+            bases.append(build_dir)
+            break
     for base in bases:
-        for ext in (".so", ".dylib"):
-            candidate = base / f"{libname}{ext}"
-            try:
-                if search_dir:
-                    path = candidate
-                    exists = path.exists()
-                else:
-                    with as_file(candidate) as path:
+        for libname in libnames:
+            for ext in (".so", ".dylib"):
+                candidate = base / f"{libname}{ext}"
+                try:
+                    if isinstance(base, Path):
+                        path = candidate
                         exists = path.exists()
-                if exists:
-                    try:
-                        cppyy.load_reflection_info(str(path.resolve()))
-                    except OSError as err:
-                        raise OSError(
-                            f"Failed to load {path}. Rebuild the project or set CH_LIBRARY_PATH"
-                        ) from err
-                    return
-            except FileNotFoundError:
-                continue
+                    else:
+                        with as_file(candidate) as path:
+                            exists = path.exists()
+                    if exists:
+                        try:
+                            cppyy.load_reflection_info(str(path.resolve()))
+                        except OSError as err:
+                            raise OSError(
+                                f"Failed to load {path}. Rebuild the project or set CH_LIBRARY_PATH"
+                            ) from err
+                        return
+                except FileNotFoundError:
+                    continue
     raise OSError(
-        f"Could not find {libname}. Rebuild the project or set CH_LIBRARY_PATH to its location."
+        "Could not find CombineHarvester CombineTools library. "
+        "Rebuild the project or set CH_LIBRARY_PATH to its location."
     )
 
 
