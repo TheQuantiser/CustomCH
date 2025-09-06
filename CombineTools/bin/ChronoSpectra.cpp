@@ -6,8 +6,10 @@
 ===============================================================================
 
 Summary:
-- Extracts and analyzes pre-fit (pre-optimization) and post-fit (with RooFitResult) histograms.
-- Flexible grouping or per-item handling of bins/processes with user-defined labels.
+- Extracts and analyzes pre-fit (pre-optimization) and post-fit (with
+RooFitResult) histograms.
+- Flexible grouping or per-item handling of bins/processes with user-defined
+labels.
 - Uncertainty estimation via random sampling.
 - Correlation matrices: bin–bin and process–process rates.
 - Parameter freezing with optional fixed values for custom fits.
@@ -155,36 +157,60 @@ std::string printTimestamp() {
 
 struct TablePrinter {
   std::vector<int> widths;
+  std::vector<std::string> headerCols;
+  std::vector<std::vector<std::string>> rows;
+
   TablePrinter(std::initializer_list<int> w) : widths(w) {}
-  int totalWidth() const {
-    int total = 0;
-    for (int w : widths)
-      if (w > 0)
-        total += w;
-    return total;
-  }
-  void header(const std::vector<std::string> &cols) const {
-    std::ostringstream line;
-    line << "  ";
-    for (size_t i = 0; i < cols.size(); ++i) {
-      line << (i == 0 ? std::left : std::right);
+
+  void header(const std::vector<std::string> &cols) { headerCols = cols; }
+
+  void row(const std::vector<std::string> &cols) { rows.push_back(cols); }
+
+  void computeWidths() {
+    if (widths.size() < headerCols.size())
+      widths.resize(headerCols.size(), 0);
+    for (size_t i = 0; i < headerCols.size(); ++i)
       if (widths[i] > 0)
-        line << std::setw(widths[i]);
-      line << cols[i];
+        widths[i] = std::max(widths[i], static_cast<int>(headerCols[i].size()));
+    for (const auto &r : rows) {
+      if (widths.size() < r.size())
+        widths.resize(r.size(), 0);
+      for (size_t i = 0; i < r.size(); ++i)
+        if (widths[i] > 0)
+          widths[i] = std::max(widths[i], static_cast<int>(r[i].size()));
     }
-    LOG_INFO << line.str() << std::endl;
-    LOG_INFO << "  " << std::string(totalWidth(), '-') << std::endl;
   }
-  void row(const std::vector<std::string> &cols) const {
-    std::ostringstream line;
-    line << "  ";
-    for (size_t i = 0; i < cols.size(); ++i) {
-      line << (i == 0 ? std::left : std::right);
+
+  void print() {
+    computeWidths();
+    std::ostringstream headerLine;
+    headerLine << "  ";
+    for (size_t i = 0; i < headerCols.size(); ++i) {
+      headerLine << (i == 0 ? std::left : std::right);
       if (widths[i] > 0)
-        line << std::setw(widths[i]);
-      line << cols[i];
+        headerLine << std::setw(widths[i]) << headerCols[i];
+      else
+        headerLine << headerCols[i];
+      if (i + 1 < headerCols.size())
+        headerLine << "  ";
     }
-    LOG_INFO << line.str() << std::endl;
+    LOG_INFO << headerLine.str() << std::endl;
+    LOG_INFO << "  " << std::string(headerLine.str().size() - 2, '-')
+             << std::endl;
+    for (const auto &r : rows) {
+      std::ostringstream line;
+      line << "  ";
+      for (size_t i = 0; i < r.size(); ++i) {
+        line << (i == 0 ? std::left : std::right);
+        if (i < widths.size() && widths[i] > 0)
+          line << std::setw(widths[i]) << r[i];
+        else
+          line << r[i];
+        if (i + 1 < r.size())
+          line << "  ";
+      }
+      LOG_INFO << line.str() << std::endl;
+    }
   }
 };
 
@@ -304,6 +330,7 @@ parseNamedGroups(const std::string &groupsArg) {
   for (const auto &[groupName, items] : namedGroups) {
     table.row({groupName, boost::algorithm::join(items, ", ")});
   }
+  table.print();
 
   return namedGroups;
 }
@@ -646,16 +673,16 @@ void plotShapeSystVariations(const SystHists &hists,
   pad1.Modified();
 
   static bool headerPrinted = false;
-  static TablePrinter table({80});
   std::string outFile = cfg.systSaveDir + "/" + plotName + ".png";
 
   canvas.SaveAs(outFile.c_str());
 
   if (!headerPrinted) {
-    table.header({"Saved plots"});
+    LOG_INFO << "  Saved plots" << std::endl;
+    LOG_INFO << "  " << std::string(80, '-') << std::endl;
     headerPrinted = true;
   }
-  table.row({outFile});
+  LOG_INFO << "  " << outFile << std::endl;
 }
 
 void StoreSystematics(ch::CombineHarvester &cmb, const std::string &bin,
@@ -710,6 +737,8 @@ void writeHistogramsToFile(
     }
   }
 
+  table.print();
+
   // Clear histograms map to ensure memory release
   histograms.clear();
 
@@ -736,6 +765,8 @@ void writeCorrToFile(
       ch::WriteToTFile(&matrix, &outfile, path);
     }
   }
+
+  table.print();
 
   // Clear histograms map to ensure memory release
   matrixMap.clear();
@@ -843,8 +874,9 @@ void processAll(
       return;
 
     // Log processing start
-    LOG_INFO << "\n\n" << printTimestamp()
-             << " Processing bin/bin group: " << binName << std::endl;
+    LOG_INFO << "\n\n"
+             << printTimestamp() << " Processing bin/bin group: " << binName
+             << std::endl;
 
     // Check if the bin contains any processes
     if (binCmb.cp().process_set().empty()) {
@@ -969,10 +1001,10 @@ void processAll(
         {"Process", "Integral", "Unc", "RateCorr", "HistBinCorr", "Plot"});
     for (const auto &[name, rep] : processReports) {
       table.row({name, formatDouble(rep.integral),
-                 formatDouble(rep.uncertainty),
-                 rep.rateCorr ? "Y" : "N",
+                 formatDouble(rep.uncertainty), rep.rateCorr ? "Y" : "N",
                  rep.histBinCorr ? "Y" : "N", rep.plotPath});
     }
+    table.print();
     LOG_INFO << printTimestamp() << "\tFinished processing " << binName
              << std::endl;
   };
@@ -1004,6 +1036,7 @@ void processAll(
       table.row({b});
       processedBins.insert(b);
     }
+    table.print();
   }
 
   // Process ungrouped bins
