@@ -9,7 +9,7 @@
 import itertools
 import os
 from pathlib import Path
-from importlib.resources import files
+from importlib.resources import as_file, files
 
 # Prevent cppyy's check for the PCH
 os.environ['CLING_STANDARD_PCH'] = 'none'
@@ -19,20 +19,27 @@ import cppyy
 def _load_library() -> None:
     libname = "libCombineHarvesterCombineTools"
     search_dir = os.environ.get("CH_LIBRARY_PATH")
-    if search_dir:
-        base = Path(search_dir)
-    else:
-        base = Path(files(__package__))
-    for ext in (".so", ".dylib"):
-        candidate = base / f"{libname}{ext}"
-        if candidate.exists():
+    bases = [Path(search_dir)] if search_dir else [files(__package__)]
+    for base in bases:
+        for ext in (".so", ".dylib"):
+            candidate = base / f"{libname}{ext}"
             try:
-                cppyy.load_reflection_info(str(candidate.resolve()))
-            except OSError as err:
-                raise OSError(
-                    f"Failed to load {candidate}. Rebuild the project or set CH_LIBRARY_PATH"
-                ) from err
-            return
+                if search_dir:
+                    path = candidate
+                    exists = path.exists()
+                else:
+                    with as_file(candidate) as path:
+                        exists = path.exists()
+                if exists:
+                    try:
+                        cppyy.load_reflection_info(str(path.resolve()))
+                    except OSError as err:
+                        raise OSError(
+                            f"Failed to load {path}. Rebuild the project or set CH_LIBRARY_PATH"
+                        ) from err
+                    return
+            except FileNotFoundError:
+                continue
     raise OSError(
         f"Could not find {libname}. Rebuild the project or set CH_LIBRARY_PATH to its location."
     )
