@@ -31,6 +31,7 @@ packages = [
     "CombineHarvester.CombineTools.input.xsecs_brs",
     "CombineHarvester.CombinePdfs",
 ]
+include-package-data = true
 
 [tool.setuptools.package-dir]
 "CombineHarvester" = "CombineHarvester"
