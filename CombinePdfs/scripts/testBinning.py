@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-from __future__ import absolute_import
-from __future__ import print_function
+#!/usr/bin/env python3
 import sys
 import ROOT
 import math
@@ -8,7 +6,6 @@ from functools import partial
 import Tools.Plotting.plotting as plot
 import os.path
 import bisect
-from six.moves import range
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gROOT.SetBatch(ROOT.kTRUE)

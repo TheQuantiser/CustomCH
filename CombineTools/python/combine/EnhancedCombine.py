@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-from __future__ import print_function
+#!/usr/bin/env python3
 import itertools
 import CombineHarvester.CombineTools.combine.utils as utils
 import json
@@ -7,8 +6,6 @@ import os
 import bisect
 from CombineHarvester.CombineTools.combine.opts import OPTS
 from CombineHarvester.CombineTools.combine.CombineToolBase import CombineToolBase
-import six
-from six.moves import zip
 
 
 def isfloat(value):
@@ -170,7 +167,7 @@ class EnhancedCombine(CombineToolBase):
             bound_vals = {}
             for par in bound_pars:
                 bound_vals[par] = list()
-                for mass, bounds in six.iteritems(bnd[par]):
+                for mass, bounds in bnd[par].items():
                     bound_vals[par].append((float(mass), bounds[0], bounds[1]))
                 bound_vals[par].sort(key=lambda x: x[0])
             # find the subbed_vars entry containing the mass

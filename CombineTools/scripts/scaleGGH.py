@@ -1,11 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import absolute_import
-from __future__ import print_function
 import CombineHarvester.CombineTools.ch as ch
 import ROOT as R
 import glob
-import six
 
 # OLD inclusive distribution
 # SCALES = {
@@ -112,7 +109,7 @@ SCALES_8TEV = {
 }
 
 def DoScales(cmb, scales):
-    for key, val in six.iteritems(scales):
+    for key, val in scales.items():
         print('Scaling ' + str(key) + ' by ' + str(val))
         cmb.cp().process(["ggH"]).channel([key[0]]).bin_id([key[1]]).ForEachProc(lambda x : x.set_rate(x.rate() * val))
         cmb.cp().process(["ggH"]).channel([key[0]]).bin_id([key[1]]).PrintProcs()

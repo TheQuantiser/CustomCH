@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-from __future__ import print_function
+#!/usr/bin/env python3
 import ROOT
 import json
 import itertools
@@ -15,8 +14,6 @@ from array import array
 import CombineHarvester.CombineTools.combine.utils as utils
 from CombineHarvester.CombineTools.combine.CombineToolBase import CombineToolBase
 import CombineHarvester.CombineTools.plotting as plot
-import six
-from six.moves import range
 
 class AsymptoticGrid(CombineToolBase):
     description = 'Calculate asymptotic limits on parameter grids'
@@ -93,7 +90,7 @@ class AsymptoticGrid(CombineToolBase):
             if p in file_dict:
                 file_dict[p].append(f)
 
-        for key,val in six.iteritems(file_dict):
+        for key, val in file_dict.items():
             name = '%s.%s.%s.%s' % (POIs[0], key[0], POIs[1], key[1])
             print('>> Point %s' % name)
             if len(val) == 0:
@@ -114,7 +111,7 @@ class AsymptoticGrid(CombineToolBase):
         xvals = []
         yvals = []
         zvals_m2s = []; zvals_m1s = []; zvals_exp = []; zvals_p1s = []; zvals_p2s = []; zvals_obs = []
-        for key,val in six.iteritems(file_dict):
+        for key, val in file_dict.items():
             for filename in val:
                 fin = ROOT.TFile(filename)
                 if fin.IsZombie(): continue
@@ -314,7 +311,7 @@ class HybridNewGrid(CombineToolBase):
 
         # Now do the full logic of the validation and return
         all_ok = (ntoys >= min_toys) # OK if min toys passes
-        for (key, val) in six.iteritems(signif_results):
+        for key, val in signif_results.items():
             all_ok = all_ok and val # still OK if all contour significances pass
         all_ok = all_ok or (ntoys >= max_toys) # Always OK if we've reached the maximum
         results['ok'] = all_ok
@@ -400,7 +397,7 @@ class HybridNewGrid(CombineToolBase):
                     bound_vals = {}
                     for par in bound_pars:
                         bound_vals[par] = list()
-                        for mass, bounds in six.iteritems(bnd[par]):
+                        for mass, bounds in bnd[par].items():
                             bound_vals[par].append((float(mass), bounds[0], bounds[1]))
                         bound_vals[par].sort(key=lambda x: x[0])
                 # print (min_limit, max_limit)
@@ -499,7 +496,7 @@ class HybridNewGrid(CombineToolBase):
         total_points = 0
         complete_points = 0
 
-        for key,val in six.iteritems(file_dict):
+        for key, val in file_dict.items():
             status_changed = True
             total_points += 1
             status_key = ':'.join(key)
@@ -659,11 +656,11 @@ class HybridNewGrid(CombineToolBase):
         if self.args.output and self.args.from_asymptotic:
             # Need to collect all the files for each mass point and hadd them:
             files_by_mass = {}
-            for key,val in six.iteritems(file_dict):
+            for key, val in file_dict.items():
                 if key[0] not in files_by_mass:
                     files_by_mass[key[0]] = list()
                 files_by_mass[key[0]].extend(list(val.values()))
-            for m, files in six.iteritems(files_by_mass):
+            for m, files in files_by_mass.items():
                 gridfile = 'higgsCombine.gridfile.%s.%s.%s.root' % (POIs[0], m, POIs[1])
                 self.job_queue.append('hadd -f %s %s' % (gridfile, ' '.join(files)))
                 for exp in ['', '0.025', '0.160', '0.500', '0.840', '0.975']:

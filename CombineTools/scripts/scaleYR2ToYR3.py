@@ -1,11 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import absolute_import
-from __future__ import print_function
 import CombineHarvester.CombineTools.ch as ch
 import ROOT as R
 import glob
-import six
 
 SCALES_XSEC_7TEV = {
   "^ggH(|_hww|_htt)$" : 15.13/15.31,
@@ -27,7 +24,7 @@ SCALES_BR = {
 }
 
 def DoScales(cmb, scales):
-    for key, val in six.iteritems(scales):
+    for key, val in scales.items():
         print('Scaling ' + key + ' by ' + str(val))
         cmb.cp().process_rgx([key]).ForEachProc(lambda x : x.set_rate(x.rate() * val))
         cmb.cp().process_rgx([key]).PrintProcs()

@@ -118,17 +118,17 @@ for era in ['7TeV', '8TeV']:
 print('>> Scaling signal process rates...')
 xs = { }
 # Get the table of H->tau tau BRs vs mass
-xs['htt'] = ch.TGraphFromTable(input_dir+'/xsecs_brs/htt_YR3.txt', 'mH', 'br')
+xs['htt'] = ch.TGraphFromTable(str(input_dir / 'xsecs_brs' / 'htt_YR3.txt'), 'mH', 'br')
 for e in ['7TeV', '8TeV']:
     for p in sig_procs:
         # Get the table of xsecs vs mass for process 'p' and era 'e':
-        xs[p+'_'+e] = ch.TGraphFromTable(input_dir+'/xsecs_brs/'+p+'_'+e+'_YR3.txt', 'mH', 'xsec')
+        xs[p+'_'+e] = ch.TGraphFromTable(str(input_dir / 'xsecs_brs' / (p+'_'+e+'_YR3.txt')), 'mH', 'xsec')
         print('>>>> Scaling for process ' + p + ' and era ' + e)
         cb.cp().process([p]).era([e]).ForEachProc(
           lambda x : x.set_rate(
             x.rate() * xs[p+'_'+e].Eval(float(x.mass())) * xs['htt'].Eval(float(x.mass())))
         )
-xs['hww_over_htt'] = ch.TGraphFromTable(input_dir+'/xsecs_brs/hww_over_htt.txt', 'mH', 'ratio')
+xs['hww_over_htt'] = ch.TGraphFromTable(str(input_dir / 'xsecs_brs' / 'hww_over_htt.txt'), 'mH', 'ratio')
 
 for e in ['7TeV', '8TeV']:
     for p in sig_procs:
