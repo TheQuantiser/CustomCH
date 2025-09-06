@@ -213,13 +213,15 @@ ChronoSpectra --help \
 #include <set>
 #include <sstream>
 #include <string>
+#include <tabulate/table.hpp>
 #include <vector>
 
 enum class LogLevel { ERROR = 0, WARN = 1, INFO = 2 };
 static LogLevel CURRENT_LOG_LEVEL = LogLevel::INFO;
 
-#define LOG_STREAM(level, prefix)                                                   \
-  if (static_cast<int>(CURRENT_LOG_LEVEL) >= static_cast<int>(level)) std::clog << prefix
+#define LOG_STREAM(level, prefix)                                              \
+  if (static_cast<int>(CURRENT_LOG_LEVEL) >= static_cast<int>(level))          \
+  std::clog << prefix
 
 #define LOG_INFO LOG_STREAM(LogLevel::INFO, "[INFO] ")
 #define LOG_WARN LOG_STREAM(LogLevel::WARN, "[WARN] ")
@@ -237,7 +239,7 @@ std::string printTimestamp() {
 
 void displayStartupMessage() {
   LOG_INFO << "\n\n\n\n"
-            << printTimestamp() << "\tStarting ChronoSpectra (c) MAW 2024 \n\n";
+           << printTimestamp() << "\tStarting ChronoSpectra (c) MAW 2024 \n\n";
 
   // ASCII Art for ChronoSpectra
   LOG_INFO << R"(
@@ -266,8 +268,8 @@ void displayStartupMessage() {
   LOG_INFO
       << "  Full License: https://creativecommons.org/licenses/by/4.0/\n\n";
   LOG_INFO << "  Official repository: "
-               "https://github.com/TheQuantiser/CombineHarvester/blob/main/"
-               "CombineTools/bin/ChronoSpectra.cpp\n";
+              "https://github.com/TheQuantiser/CombineHarvester/blob/main/"
+              "CombineTools/bin/ChronoSpectra.cpp\n";
   LOG_INFO
       << "==============================================================\n\n";
 };
@@ -341,15 +343,17 @@ parseNamedGroups(const std::string &groupsArg) {
     it->second = std::move(items);
   }
 
-  // Print out the groups and their elements
+  // Print out the groups and their elements in a table
+  tabulate::Table table;
+  table.add_row({"Group", "Items"});
   for (const auto &[groupName, items] : namedGroups) {
-    LOG_INFO << "Group: '" << groupName << "' -> [ ";
-    for (size_t i = 0; i < items.size(); ++i) {
-      LOG_INFO << "'" << items[i] << "'";
-      if (i != items.size() - 1)
-        LOG_INFO << ", ";
-    }
-    LOG_INFO << " ]\n";
+    table.add_row({groupName, boost::algorithm::join(items, ", ")});
+  }
+  std::stringstream table_stream;
+  table_stream << table;
+  std::string line;
+  while (std::getline(table_stream, line)) {
+    LOG_INFO << line << "\n";
   }
 
   return namedGroups;
@@ -394,8 +398,7 @@ bool WildcardMatch(const std::string &pattern, const std::string &value) {
 
 // Check if a given bin/process/systematic combination should be plotted
 bool ShouldPlot(const std::string &bin, const std::string &proc,
-                const std::string &syst,
-                const ChronoSpectraConfig &cfg) {
+                const std::string &syst, const ChronoSpectraConfig &cfg) {
   if (cfg.plotSystAll)
     return true;
   if (cfg.plotSystPatterns.empty())
@@ -725,16 +728,15 @@ void writeHistogramsToFile(
     std::map<std::string, std::map<std::string, TH1F>> &histograms,
     TFile &outfile, const std::string &prefix) {
   LOG_INFO << printTimestamp()
-            << " Writing histograms to file: " << outfile.GetName()
-            << std::endl;
+           << " Writing histograms to file: " << outfile.GetName() << std::endl;
 
   for (auto &[binName, procMap] : histograms) {
     for (auto &[procName, histogram] : procMap) {
       std::string path = prefix + "/" + binName + "/" + procName;
       histogram.SetTitle(procName.c_str());
       LOG_INFO << printTimestamp() << "\t--> " << std::setw(50) << std::left
-                << path << " = " << histogram.Integral() << " ± "
-                << histogram.GetBinContent(0) << std::endl;
+               << path << " = " << histogram.Integral() << " ± "
+               << histogram.GetBinContent(0) << std::endl;
       ch::WriteToTFile(&histogram, &outfile, path);
     }
   }
@@ -750,9 +752,9 @@ void writeCorrToFile(
     TFile &outfile, const std::string &prefix, const std::string &suffix) {
   // Log the start of the process
   LOG_INFO << "\n"
-            << printTimestamp()
-            << " Writing correlation matrices to file: " << outfile.GetName()
-            << std::endl;
+           << printTimestamp()
+           << " Writing correlation matrices to file: " << outfile.GetName()
+           << std::endl;
 
   // Iterate through bins and processes
   for (auto &[binName, procMap] : matrixMap) {
@@ -781,8 +783,8 @@ void processAll(
     std::map<std::string, std::map<std::string, TH1F>> &histograms,
     const std::map<std::string, std::vector<std::string>> &binGroups,
     const std::map<std::string, std::vector<std::string>> &processGroups,
-    const ChronoSpectraConfig &cfg,
-    unsigned samples = 0, RooFitResult *fitRes = nullptr,
+    const ChronoSpectraConfig &cfg, unsigned samples = 0,
+    RooFitResult *fitRes = nullptr,
     std::map<std::string, std::map<std::string, TH2F>> *RateCorrMap = nullptr,
     std::map<std::string, std::map<std::string, TH2F>> *HistBinCorrMap =
         nullptr,
@@ -792,9 +794,9 @@ void processAll(
   bool isPostfit = (fitRes != nullptr);
 
   LOG_INFO << "\n\n"
-            << printTimestamp() << "Generating "
-            << (isPostfit ? "post-fit" : "pre-fit") << " results..."
-            << std::endl;
+           << printTimestamp() << "Generating "
+           << (isPostfit ? "post-fit" : "pre-fit") << " results..."
+           << std::endl;
 
   // Change the model parameters and uncertainties to the fitted values
   if (isPostfit)
@@ -816,8 +818,8 @@ void processAll(
                       : subCmb.cp().GetShapeWithUncertainty();
     const TH1F &tmp = histograms[binName][procName];
     LOG_INFO << printTimestamp() << std::setw(50) << std::left
-              << std::string("\t") + binName + "/" + procName << " -> "
-              << tmp.Integral() << " ± " << tmp.GetBinContent(0) << std::endl;
+             << std::string("\t") + binName + "/" + procName << " -> "
+             << tmp.Integral() << " ± " << tmp.GetBinContent(0) << std::endl;
   };
 
   // Lambda: Handle rate correlations
@@ -830,9 +832,9 @@ void processAll(
       (*RateCorrMap)[binName][procName] =
           subCmb.cp().GetRateCorrelation(*fitRes, samples);
       LOG_INFO << printTimestamp() << std::setw(50) << std::left
-                << std::string("\t") + binName + "/" + procName +
-                       " rate correlation computed"
-                << std::endl;
+               << std::string("\t") + binName + "/" + procName +
+                      " rate correlation computed"
+               << std::endl;
     }
   };
 
@@ -846,9 +848,9 @@ void processAll(
       (*HistBinCorrMap)[binName][procName] =
           subCmb.cp().GetHistogramBinCorrelation(*fitRes, samples);
       LOG_INFO << printTimestamp() << std::setw(50) << std::left
-                << std::string("\t") + binName + "/" + procName +
-                       " histogram bin correlation computed"
-                << std::endl;
+               << std::string("\t") + binName + "/" + procName +
+                      " histogram bin correlation computed"
+               << std::endl;
     }
   };
 
@@ -877,13 +879,13 @@ void processAll(
 
     // Log processing start
     LOG_INFO << "\n\n"
-              << printTimestamp() << std::setw(50) << std::left
-              << " Processing bin/bin group: " << binName << std::endl;
+             << printTimestamp() << std::setw(50) << std::left
+             << " Processing bin/bin group: " << binName << std::endl;
 
     // Check if the bin contains any processes
     if (binCmb.cp().process_set().empty()) {
-      LOG_WARN << "Bin/bin group '" << binName
-               << "' has no processes." << std::endl;
+      LOG_WARN << "Bin/bin group '" << binName << "' has no processes."
+               << std::endl;
       return;
     }
 
@@ -910,10 +912,10 @@ void processAll(
       obsHist.SetBinErrorOption(TH1::kPoisson);
 
       LOG_INFO << printTimestamp() << std::setw(50) << std::left
-                << "\t" + binName + "/" + cfg.dataset +
-                       (cfg.skipObs ? " (pseudo-data)" : "")
-                << " -> " << obsHist.Integral() << " ± "
-                << obsHist.GetBinContent(0) << std::endl;
+               << "\t" + binName + "/" + cfg.dataset +
+                      (cfg.skipObs ? " (pseudo-data)" : "")
+               << " -> " << obsHist.Integral() << " ± "
+               << obsHist.GetBinContent(0) << std::endl;
     }
 
     // Process grouped processes
@@ -935,7 +937,7 @@ void processAll(
 
       // Log and track processes within the group
       LOG_INFO << printTimestamp() << "\t-- Process group " << procGroupName
-                << " contains ";
+               << " contains ";
       for (const auto &proc : procGroupCmb.cp().process_set()) {
         LOG_INFO << proc << ", ";
         processedProcesses.insert(proc);
@@ -961,8 +963,7 @@ void processAll(
         continue;
 
       if (singleProcCmb.cp().process_set().empty()) {
-        LOG_WARN << "Process '" << proc << "' not found."
-                 << std::endl;
+        LOG_WARN << "Process '" << proc << "' not found." << std::endl;
         continue;
       }
 
@@ -985,8 +986,8 @@ void processAll(
 
     // Skip if no matching bins
     if (binCmb.cp().bin_set().empty()) {
-      LOG_WARN << "Bin group '" << binGroupName
-               << "' has no matching bins!" << std::endl;
+      LOG_WARN << "Bin group '" << binGroupName << "' has no matching bins!"
+               << std::endl;
       continue;
     }
 
@@ -995,7 +996,7 @@ void processAll(
 
     // Log and mark bins as processed
     LOG_INFO << printTimestamp() << " -- Bin group " << binGroupName
-              << " contains ";
+             << " contains ";
     for (const auto &bin : binCmb.cp().bin_set()) {
       LOG_INFO << bin << ", ";
       processedBins.insert(std::move(bin));
@@ -1013,8 +1014,7 @@ void processAll(
 
     // Log warning if the bin has no matching processes
     if (binCmb.cp().bin_set().empty()) {
-      LOG_WARN << "Bin '" << bin << "' has no matching processes."
-               << std::endl;
+      LOG_WARN << "Bin '" << bin << "' has no matching processes." << std::endl;
       continue;
     }
 
@@ -1025,8 +1025,8 @@ void processAll(
   }
 
   LOG_INFO << printTimestamp() << " Completed computing "
-            << (isPostfit ? "post-fit" : "pre-fit") << " results....\n\n\n"
-            << std::endl;
+           << (isPostfit ? "post-fit" : "pre-fit") << " results....\n\n\n"
+           << std::endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -1071,8 +1071,8 @@ int main(int argc, char *argv[]) {
   gStyle->SetCanvasPreferGL(1);
 
   gSystem->Load("libHiggsAnalysisCombinedLimit");
-  ChronoSpectraConfig cfg = parseCommandLine(static_cast<int>(filtered.size()),
-                                             filtered.data());
+  ChronoSpectraConfig cfg =
+      parseCommandLine(static_cast<int>(filtered.size()), filtered.data());
 
   // Ensure either pre-fit or post-fit histograms are requested
   if (cfg.skipprefit && !cfg.postfit)
@@ -1100,9 +1100,10 @@ int main(int argc, char *argv[]) {
                  : nullptr;
 
     if (fitRes) {
-      LOG_INFO << printTimestamp() << " Valid fit result found (" << cfg.fitresult
-                << "), with " << fitRes->floatParsFinal().getSize()
-                << " parameters." << std::endl;
+      LOG_INFO << printTimestamp() << " Valid fit result found ("
+               << cfg.fitresult << "), with "
+               << fitRes->floatParsFinal().getSize() << " parameters."
+               << std::endl;
     } else {
       throw std::runtime_error("Fit result is invalid!");
     }
@@ -1124,9 +1125,9 @@ int main(int argc, char *argv[]) {
         "' into cmb_restore: No bins or processes were found.");
   }
   LOG_INFO << "\n\n"
-            << printTimestamp()
-            << " Successfully loaded text datacard: " << cfg.datacard << "\n"
-            << std::endl;
+           << printTimestamp()
+           << " Successfully loaded text datacard: " << cfg.datacard << "\n"
+           << std::endl;
 
   // Load workspace
   TFile infile(cfg.workspace.c_str());
@@ -1134,20 +1135,21 @@ int main(int argc, char *argv[]) {
     throw std::runtime_error("Failed to open workspace file: " + cfg.workspace);
   RooWorkspace *ws = dynamic_cast<RooWorkspace *>(infile.Get("w"));
   if (!ws)
-    throw std::runtime_error("Workspace 'w' not found in file: " + cfg.workspace);
+    throw std::runtime_error("Workspace 'w' not found in file: " +
+                             cfg.workspace);
   else
     LOG_INFO << printTimestamp() << " Loaded workspace from " << cfg.workspace
-              << "\n"
-              << std::endl;
+             << "\n"
+             << std::endl;
 
   // Initialize CombineHarvester from Workspace
   ch::CombineHarvester cmb;
   cmb.SetFlag("workspaces-use-clone", true);
   ch::ParseCombineWorkspace(cmb, *ws, "ModelConfig", cfg.dataset, false);
   LOG_INFO << "\n\n"
-            << printTimestamp()
-            << " Initialized CombineHarvester instance from workspace " << "\n"
-            << std::endl;
+           << printTimestamp()
+           << " Initialized CombineHarvester instance from workspace " << "\n"
+           << std::endl;
 
   // Lambda to freeze parameters
   auto freeze_parameters = [&]() {
@@ -1172,8 +1174,8 @@ int main(int argc, char *argv[]) {
       par->set_frozen(true);
 
       LOG_INFO << "\n"
-                << printTimestamp() << " Freezing parameter: " << parts[0]
-                << (parts.size() == 2 ? " to " + parts[1] : "") << std::endl;
+               << printTimestamp() << " Freezing parameter: " << parts[0]
+               << (parts.size() == 2 ? " to " + parts[1] : "") << std::endl;
     }
     // }
   };
@@ -1199,9 +1201,9 @@ int main(int argc, char *argv[]) {
     }
 
     LOG_INFO << "\n"
-              << printTimestamp()
-              << " Created systematics plotting directory: " << cfg.systSaveDir
-              << std::endl;
+             << printTimestamp()
+             << " Created systematics plotting directory: " << cfg.systSaveDir
+             << std::endl;
   }
 
   // Generate pre-fit histograms if requested
@@ -1259,9 +1261,9 @@ int main(int argc, char *argv[]) {
     ApplyTH2FStyle(parCorrMatrix);
     ch::WriteToTFile(&parCorrMatrix, &outfile, "postfit/parCorrMat");
     LOG_INFO << "\n"
-              << printTimestamp()
-              << " Parameter correlations extracted -> postfit/parCorrMat"
-              << std::endl;
+             << printTimestamp()
+             << " Parameter correlations extracted -> postfit/parCorrMat"
+             << std::endl;
 
     // Compute and write global rate correlation matrix
     if (cfg.samples > 0) {
@@ -1270,10 +1272,9 @@ int main(int argc, char *argv[]) {
       ApplyTH2FStyle(globalRateCorrMatrix);
       ch::WriteToTFile(&globalRateCorrMatrix, &outfile,
                        "postfit/globalRateCorr");
-      LOG_INFO
-          << printTimestamp() << std::setw(50) << std::left
-          << " Global rate correlations computed -> postfit/globalRateCorr"
-          << std::endl;
+      LOG_INFO << printTimestamp() << std::setw(50) << std::left
+               << " Global rate correlations computed -> postfit/globalRateCorr"
+               << std::endl;
     }
   }
 
@@ -1283,10 +1284,10 @@ int main(int argc, char *argv[]) {
   infile.Close();
   outfile.Close();
   LOG_INFO << "\n\n"
-            << printTimestamp() << " Output file: " << outfile.GetName()
-            << std::endl;
+           << printTimestamp() << " Output file: " << outfile.GetName()
+           << std::endl;
   LOG_INFO << "\n\n\n\n"
-            << printTimestamp() << " Task complete!\n\n\n\n"
-            << std::endl;
+           << printTimestamp() << " Task complete!\n\n\n\n"
+           << std::endl;
   return 0;
 }
