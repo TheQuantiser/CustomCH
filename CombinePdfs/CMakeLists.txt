@@ -1,4 +1,4 @@
-file(GLOB COMBINE_PDFS_SRC src/*.cc)
+file(GLOB CONFIGURE_DEPENDS COMBINE_PDFS_SRC src/*.cc)
 
 get_target_property(_CL_INC HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit INTERFACE_INCLUDE_DIRECTORIES)
 
@@ -19,7 +19,7 @@ target_include_directories(CombinePdfs PUBLIC
 target_link_libraries(CombinePdfs PUBLIC CombineTools ${CH_EXTERNAL_LIBS} HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
 set_target_properties(CombinePdfs PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-file(GLOB COMBINE_PDFS_BINS bin/*.cpp)
+file(GLOB CONFIGURE_DEPENDS COMBINE_PDFS_BINS bin/*.cpp)
 set(COMBINE_PDFS_BINARIES)
 foreach(src ${COMBINE_PDFS_BINS})
   get_filename_component(name ${src} NAME_WE)
