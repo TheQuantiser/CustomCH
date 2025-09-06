@@ -68,10 +68,14 @@ CombineHarvester::CombineHarvester(CombineHarvester const& other)
 void CombineHarvester::SetFlag(std::string const& flag, bool const& value) {
   auto it = flags_.find(flag);
   if (it != flags_.end()) {
-    FNLOG(std::cout) << "Changing value of flag \"" << it->first << "\" from " << it->second << " to " << value << "\n";
+    if (verbosity_ >= 2)
+      FNLOG(std::cout) << "Changing value of flag \"" << it->first << "\" from "
+                       << it->second << " to " << value << "\n";
     it->second = value;
   } else {
-    FNLOG(std::cout) << "Created new flag \"" << flag << "\" with value " << value << "\n";
+    if (verbosity_ >= 2)
+      FNLOG(std::cout) << "Created new flag \"" << flag
+                       << "\" with value " << value << "\n";
     flags_[flag] = value;
   }
 }

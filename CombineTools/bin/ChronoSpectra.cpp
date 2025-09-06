@@ -12,45 +12,6 @@ Summary:
 - Correlation matrices: bin–bin and process–process rates.
 - Parameter freezing with optional fixed values for custom fits.
 - Structured outputs: prefit/ and postfit/.
- ============================================================================*/
-
- Purpose:
- --------
- ChronoSpectra simplifies the extraction and analysis of pre-fit and post-fit
- histograms from Combine-generated ROOT workspaces. It enhances traditional
- approaches with flexibles features such as flexible grouping of bins and
- processes, and detailed correlation matrix computation. Inspired by the widely
- used "PostFitShapesFromWorkspace.cpp" in CombineHarvester,
- ChronoSpectra builds on its foundation to offer more organized outputs,
- structured analysis options, and improved usability.
-
-
-
- ---------
- Features:
- ---------
- 1. Pre-fit & Post-fit Histograms
-    - Pre-fit: Reflects the model before parameter optimization.
-    - Post-fit: Incorporates adjustments from a provided RooFitResult.
-
- 2. Histogram Grouping
-    - Group bins/processes with user-defined names for structured output.
-    - Supports ungrouped individual bin/process handling.
-
- 3. Uncertainty Estimation
-    - Enables random sampling to quantify uncertainties.
-
- 4. Correlation Matrices
-    - Computes correlation matrices for histogram bin-to-bin and
-process-to-process rates.
-
- 5. Parameter Freezing
-    - Allows fixing parameters with optional values for custom fits.
-
- 6. Organized Output
-    - Saves histograms and matrices in structured directories: `prefit/`,
-`postfit/`.
-    - Provides flexibility for grouped or individual histogram handling.
 
  ---------------------
  Command-Line Options:
@@ -136,7 +97,7 @@ ChronoSpectra --help \
  - Ensure workspace and datacard files align to avoid mismatches.
  - Use `--samples` for sampling-based uncertainty estimation.
  - Results are saved in a structured and organized ROOT file.
-**/
+*/
 
 #include "CombineHarvester/CombineTools/interface/CombineHarvester.h"
 #include "CombineHarvester/CombineTools/interface/ParseCombineWorkspace.h"
@@ -227,7 +188,6 @@ struct TablePrinter {
         LOG_INFO << std::setw(widths[i]);
       LOG_INFO << cols[i];
     }
-    LOG_INFO << std::endl;
   }
 };
 
@@ -238,8 +198,7 @@ static std::string formatDouble(double v) {
 }
 
 void displayStartupMessage() {
-  LOG_INFO << "\n\n\n\n"
-           << printTimestamp() << "\tStarting ChronoSpectra (c) MAW 2024 \n\n";
+  LOG_INFO << printTimestamp() << " Starting ChronoSpectra (c) MAW 2024\n\n";
 
   // ASCII Art for ChronoSpectra
   LOG_INFO << R"(
@@ -764,8 +723,7 @@ void writeCorrToFile(
     std::map<std::string, std::map<std::string, TH2F>> &matrixMap,
     TFile &outfile, const std::string &prefix, const std::string &suffix) {
   // Log the start of the process
-  LOG_INFO << "\n"
-           << printTimestamp()
+  LOG_INFO << printTimestamp()
            << " Writing correlation matrices to file: " << outfile.GetName()
            << std::endl;
 
@@ -1049,7 +1007,6 @@ void processAll(
       table.row({b});
       processedBins.insert(b);
     }
-    LOG_INFO << std::endl;
   }
 
   // Process ungrouped bins
@@ -1158,8 +1115,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  LOG_INFO << std::endl;
-
   // Load datacard for later histogram rebinning
   if (!std::filesystem::exists(cfg.datacard))
     throw std::runtime_error("Error: Datacard file '" + cfg.datacard +
@@ -1224,8 +1179,7 @@ int main(int argc, char *argv[]) {
 
       par->set_frozen(true);
 
-      LOG_INFO << "\n"
-               << printTimestamp() << " Freezing parameter: " << parts[0]
+      LOG_INFO << printTimestamp() << " Freezing parameter: " << parts[0]
                << (parts.size() == 2 ? " to " + parts[1] : "") << std::endl;
     }
     // }
@@ -1251,8 +1205,7 @@ int main(int argc, char *argv[]) {
           cfg.systSaveDir);
     }
 
-    LOG_INFO << "\n"
-             << printTimestamp()
+    LOG_INFO << printTimestamp()
              << " Created systematics plotting directory: " << cfg.systSaveDir
              << std::endl;
   }
@@ -1311,8 +1264,7 @@ int main(int argc, char *argv[]) {
 
     ApplyTH2FStyle(parCorrMatrix);
     ch::WriteToTFile(&parCorrMatrix, &outfile, "postfit/parCorrMat");
-    LOG_INFO << "\n"
-             << printTimestamp()
+    LOG_INFO << printTimestamp()
              << " Parameter correlations extracted -> postfit/parCorrMat"
              << std::endl;
 
