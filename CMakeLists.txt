@@ -102,18 +102,15 @@ set(CH_EXTERNAL_LIBS
 )
 
 add_subdirectory(CombineTools)
-add_subdirectory(CombinePdfs)
 
 add_library(CombineHarvester INTERFACE)
 target_include_directories(CombineHarvester INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CombineTools/interface>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CombinePdfs/interface>
   $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(CombineHarvester INTERFACE
   CombineTools
-  CombinePdfs
   HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
 
 if(NOT USE_SYSTEM_COMBINEDLIMIT)
@@ -129,7 +126,4 @@ install(EXPORT CombineHarvesterTargets
 
 install(DIRECTORY CombineTools/interface
         DESTINATION include/CombineHarvester/CombineTools
-        FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")
-install(DIRECTORY CombinePdfs/interface
-        DESTINATION include/CombineHarvester/CombinePdfs
         FILES_MATCHING PATTERN "*.h" PATTERN "*.hh")

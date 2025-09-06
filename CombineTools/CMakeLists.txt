@@ -1,4 +1,4 @@
-file(GLOB COMBINE_TOOLS_SRC src/*.cc src/*.cpp)
+file(GLOB COMBINE_TOOLS_SRC CONFIGURE_DEPENDS src/*.cc src/*.cpp)
 
 get_target_property(_CL_INC HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit INTERFACE_INCLUDE_DIRECTORIES)
 
@@ -22,7 +22,7 @@ target_include_directories(CombineTools PUBLIC
 target_link_libraries(CombineTools PUBLIC ${CH_EXTERNAL_LIBS} HiggsAnalysisCombinedLimit::HiggsAnalysisCombinedLimit)
 set_target_properties(CombineTools PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-file(GLOB COMBINE_TOOLS_BINS bin/*.cpp)
+file(GLOB COMBINE_TOOLS_BINS CONFIGURE_DEPENDS bin/*.cpp)
 set(COMBINE_TOOLS_BINARIES)
 foreach(src ${COMBINE_TOOLS_BINS})
   get_filename_component(name ${src} NAME_WE)

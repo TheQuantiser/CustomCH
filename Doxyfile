@@ -767,8 +767,6 @@ WARN_LOGFILE           =
 
 INPUT  = CombineTools/interface \
          CombineTools/src \
-         CombinePdfs/interface \
-         CombinePdfs/src \
          CombineTools/python/plotting.py \
          CombineTools/bin/MSSMYieldTable.cpp \
          CombineTools/bin/PostFitShapesFromWorkspace.cpp \
@@ -779,12 +777,7 @@ INPUT  = CombineTools/interface \
          docs/PythonInterface.md \
          docs/PostFitShapesFromWorkspace.md \
          docs/Limits.md \
-         docs/RooMorphingPdf.md \
          docs/ReproduceRun1HTTDatacards.md \
-         docs/ChargedHiggs.md \
-         docs/BSM-ModelIndependent-Limits-MSSMHTT.md \
-         docs/BSM-ModelIndependent-Limits-HhhAZh.md \
-         docs/mA-tanb-Limits.md \
          docs/HybridNewGrid.md \
         # docs/BuildSystem.md \
         # docs/MSSMWithMorphing.md
@@ -868,9 +861,6 @@ EXCLUDE_SYMBOLS        =
 # command).
 
 EXAMPLE_PATH           = CombineTools/bin \
-                         CombinePdfs/bin \
-                         CombinePdfs/src \
-                         CombinePdfs/python \
                          Run1BSMComb/bin \
                          CombineTools/src \
                          CombineTools/input/examples

@@ -4,7 +4,7 @@
 BUILD_DIR=${1:-build}
 
 # Ensure the libraries and python modules from the CMake build are found
-export LD_LIBRARY_PATH="$PWD/${BUILD_DIR}/CombineTools:$PWD/${BUILD_DIR}/CombinePdfs:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="$PWD/${BUILD_DIR}/CombineTools:${LD_LIBRARY_PATH}"
 export PYTHONPATH="$PWD/${BUILD_DIR}:${PYTHONPATH}"
 
 doxygen Doxyfile

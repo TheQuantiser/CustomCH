@@ -11,8 +11,7 @@ std::string base() {
   if (env) return std::string(env);
   boost::filesystem::path p = boost::filesystem::current_path();
   while (true) {
-    if (boost::filesystem::exists(p / "CombineTools") &&
-        boost::filesystem::exists(p / "CombinePdfs")) {
+    if (boost::filesystem::exists(p / "CombineTools")) {
       return p.string();
     }
     if (p.has_parent_path()) {
