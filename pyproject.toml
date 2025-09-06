@@ -1,5 +1,12 @@
 [build-system]
-requires = ["setuptools>=61", "wheel", "cmake", "ninja"]
+requires = [
+    "setuptools>=61",
+    "wheel",
+    "cmake",
+    "ninja",
+    "cppyy-backend==1.15.3",
+    "cppyy-cling",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
