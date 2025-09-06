@@ -56,6 +56,10 @@ class CMakeBuild(build_ext):
                 dest_dir = Path(self.build_lib) / "CombineHarvester" / "CombineTools"
                 dest_dir.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(candidate, dest_dir / lib_name)
+
+                self.extensions.remove(ext)
+                if getattr(self.distribution, "ext_modules", None):
+                    self.distribution.ext_modules.remove(ext)
                 return
 
         print("CombineTools library not found—building from source")
@@ -90,6 +94,11 @@ class CMakeBuild(build_ext):
         dest_dir = Path(self.build_lib) / "CombineHarvester" / "CombineTools"
         dest_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy2(built_lib, dest_dir / lib_name)
+
+        self.extensions.remove(ext)
+        if getattr(self.distribution, "ext_modules", None):
+            self.distribution.ext_modules.remove(ext)
+        return
 
 
 setup(
