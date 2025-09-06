@@ -1,6 +1,6 @@
 #!/bin/sh
 ulimit -s unlimited
-cd %(CMSSW_BASE)s/src
+cd %(CH_BASE)s
 export SCRAM_ARCH=%(SCRAM_ARCH)s
 source /vols/grid/cms/setup.sh
 eval `scramv1 runtime -sh`
