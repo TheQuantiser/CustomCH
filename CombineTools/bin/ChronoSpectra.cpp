@@ -365,6 +365,14 @@ struct SystHists {
   TH1F down;
 };
 
+struct ProcessReport {
+  double integral = 0.0;
+  double uncertainty = 0.0;
+  bool rateCorr = false;
+  bool histBinCorr = false;
+  std::string plotPath;
+};
+
 SystHists BuildSystHists(ch::CombineHarvester &cmb, ch::Parameter &param) {
   double original_val = param.val();
   double err_u = param.err_u();
@@ -816,10 +824,6 @@ void processAll(
     histograms[binName][procName] =
         doSamplingUnc ? subCmb.cp().GetShapeWithUncertainty(*fitRes, samples)
                       : subCmb.cp().GetShapeWithUncertainty();
-    const TH1F &tmp = histograms[binName][procName];
-    LOG_INFO << printTimestamp() << std::setw(50) << std::left
-             << std::string("\t") + binName + "/" + procName << " -> "
-             << tmp.Integral() << " ± " << tmp.GetBinContent(0) << std::endl;
   };
 
   // Lambda: Handle rate correlations
@@ -831,10 +835,6 @@ void processAll(
     if (RateCorrMap && doSamplingUnc) {
       (*RateCorrMap)[binName][procName] =
           subCmb.cp().GetRateCorrelation(*fitRes, samples);
-      LOG_INFO << printTimestamp() << std::setw(50) << std::left
-               << std::string("\t") + binName + "/" + procName +
-                      " rate correlation computed"
-               << std::endl;
     }
   };
 
@@ -847,26 +847,32 @@ void processAll(
     if (HistBinCorrMap && doSamplingUnc) {
       (*HistBinCorrMap)[binName][procName] =
           subCmb.cp().GetHistogramBinCorrelation(*fitRes, samples);
-      LOG_INFO << printTimestamp() << std::setw(50) << std::left
-               << std::string("\t") + binName + "/" + procName +
-                      " histogram bin correlation computed"
-               << std::endl;
     }
   };
 
-  // Lambda: Handle histogram bin correlations
   auto computeProcess =
       [&](ch::CombineHarvester &subCmb, const std::string &binName,
           const std::string &procName, const bool doHist, const bool doRateCorr,
-          const bool doBinCorr) -> void {
+          const bool doBinCorr,
+          std::vector<std::pair<std::string, ProcessReport>> &reports) -> void {
     if (subCmb.process_set().empty())
       return;
-    if (doHist)
+    ProcessReport pr;
+    if (doHist) {
       createHistogram(subCmb, binName, procName);
-    if (doRateCorr)
+      const TH1F &tmp = histograms[binName][procName];
+      pr.integral = tmp.Integral();
+      pr.uncertainty = tmp.GetBinContent(0);
+    }
+    if (doRateCorr) {
       createRateCorrelation(subCmb, binName, procName);
-    if (doBinCorr)
+      pr.rateCorr = true;
+    }
+    if (doBinCorr) {
       createBinCorrelation(subCmb, binName, procName);
+      pr.histBinCorr = true;
+    }
+    reports.emplace_back(procName, std::move(pr));
   };
 
   // Lambda: Process all computations for a bin or bin group
@@ -889,13 +895,15 @@ void processAll(
       return;
     }
 
+    std::vector<std::pair<std::string, ProcessReport>> processReports;
+
     // Process total, signals, and backgrounds
     computeProcess(binCmb.cp().signals(), binName, "signal", doBinHists,
-                   doBinRateCorr, doBinHistBinCorr);
+                   doBinRateCorr, doBinHistBinCorr, processReports);
     computeProcess(binCmb.cp().backgrounds(), binName, "background", doBinHists,
-                   doBinRateCorr, doBinHistBinCorr);
+                   doBinRateCorr, doBinHistBinCorr, processReports);
     computeProcess(binCmb, binName, "total", doBinHists, doBinRateCorr,
-                   doBinHistBinCorr);
+                   doBinHistBinCorr, processReports);
 
     // Handle observed or pseudo-data
     if (doBinHists) {
@@ -911,11 +919,10 @@ void processAll(
       obsHist.SetBinContent(0, std::sqrt(obsHist.Integral()));
       obsHist.SetBinErrorOption(TH1::kPoisson);
 
-      LOG_INFO << printTimestamp() << std::setw(50) << std::left
-               << "\t" + binName + "/" + cfg.dataset +
-                      (cfg.skipObs ? " (pseudo-data)" : "")
-               << " -> " << obsHist.Integral() << " ± "
-               << obsHist.GetBinContent(0) << std::endl;
+      ProcessReport obsRep;
+      obsRep.integral = obsHist.Integral();
+      obsRep.uncertainty = obsHist.GetBinContent(0);
+      processReports.emplace_back(cfg.dataset, std::move(obsRep));
     }
 
     // Process grouped processes
@@ -933,16 +940,15 @@ void processAll(
 
       // Compute grouped processes
       computeProcess(procGroupCmb, binName, procGroupName, doBinHists,
-                     doBinRateCorr, doBinHistBinCorr);
+                     doBinRateCorr, doBinHistBinCorr, processReports);
 
-      // Log and track processes within the group
       LOG_INFO << printTimestamp() << "\t-- Process group " << procGroupName
-               << " contains ";
+               << " members:" << std::endl;
+      LOG_INFO << std::setw(20) << "Process" << std::endl;
       for (const auto &proc : procGroupCmb.cp().process_set()) {
-        LOG_INFO << proc << ", ";
+        LOG_INFO << std::setw(20) << proc << std::endl;
         processedProcesses.insert(proc);
       }
-      LOG_INFO << std::endl;
     }
 
     // Process ungrouped individual processes
@@ -971,7 +977,20 @@ void processAll(
       computeProcess(singleProcCmb, binName, proc,
                      doBinHists && (!isProcGrouped || cfg.sepProcHists), false,
                      doBinHistBinCorr &&
-                         (!isProcGrouped || cfg.sepProcHistBinCorr));
+                         (!isProcGrouped || cfg.sepProcHistBinCorr),
+                     processReports);
+    }
+
+    LOG_INFO << printTimestamp() << "\tProcess summary for " << binName
+             << std::endl;
+    LOG_INFO << std::setw(20) << "Process" << std::setw(15) << "Integral"
+             << std::setw(15) << "Unc" << std::setw(10) << "RateCorr"
+             << std::setw(12) << "HistBinCorr" << "Plot" << std::endl;
+    for (const auto &[name, rep] : processReports) {
+      LOG_INFO << std::setw(20) << name << std::setw(15) << rep.integral
+               << std::setw(15) << rep.uncertainty << std::setw(10)
+               << (rep.rateCorr ? "Y" : "N") << std::setw(12)
+               << (rep.histBinCorr ? "Y" : "N") << rep.plotPath << std::endl;
     }
   };
 
@@ -994,14 +1013,14 @@ void processAll(
     // Compute bin statistics
     computeBin(binCmb, binGroupName, true, cfg.getRateCorr, cfg.getHistBinCorr);
 
-    // Log and mark bins as processed
     LOG_INFO << printTimestamp() << " -- Bin group " << binGroupName
-             << " contains ";
-    for (const auto &bin : binCmb.cp().bin_set()) {
-      LOG_INFO << bin << ", ";
-      processedBins.insert(std::move(bin));
+             << " members:" << std::endl;
+    LOG_INFO << std::setw(20) << "Bin" << std::endl;
+    for (const auto &b : binCmb.cp().bin_set()) {
+      LOG_INFO << std::setw(20) << b << std::endl;
+      processedBins.insert(b);
     }
-    LOG_INFO << "\n" << std::endl;
+    LOG_INFO << std::endl;
   }
 
   // Process ungrouped bins
