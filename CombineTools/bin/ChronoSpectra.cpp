@@ -191,6 +191,7 @@ ChronoSpectra --help \
 #include "TROOT.h"
 #include "RooMsgService.h"
 #include <TCanvas.h>
+#include <TError.h>
 #include <TGaxis.h>
 #include <TH1F.h>
 #include <TH2F.h>
@@ -697,7 +698,23 @@ void plotShapeSystVariations(const SystHists &hists,
   pad1.Update();
   pad1.Modified();
 
-  canvas.SaveAs((cfg.systSaveDir + "/" + plotName + ".png").c_str());
+  static tabulate::Table savedPlots;
+  static bool headerPrinted = false;
+  std::string outFile = cfg.systSaveDir + "/" + plotName + ".png";
+
+  canvas.SaveAs(outFile.c_str());
+
+  if (!headerPrinted) {
+    savedPlots.add_row({"Saved plots"});
+    headerPrinted = true;
+  }
+  savedPlots.add_row({outFile});
+  std::stringstream row_stream;
+  row_stream << savedPlots.row(savedPlots.size() - 1);
+  std::string line;
+  while (std::getline(row_stream, line)) {
+    LOG_INFO << line << "\n";
+  }
 }
 
 void StoreSystematics(ch::CombineHarvester &cmb, const std::string &bin,
@@ -874,8 +891,6 @@ void processAll(
       pr.histBinCorr = true;
     }
     reports.emplace_back(procName, std::move(pr));
-    LOG_INFO << printTimestamp() << "\tProcessed process " << procName
-             << " for bin " << binName << std::endl;
   };
 
   // Lambda: Process all computations for a bin or bin group
@@ -900,13 +915,27 @@ void processAll(
 
     std::vector<std::pair<std::string, ProcessReport>> processReports;
 
+    bool firstProc = true;
+    auto processLogger = [&](const std::string &name) {
+      if (firstProc) {
+        LOG_INFO << printTimestamp() << "\t" << binName << ": " << std::flush;
+        firstProc = false;
+      } else {
+        std::clog << ' ';
+      }
+      std::clog << name << std::flush;
+    };
+
     // Process total, signals, and backgrounds
     computeProcess(binCmb.cp().signals(), binName, "signal", doBinHists,
                    doBinRateCorr, doBinHistBinCorr, processReports);
+    processLogger("signal");
     computeProcess(binCmb.cp().backgrounds(), binName, "background", doBinHists,
                    doBinRateCorr, doBinHistBinCorr, processReports);
+    processLogger("background");
     computeProcess(binCmb, binName, "total", doBinHists, doBinRateCorr,
                    doBinHistBinCorr, processReports);
+    processLogger("total");
 
     // Handle observed or pseudo-data
     if (doBinHists) {
@@ -926,8 +955,7 @@ void processAll(
       obsRep.integral = obsHist.Integral();
       obsRep.uncertainty = obsHist.GetBinContent(0);
       processReports.emplace_back(cfg.dataset, std::move(obsRep));
-      LOG_INFO << printTimestamp() << "\tProcessed process " << cfg.dataset
-               << " for bin " << binName << std::endl;
+      processLogger(cfg.dataset);
     }
 
     // Process grouped processes
@@ -946,14 +974,18 @@ void processAll(
       // Compute grouped processes
       computeProcess(procGroupCmb, binName, procGroupName, doBinHists,
                      doBinRateCorr, doBinHistBinCorr, processReports);
+      processLogger(procGroupName);
 
-      LOG_INFO << printTimestamp() << "\t-- Process group " << procGroupName
-               << " members:" << std::endl;
-      LOG_INFO << std::setw(20) << "Process" << std::endl;
+      LOG_INFO << printTimestamp() << "\tGroup " << procGroupName << ": ";
+      bool first = true;
       for (const auto &proc : procGroupCmb.cp().process_set()) {
-        LOG_INFO << std::setw(20) << proc << std::endl;
+        if (!first)
+          std::clog << ", ";
+        std::clog << proc;
         processedProcesses.insert(proc);
+        first = false;
       }
+      std::clog << std::endl;
     }
 
     // Process ungrouped individual processes
@@ -984,7 +1016,11 @@ void processAll(
                      doBinHistBinCorr &&
                          (!isProcGrouped || cfg.sepProcHistBinCorr),
                      processReports);
+      processLogger(proc);
     }
+
+    if (!firstProc)
+      std::clog << std::endl;
 
     LOG_INFO << printTimestamp() << "\tProcess summary for " << binName
              << std::endl;
@@ -1095,6 +1131,7 @@ int main(int argc, char *argv[]) {
   gStyle->SetOptStat(0);
   gStyle->SetLineScalePS(1);
   gStyle->SetCanvasPreferGL(1);
+  gErrorIgnoreLevel = kWarning;
 
   gSystem->Load("libHiggsAnalysisCombinedLimit");
   ChronoSpectraConfig cfg =
