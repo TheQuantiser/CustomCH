@@ -14,6 +14,22 @@ class CMakeExtension(Extension):
 
 
 class CMakeBuild(build_ext):
+    user_options = build_ext.user_options + [
+        ("build-threads=", None, "number of threads for building"),
+    ]
+
+    def initialize_options(self) -> None:  # noqa: D401 - see base class
+        super().initialize_options()
+        self.build_threads = None
+
+    def finalize_options(self) -> None:  # noqa: D401 - see base class
+        super().finalize_options()
+        if self.build_threads is not None:
+            try:
+                self.build_threads = int(self.build_threads)
+            except ValueError as err:
+                raise ValueError("--build-threads must be an integer") from err
+
     def build_extension(self, ext: Extension) -> None:  # noqa: D401 - see base class
         source_dir = Path(__file__).resolve().parent
 
@@ -46,17 +62,24 @@ class CMakeBuild(build_ext):
 
         build_temp = Path(self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
-        subprocess.check_call([
-            "cmake",
-            "-S",
-            str(source_dir),
-            "-B",
-            str(build_temp),
-            f"-DPython_EXECUTABLE={sys.executable}",
-            "-DUSE_SYSTEM_COMBINEDLIMIT=ON",
-            f"-DCMAKE_PREFIX_PATH={sys.prefix}",
-        ])
-        subprocess.check_call(["cmake", "--build", str(build_temp), "--target", "CombineTools"])
+        subprocess.check_call(
+            [
+                "cmake",
+                "-S",
+                str(source_dir),
+                "-B",
+                str(build_temp),
+                f"-DPython_EXECUTABLE={sys.executable}",
+                "-DUSE_SYSTEM_COMBINEDLIMIT=ON",
+                f"-DCMAKE_PREFIX_PATH={sys.prefix}",
+            ]
+        )
+        build_cmd = ["cmake", "--build", str(build_temp), "--target", "CombineTools"]
+        if self.build_threads is not None:
+            build_cmd.extend(["--parallel", str(self.build_threads)])
+        else:
+            build_cmd.append("--parallel")
+        subprocess.check_call(build_cmd)
 
         built_lib = build_temp / "CombineTools" / lib_name
 
