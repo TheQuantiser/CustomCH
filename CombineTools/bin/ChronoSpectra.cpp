@@ -188,8 +188,8 @@ ChronoSpectra --help \
 #include "CombineHarvester/CombineTools/interface/ParseCombineWorkspace.h"
 #include "CombineHarvester/CombineTools/interface/TFileIO.h"
 #include "CombineHarvester/CombineTools/interface/cli.hpp"
-#include "TROOT.h"
 #include "RooMsgService.h"
+#include "TROOT.h"
 #include <TCanvas.h>
 #include <TError.h>
 #include <TGaxis.h>
@@ -215,7 +215,6 @@ ChronoSpectra --help \
 #include <set>
 #include <sstream>
 #include <string>
-#include <tabulate/table.hpp>
 #include <vector>
 
 enum class LogLevel { ERROR = 0, WARN = 1, INFO = 2 };
@@ -239,9 +238,52 @@ std::string printTimestamp() {
   return timestamp.str();
 }
 
+struct TablePrinter {
+  std::vector<int> widths;
+  TablePrinter(std::initializer_list<int> w) : widths(w) {}
+  int totalWidth() const {
+    int total = 0;
+    for (int w : widths)
+      if (w > 0)
+        total += w;
+    return total;
+  }
+  void header(const std::vector<std::string> &cols) const {
+    LOG_INFO << "  ";
+    for (size_t i = 0; i < cols.size(); ++i) {
+      if (i == 0)
+        LOG_INFO << std::left;
+      else
+        LOG_INFO << std::right;
+      if (widths[i] > 0)
+        LOG_INFO << std::setw(widths[i]);
+      LOG_INFO << cols[i];
+    }
+    LOG_INFO << std::endl;
+    LOG_INFO << "  " << std::string(totalWidth(), '-') << std::endl;
+  }
+  void row(const std::vector<std::string> &cols) const {
+    LOG_INFO << "  ";
+    for (size_t i = 0; i < cols.size(); ++i) {
+      if (i == 0)
+        LOG_INFO << std::left;
+      else
+        LOG_INFO << std::right;
+      if (widths[i] > 0)
+        LOG_INFO << std::setw(widths[i]);
+      LOG_INFO << cols[i];
+    }
+  }
+};
+
+static std::string formatDouble(double v) {
+  std::ostringstream ss;
+  ss << std::setprecision(6) << std::defaultfloat << v;
+  return ss.str();
+}
+
 void displayStartupMessage() {
-  LOG_INFO << "\n\n\n\n"
-           << printTimestamp() << "\tStarting ChronoSpectra (c) MAW 2024 \n\n";
+  LOG_INFO << printTimestamp() << " Starting ChronoSpectra (c) MAW 2024\n\n";
 
   // ASCII Art for ChronoSpectra
   LOG_INFO << R"(
@@ -345,17 +387,10 @@ parseNamedGroups(const std::string &groupsArg) {
     it->second = std::move(items);
   }
 
-  // Print out the groups and their elements in a table
-  tabulate::Table table;
-  table.add_row({"Group", "Items"});
+  TablePrinter table({20, 50});
+  table.header({"Group", "Items"});
   for (const auto &[groupName, items] : namedGroups) {
-    table.add_row({groupName, boost::algorithm::join(items, ", ")});
-  }
-  std::stringstream table_stream;
-  table_stream << table;
-  std::string line;
-  while (std::getline(table_stream, line)) {
-    LOG_INFO << line << "\n";
+    table.row({groupName, boost::algorithm::join(items, ", ")});
   }
 
   return namedGroups;
@@ -699,19 +734,16 @@ void plotShapeSystVariations(const SystHists &hists,
   pad1.Modified();
 
   static bool headerPrinted = false;
+  static TablePrinter table({80});
   std::string outFile = cfg.systSaveDir + "/" + plotName + ".png";
 
   canvas.SaveAs(outFile.c_str());
 
   if (!headerPrinted) {
-    tabulate::Table header;
-    header.add_row({"Saved plots"});
-    LOG_INFO << header << "\n";
+    table.header({"Saved plots"});
     headerPrinted = true;
   }
-  tabulate::Table row;
-  row.add_row({outFile});
-  LOG_INFO << row << "\n";
+  table.row({outFile});
 }
 
 void StoreSystematics(ch::CombineHarvester &cmb, const std::string &bin,
@@ -753,13 +785,15 @@ void writeHistogramsToFile(
   LOG_INFO << printTimestamp()
            << " Writing histograms to file: " << outfile.GetName() << std::endl;
 
+  TablePrinter table({50, 15, 15});
+  table.header({"Histogram", "Integral", "Unc"});
+
   for (auto &[binName, procMap] : histograms) {
     for (auto &[procName, histogram] : procMap) {
       std::string path = prefix + "/" + binName + "/" + procName;
       histogram.SetTitle(procName.c_str());
-      LOG_INFO << printTimestamp() << "\t--> " << std::setw(50) << std::left
-               << path << " = " << histogram.Integral() << " ± "
-               << histogram.GetBinContent(0) << std::endl;
+      table.row({path, formatDouble(histogram.Integral()),
+                 formatDouble(histogram.GetBinContent(0))});
       ch::WriteToTFile(&histogram, &outfile, path);
     }
   }
@@ -774,21 +808,19 @@ void writeCorrToFile(
     std::map<std::string, std::map<std::string, TH2F>> &matrixMap,
     TFile &outfile, const std::string &prefix, const std::string &suffix) {
   // Log the start of the process
-  LOG_INFO << "\n"
-           << printTimestamp()
+  LOG_INFO << printTimestamp()
            << " Writing correlation matrices to file: " << outfile.GetName()
            << std::endl;
 
-  // Iterate through bins and processes
+  TablePrinter table({50});
+  table.header({"Matrix"});
+
   for (auto &[binName, procMap] : matrixMap) {
     for (auto &[procName, matrix] : procMap) {
-      // Construct the path and log it
       std::string path = prefix + "/" + binName + "/" + procName + suffix;
-      LOG_INFO << printTimestamp() << "\t--> " << path << std::endl;
+      table.row({path});
 
       ApplyTH2FStyle(matrix);
-
-      // Write the matrix to the output file
       ch::WriteToTFile(&matrix, &outfile, path);
     }
   }
@@ -899,8 +931,7 @@ void processAll(
       return;
 
     // Log processing start
-    LOG_INFO << "\n\n"
-             << printTimestamp() << std::setw(50) << std::left
+    LOG_INFO << "\n\n" << printTimestamp()
              << " Processing bin/bin group: " << binName << std::endl;
 
     // Check if the bin contains any processes
@@ -1021,14 +1052,14 @@ void processAll(
 
     LOG_INFO << printTimestamp() << "\tProcess summary for " << binName
              << std::endl;
-    LOG_INFO << std::setw(20) << "Process" << std::setw(15) << "Integral"
-             << std::setw(15) << "Unc" << std::setw(10) << "RateCorr"
-             << std::setw(12) << "HistBinCorr" << "Plot" << std::endl;
+    TablePrinter table({20, 15, 15, 10, 12, 0});
+    table.header(
+        {"Process", "Integral", "Unc", "RateCorr", "HistBinCorr", "Plot"});
     for (const auto &[name, rep] : processReports) {
-      LOG_INFO << std::setw(20) << name << std::setw(15) << rep.integral
-               << std::setw(15) << rep.uncertainty << std::setw(10)
-               << (rep.rateCorr ? "Y" : "N") << std::setw(12)
-               << (rep.histBinCorr ? "Y" : "N") << rep.plotPath << std::endl;
+      table.row({name, formatDouble(rep.integral),
+                 formatDouble(rep.uncertainty),
+                 rep.rateCorr ? "Y" : "N",
+                 rep.histBinCorr ? "Y" : "N", rep.plotPath});
     }
     LOG_INFO << printTimestamp() << "\tFinished processing " << binName
              << std::endl;
@@ -1055,12 +1086,12 @@ void processAll(
 
     LOG_INFO << printTimestamp() << " -- Bin group " << binGroupName
              << " members:" << std::endl;
-    LOG_INFO << std::setw(20) << "Bin" << std::endl;
+    TablePrinter table({20});
+    table.header({"Bin"});
     for (const auto &b : binCmb.cp().bin_set()) {
-      LOG_INFO << std::setw(20) << b << std::endl;
+      table.row({b});
       processedBins.insert(b);
     }
-    LOG_INFO << std::endl;
   }
 
   // Process ungrouped bins
@@ -1169,8 +1200,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  LOG_INFO << std::endl;
-
   // Load datacard for later histogram rebinning
   if (!std::filesystem::exists(cfg.datacard))
     throw std::runtime_error("Error: Datacard file '" + cfg.datacard +
@@ -1235,8 +1264,7 @@ int main(int argc, char *argv[]) {
 
       par->set_frozen(true);
 
-      LOG_INFO << "\n"
-               << printTimestamp() << " Freezing parameter: " << parts[0]
+      LOG_INFO << printTimestamp() << " Freezing parameter: " << parts[0]
                << (parts.size() == 2 ? " to " + parts[1] : "") << std::endl;
     }
     // }
@@ -1262,8 +1290,7 @@ int main(int argc, char *argv[]) {
           cfg.systSaveDir);
     }
 
-    LOG_INFO << "\n"
-             << printTimestamp()
+    LOG_INFO << printTimestamp()
              << " Created systematics plotting directory: " << cfg.systSaveDir
              << std::endl;
   }
@@ -1322,8 +1349,7 @@ int main(int argc, char *argv[]) {
 
     ApplyTH2FStyle(parCorrMatrix);
     ch::WriteToTFile(&parCorrMatrix, &outfile, "postfit/parCorrMat");
-    LOG_INFO << "\n"
-             << printTimestamp()
+    LOG_INFO << printTimestamp()
              << " Parameter correlations extracted -> postfit/parCorrMat"
              << std::endl;
 
@@ -1334,7 +1360,7 @@ int main(int argc, char *argv[]) {
       ApplyTH2FStyle(globalRateCorrMatrix);
       ch::WriteToTFile(&globalRateCorrMatrix, &outfile,
                        "postfit/globalRateCorr");
-      LOG_INFO << printTimestamp() << std::setw(50) << std::left
+      LOG_INFO << printTimestamp()
                << " Global rate correlations computed -> postfit/globalRateCorr"
                << std::endl;
     }
