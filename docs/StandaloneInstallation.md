@@ -68,6 +68,16 @@ After installation the libraries and Python bindings are available from
 the chosen prefix and `CombineHarvester` can be used like any other
 installed package.
 
+## Installing the Python package
+
+Instead of a full install, the Python bindings can be built directly in
+editable mode. This will run CMake to compile the C++ libraries and place
+them into the Python package:
+
+```bash
+python -m pip install -e .
+```
+
 Command-line tools such as `ChronoSpectra` are installed into the `bin`
 directory of that prefix, which is typically added to the `PATH` by
 Conda environments.
