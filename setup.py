@@ -23,7 +23,7 @@ class CMakeBuild(build_ext):
             str(source_dir),
             "-B",
             str(build_temp),
-            f"-DPython3_EXECUTABLE={sys.executable}",
+            f"-DPython_EXECUTABLE={sys.executable}",
         ])
         subprocess.check_call(["cmake", "--build", str(build_temp), "--target", "CombineTools"])
 
