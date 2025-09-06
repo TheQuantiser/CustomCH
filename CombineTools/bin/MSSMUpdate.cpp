@@ -12,6 +12,7 @@
 #include "CombineHarvester/CombineTools/interface/CardWriter.h"
 #include "CombineHarvester/CombineTools/interface/CopyTools.h"
 #include "CombineHarvester/CombineTools/interface/BinByBin.h"
+#include "CombineHarvester/CombineTools/interface/PathTools.h"
 
 using namespace std;
 
@@ -23,11 +24,11 @@ int main(int argc, char** argv) {
   
  
   string SM125        = "";
-  if(argc>1) SM125    = string(argv[1]);
-  string auxiliaries  = string(getenv("CMSSW_BASE")) + "/src/auxiliaries/";
-  string aux_shapes   = auxiliaries +"shapes/";
-  string aux_pruning  = auxiliaries +"pruning/";
-  string input_dir    = string(getenv("CMSSW_BASE")) + "/src/CombineHarvester/CombineTools/input";
+  if (argc > 1) SM125 = string(argv[1]);
+  string auxiliaries  = ch::paths::auxiliaries();
+  string aux_shapes   = auxiliaries + "shapes/";
+  string aux_pruning  = auxiliaries + "pruning/";
+  string input_dir    = ch::paths::input();
 
   VString chns =
       {"mt", "et", "tt", "em", "mm"};
